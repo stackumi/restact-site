@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="6.6 12.3 50.8 40">
+  <!-- The REST:ACT mark: a plane of four rounded isometric tiles; the two on the vertical
+       axis have risen into a colon and are lit, and their places stay as dashed outlines.
+       Grid 64, tiles 12u r3u under matrix(1 .5 -1 .5 x y), lifts 14u / 12u, slabs 4u.
+       Colours come from CSS custom properties set by the page. -->
+  <defs><clipPath id="restact-right" clipPathUnits="userSpaceOnUse"><rect x="32" y="0" width="40" height="64"/></clipPath></defs>
+  <rect class="place" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 26)"/>
+  <rect class="tile" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 18 33)"/>
+  <rect class="tile" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 46 33)"/>
+  <rect class="place" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 40)"/>
+  <g class="back">
+    <rect class="wl" x="21.757" y="18" width="20.485" height="4"/>
+    <rect class="wl" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 16)"/>
+    <g clip-path="url(#restact-right)">
+      <rect class="wr" x="21.757" y="18" width="20.485" height="4"/>
+      <rect class="wr" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 16)"/>
+    </g>
+    <rect class="top" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 12)"/>
+  </g>
+  <g class="front">
+    <rect class="wl" x="21.757" y="34" width="20.485" height="4"/>
+    <rect class="wl" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 32)"/>
+    <g clip-path="url(#restact-right)">
+      <rect class="wr" x="21.757" y="34" width="20.485" height="4"/>
+      <rect class="wr" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 32)"/>
+    </g>
+    <rect class="top" width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 28)"/>
+  </g>
+</svg>

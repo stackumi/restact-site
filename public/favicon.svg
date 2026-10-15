@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="REST:ACT">
+  <!-- The favicon cut of the mark: no hairlines and no dashed places, and the colon opened to
+       15u / 11u so its gap survives at 16 px. Solid slate ground so the mark holds against both a
+       light and a dark tab bar without a media query a favicon may not honour. -->
+  <defs>
+    <clipPath id="right" clipPathUnits="userSpaceOnUse"><rect x="32" y="0" width="40" height="64"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0d1418"/>
+  <g transform="translate(-6.347 -1.554) scale(1.198)">
+    <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 18 33)" fill="#2a3740"/>
+    <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 46 33)" fill="#2a3740"/>
+    <rect x="21.757" y="17" width="20.485" height="4" fill="#2a9e93"/>
+    <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 15)" fill="#2a9e93"/>
+    <g clip-path="url(#right)">
+      <rect x="21.757" y="17" width="20.485" height="4" fill="#1f7a72"/>
+      <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 15)" fill="#1f7a72"/>
+    </g>
+    <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 11)" fill="#56d5c9"/>
+    <rect x="21.757" y="35" width="20.485" height="4" fill="#2a9e93"/>
+    <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 33)" fill="#2a9e93"/>
+    <g clip-path="url(#right)">
+      <rect x="21.757" y="35" width="20.485" height="4" fill="#1f7a72"/>
+      <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 33)" fill="#1f7a72"/>
+    </g>
+    <rect width="12" height="12" rx="3" transform="matrix(1 .5 -1 .5 32 29)" fill="#56d5c9"/>
+  </g>
+</svg>

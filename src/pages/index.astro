@@ -1,0 +1,90 @@
+---
+import Mark from '../assets/mark.svg';
+import Wordmark from '../assets/wordmark.svg';
+/* The placeholder: the mark and the wordmark on the slate ground, nothing else. Colours, geometry
+   and the rise follow docs/design/restact-visual-identity.md in the restact repository. */
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0d1418" />
+    <meta name="description" content="REST:ACT — every noun can act." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>REST:ACT</title>
+  </head>
+  <body>
+    <main>
+      <h1 class="lockup">
+        <Mark class="mark" aria-hidden="true" />
+        <Wordmark class="wordmark" role="img" aria-label="REST:ACT" />
+      </h1>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #0d1418;
+    --tile: #1a242a;
+    --edge: #36444d;
+    --dash: #4a5963;
+    --ink: #e7edf0;
+    --signal: #56d5c9;
+    --wall-l: #2a9e93;
+    --wall-r: #1f7a72;
+    /* The wordmark's cap height; the lockup is sized from it (identity §4). */
+    --cap: clamp(28px, 6vw, 64px);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background:
+      radial-gradient(60% 50% at 44% 46%, rgba(86, 213, 201, 0.07), transparent 70%),
+      var(--bg);
+    color: var(--ink);
+  }
+  main {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: clamp(24px, 6vw, 64px);
+  }
+  .lockup {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--cap) * 0.42);
+  }
+  .mark {
+    height: calc(var(--cap) * 1.55);
+    width: auto;
+    flex: none;
+  }
+  .mark .tile { fill: var(--tile); stroke: var(--edge); stroke-width: 0.9; }
+  .mark .place { fill: none; stroke: var(--dash); stroke-width: 0.9; stroke-dasharray: 1.6 1.6; }
+  .mark .wl { fill: var(--wall-l); }
+  .mark .wr { fill: var(--wall-r); }
+  .mark .top { fill: var(--signal); }
+  /* The rise (identity §7), once on first paint: each lit tile starts in its place on the plane;
+     the back one rises first and the front one 60 ms later. Never loops. */
+  .mark .back { animation: rise-back 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 240ms both; }
+  .mark .front { animation: rise-front 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 300ms both; }
+  @keyframes rise-back { from { transform: translateY(14px); } to { transform: none; } }
+  @keyframes rise-front { from { transform: translateY(12px); } to { transform: none; } }
+  .wordmark {
+    /* The outline's box is 72.8 units tall for a 70-unit cap height. */
+    height: calc(var(--cap) * 72.8 / 70);
+    width: auto;
+  }
+  .wordmark .ink { fill: var(--ink); }
+  .wordmark .lit { fill: var(--signal); }
+  @media (prefers-reduced-motion: reduce) {
+    .mark .back, .mark .front { animation: none; }
+  }
+</style>
