@@ -1,0 +1,73 @@
+---
+layout: ../layouts/MdPage.astro
+title: How REST:ACT works
+description: A REST:ACT server is a tree of objects addressed by path. Each object has data, read and written with the standard HTTP methods, and verbs, uploaded programs addressed with a colon and invoked over HTTP.
+chips:
+  - Explanatory
+  - 'Normative text: draft §5 to §7, §10'
+---
+
+import CodeBlock from '../components/CodeBlock.astro';
+import Callout from '../components/Callout.astro';
+import ResolutionWalk from '../components/ResolutionWalk.astro';
+
+## Objects, data and verbs
+
+An object such as `/animals/dogs/fido` has data, its JSON representation, and verbs addressed off it. The path hierarchy is a single-inheritance chain: fido's parents are dogs, animals and the root.
+
+Invoking a verb searches the object first, then each ancestor in turn, and runs the first definition it finds, bound to the object named in the URL. When one level holds both a literal definition and a wildcard such as `{id}`, the literal one wins, whatever the deploy order.
+
+<ResolutionWalk
+  method="GET"
+  object="/animals/dogs/fido"
+  verb="noise"
+  caption="Resolution walks up the path and stops at the first definition."
+  steps={[
+    { path: '/animals/dogs/fido', note: 'no :noise here', state: 'miss' },
+    { path: '/animals/dogs', note: 'found, runs bound to fido', state: 'hit' },
+    { path: '/animals', note: 'not searched', state: 'skipped' },
+    { path: '/', note: 'not searched', state: 'skipped' },
+  ]}
+/>
+
+An object's data and its verbs are independent by default, so a verb can exist with no stored data. A server may instead couple them, so that deploying a verb on a missing object creates it or is refused, and deleting the object removes its verbs. The server advertises which mode it uses.
+
+## Addressing
+
+The grammar has three forms. A verb is itself an object, so its facets are properties addressed under it and handled with ordinary methods.
+
+<CodeBlock
+  label="http"
+  html={`/obj                    <span class="c-dim"># the object's data (the noun)</span>
+/obj<span class="c-sig">:</span>verb               <span class="c-dim"># the verb; the bare form invokes it</span>
+/obj<span class="c-sig">:</span>verb/&lt;property&gt;    <span class="c-dim"># a property of the verb</span>`}
+/>
+
+The usual verb properties are `code`, `policy` and `meta`. They are recommended names, not requirements; a client learns what a server supports from `OPTIONS` and the discovery document instead of guessing.
+
+### Functions and actions
+
+| | Function | Action |
+|---|---|---|
+| Invoked with | `GET` | `POST` |
+| Side effects | none; writes are refused | allowed |
+| Cacheable | yes | no |
+| May call | functions | functions, and actions it declared |
+
+<Callout title="Compatible with AIP-136">
+  The colon, camelCase verb names and GET-for-pure, POST-for-side-effects come from Google's AIP-136 custom methods. REST:ACT also lets a path continue after the verb, so any AIP-136 endpoint is already a valid REST:ACT endpoint.
+</Callout>
+
+## What a verb can reach
+
+A verb is a WebAssembly component, and the interfaces it imports are its capability manifest. There is no ambient authority beyond them. A server answers `403` at upload when a component imports an interface it does not grant.
+
+| Interface | Gives the verb | Grant |
+|---|---|---|
+| `host` | structured logging | ambient |
+| `identity` | a read-only view of the caller: subject, roles, scopes, groups, claims | ambient |
+| `object` | read and write the bound object's data, and others' under their access rules | gated |
+| `compose` | call the verbs it declared | gated |
+| `event` | publish an event on a topic | gated |
+
+All five live in the WIT package `rest-act:plugin@0.1.0`, which only grows, so compiled verbs keep linking.

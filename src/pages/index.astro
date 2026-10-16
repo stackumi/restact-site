@@ -1,0 +1,1156 @@
+---
+import Base from '../layouts/Base.astro';
+import AnatomyDemo from '../components/AnatomyDemo.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import Tabs from '../components/Tabs.astro';
+import MethodTag from '../components/MethodTag.astro';
+import { term } from '../lib/term';
+import { DRAFT, GITHUB } from '../site.config';
+
+/* The home page. Copy and structure follow the approved canvas (Main.dc.html); sections link to the
+   page that covers them in full. Data for repeated blocks sits up here, markup below. */
+
+const status = [
+  { label: 'Specification', value: DRAFT.status },
+  { label: 'Reference server', value: 'restactd, in Rust on Wasmtime' },
+  { label: 'Guest contract', value: 'rest-act:plugin@0.1.0', mono: true },
+  { label: 'Verb languages', value: 'JavaScript, Python, Rust, any WASI 0.2 component' },
+];
+
+const rules = [
+  {
+    title: 'A verb is a WebAssembly component',
+    body: 'Every verb runs as a WASI 0.2 component. JavaScript and Python are interpreted by a runner component inside the same sandbox, so nothing is compiled per upload.',
+    tag: 'wasm32-wasip2',
+  },
+  {
+    title: 'It reaches only what it imports',
+    body: 'The component’s imports are its capability manifest. An import the server does not grant is refused at upload, and no interface opens a socket.',
+    tag: '403 disallowed-import',
+  },
+  {
+    title: 'It runs as the caller',
+    body: 'A call can do what the caller could do directly and the verb declared, within the target’s policy. Its compute is charged to the caller.',
+    tag: 'caller ∩ declared ∩ policy',
+  },
+  {
+    title: 'It is metered',
+    body: 'Wall-clock, compute and memory limits apply to every call. A verb that calls other verbs shares one budget with them.',
+    tag: '408 · 429 · 507',
+  },
+];
+
+const limits = [
+  { limit: 'Wall-clock time', status: '408', value: '2 s' },
+  { limit: 'Compute (fuel)', status: '429', value: '200,000,000' },
+  { limit: 'Memory', status: '507', value: '32 MiB' },
+];
+
+const limitsSession = term(`
+$ echo 'function invoke(input) { while (true) {} }' > spin.js
+$ curl -X POST --data-binary @spin.js \\
+    'localhost:8080/v1/modules?verb=greeter¦spin&kind=function&lang=text/javascript'
+$ curl -i localhost:8080/v1/greeter¦spin
+«HTTP/1.1 429 Too Many Requests»
+content-type: application/problem+json
+
+{ …, «"restact_code"»: ‹"cpu-budget"› }
+`);
+
+const tabs = [
+  { id: 'js', label: 'JavaScript' },
+  { id: 'py', label: 'Python' },
+  { id: 'rs', label: 'Rust' },
+];
+
+const jsCode = `function invoke(input) {
+  const n = Number(obj.get("visits") ?? 0) + 1;
+  obj.set("visits", String(n));
+  return { visits: n };
+}`;
+const jsShell = term(`
+$ curl -g -X POST --data-binary @visit.js \\
+    'localhost:8080/v1/modules?verb=pages/{id}¦visit&kind=action&lang=text/javascript'
+$ curl -X POST localhost:8080/v1/pages/home¦visit
+«{"visits":1}»
+$ curl localhost:8080/v1/pages/home
+«{"visits":"1"}»
+`);
+
+const pyCode = `def invoke(input):
+    n = int(obj.get("count") or 0) + 1
+    obj.set("count", str(n))
+    return {"count": n}`;
+const pyShell = term(`
+$ curl -g -X POST --data-binary @bump.py \\
+    'localhost:8080/v1/modules?verb=counters/{id}¦bump&kind=action&lang=text/x-python'
+$ curl -X POST localhost:8080/v1/counters/7¦bump
+«{"count":1}»
+`);
+
+const rsCode = `use restact_sdk::{export_verb, Error, ErrorExt, Payload, Verb};
+
+struct WordCount;
+
+impl Verb for WordCount {
+    fn invoke(input: Payload) -> Result<Payload, Error> {
+        let text = String::from_utf8(input)
+            .map_err(|_| Error::invalid_input("input is not UTF-8"))?;
+        Ok(text.split_whitespace().count().to_string().into_bytes())
+    }
+}
+
+export_verb!(WordCount);`;
+const rsShell = term(`
+$ cargo build --release --target wasm32-wasip2
+$ curl -X POST --data-binary @target/wasm32-wasip2/release/word_count.wasm \\
+    'localhost:8080/v1/modules?verb=text¦wordCount&kind=function'
+$ curl 'localhost:8080/v1/text¦wordCount?input=one%20two%20three'
+«3»
+`);
+
+const viewJson = term(`
+⟨GET /v1/lists/7¦homeView⟩
+{
+  «"type"»: "page",
+  «"title"»: "Reading list",
+  «"blocks"»: [
+    { "type": "grid", "items": [
+      { "type": "stat", "value": 12,
+        "label": "saved" },
+      { "type": "stat", "value": 3,
+        "label": "unread" } ] },
+    { "type": "card",
+      "title": "The REST:ACT draft",
+      "subtitle": "spec · 18 min",
+      "badges": [{ "label": "unread",
+                   "tone": "warn" }] }
+  ]
+}
+`);
+
+const discoveryJson = term(`
+$ curl localhost:8080/.well-known/restact
+{
+  «"service"»: {
+    «"features"»: [
+      "data-plane", "composition", "object-data-access",
+      "caller-identity", "source-languages",
+      "lifecycle-hooks", "presentation-verbs", …
+    ],
+    «"consistency"»: "conditional",
+    «"limits"»: { … }
+  },
+  «"verbs"»: [
+    { «"route"»: …, «"verb"»: { "kind": "function", "binding": …,
+        "capabilities": […], "callGraph": […], "limits": { … } } }
+  ]
+}
+`);
+
+const compare = [
+  {
+    title: 'REST and OpenAPI',
+    body: 'Same methods, status codes and caching. OpenAPI describes behavior the API’s developers fixed; REST:ACT adds a way to change it at runtime.',
+  },
+  {
+    title: 'RPC and gRPC',
+    body: 'A verb is addressed off a resource, uses the method that matches its side effects, and reports errors as RFC 9457 problem details.',
+  },
+  {
+    title: 'GraphQL',
+    body: 'Accessor verbs such as `:get` and `:list` play the role of resolvers. A new shape means deploying a verb, and the result is a cacheable GET.',
+  },
+  {
+    title: 'Serverless platforms',
+    body: 'A verb is deployed by an API client, runs as each caller, is charged to that caller, and gets no socket interface.',
+  },
+  {
+    title: 'Wasm platforms',
+    body: 'Spin and wasmCloud run components the application’s developers deploy. REST:ACT is a wire protocol for an API’s clients to upload them at runtime.',
+  },
+  {
+    title: 'MCP',
+    body: 'MCP standardizes calling the tools a server’s author exposes. REST:ACT standardizes installing a new verb, and verbsmith serves a host’s verbs as MCP tools.',
+  },
+];
+
+const tools = [
+  { name: 'restactd', href: '/start/', body: 'The reference server, in Rust on Wasmtime. In-process or per-request process isolation; memory, file or PostgreSQL storage.', primary: true },
+  { name: 'restact-conformance', href: GITHUB.conformance, body: 'Black-box tests for any server. Runs only the checks for the features the server advertises.' },
+  { name: 'verbsmith', href: GITHUB.verbsmith, body: 'An MCP server that exposes a REST:ACT host’s verbs as tools and its objects as resources.' },
+  { name: 'restact-sdk', href: GITHUB.sdk, body: 'A Rust crate for writing verbs: implement one trait, add one macro, build with plain cargo.' },
+  { name: 'agent plugins', href: GITHUB.plugins, body: 'Skills for Claude Code, Codex CLI and Cursor that teach a coding agent to write, deploy and call verbs.' },
+];
+
+const ctaSession = term(`
+$ make docker-build
+$ make docker-run      ⟨# http://localhost:8080⟩
+`);
+
+/** Split a body string on `code` spans so compare cards can show inline mono. */
+const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
+---
+
+<Base>
+  <!-- Hero -->
+  <section class="hero container">
+    <div class="hero-copy">
+      <a class="draft-pill" href="/spec/">
+        <span class="sq" aria-hidden="true"></span>
+        Internet-Draft · {DRAFT.docname}
+      </a>
+      <h1>Every noun<br />can act.</h1>
+      <p class="hero-lede">
+        REST:ACT is an HTTP protocol for adding code to a server at runtime. A client uploads a small program, called a <span class="strong">verb</span>, to a path in the server’s object tree, and anyone allowed to can call it with an
+        ordinary <span class="mono strong">GET</span> or <span class="mono strong">POST</span>.
+      </p>
+      <p class="hero-sub">
+        Each verb is a WebAssembly component. It reaches only the host interfaces it imports, runs with the caller’s
+        permissions, and is cut off when it exceeds its time, compute or memory limit.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn--primary" href="/spec/">Read the specification</a>
+        <a class="btn" href="/start/">Run restactd locally</a>
+      </div>
+    </div>
+    <div class="hero-demo">
+      <AnatomyDemo />
+    </div>
+  </section>
+
+  <!-- Status strip -->
+  <section class="status" aria-label="Status">
+    <div class="container status-grid">
+      {
+        status.map((s) => (
+          <div class="status-item">
+            <span class="label">{s.label}</span>
+            <span class:list={['value', { mono: s.mono }]}>{s.value}</span>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- The colon -->
+  <section class="section container split colon">
+    <div class="copy">
+      <span class="eyebrow">Addressing</span>
+      <h2 class="h2"><a href="/how-it-works/">The colon is the protocol.</a></h2>
+      <p class="lede">
+        REST:ACT keeps HTTP’s methods, status codes, conditional requests and caching, and adds one character to the
+        path. After the colon comes a verb, in the custom-method form of Google’s AIP-136, so an AIP-136 endpoint is
+        already a valid REST:ACT endpoint.
+      </p>
+      <p class="lede">
+        Resolution walks up the path. A verb deployed on <span class="code-inline">notes/{'{id}'}</span> answers for every
+        note, and the most specific definition wins.
+      </p>
+      <a class="link-arrow" href="/how-it-works/">How addressing works →</a>
+    </div>
+    <div class="stack">
+      <div class="grammar card">
+        <div class="bnf">segment = name [ <span class="c-sig">":"</span> verb ]</div>
+        <dl class="forms">
+          <dt>/notes/42</dt>
+          <dd>the object’s data</dd>
+          <dt>/notes/42<span class="c-sig">:</span>archive</dt>
+          <dd>the verb; the bare form invokes it</dd>
+          <dt>/notes/42<span class="c-sig">:</span>archive/code</dt>
+          <dd>a property of the verb: code, policy, meta</dd>
+        </dl>
+      </div>
+      <div class="pair">
+        <div class="card kind">
+          <div class="kind-head"><h3>Function</h3><MethodTag method="GET" /></div>
+          <p>
+            Safe and cacheable. The host refuses any write a function attempts, and a function may not call an action, so
+            a GET stays free of side effects all the way down.
+          </p>
+        </div>
+        <div class="card kind">
+          <div class="kind-head"><h3>Action</h3><MethodTag method="POST" /></div>
+          <p>
+            May change state: write the object it is bound to, publish an event, call other actions it declared. An <span class="code-inline">Idempotency-Key</span> makes a retry safe.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section class="section band" id="security">
+    <div class="container col">
+      <div class="head-row">
+        <div class="head-left">
+          <span class="eyebrow">Threat model</span>
+          <h2 class="h2"><a href="/security/">Assume every upload is hostile.</a></h2>
+        </div>
+        <p class="lede head-right">
+          Code-writing assistants raise the demand for uploaded code and also the chance that it is wrong or hostile. The
+          draft answers with four rules that every conformant server enforces.
+        </p>
+      </div>
+
+      <div class="rules">
+        {
+          rules.map((r, i) => (
+            <div class="card rule">
+              <span class="num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{r.title}</h3>
+              <p>{r.body}</p>
+              <span class="tag">{r.tag}</span>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="duo">
+        <div class="card panel">
+          <div class="panel-copy">
+            <h3>A verb never holds more authority than its caller</h3>
+            <p>
+              Effective authority is the intersection of three sets. Triggers and schedules run as the principal that
+              registered them; an owner can opt a verb into running as the owner, and the server then advertises it.
+            </p>
+          </div>
+          <div
+            class="venn"
+            role="img"
+            aria-label="Three overlapping sets: the caller's permissions, the verb's declared capabilities and the target's policy. The call may do only what lies in all three."
+          >
+            <span class="circle c1"></span>
+            <span class="circle c2"></span>
+            <span class="circle c3"></span>
+            <span class="vl l1">the caller’s<br />permissions</span>
+            <span class="vl l2">the verb’s declared<br />capabilities</span>
+            <span class="vl l3">the target’s policy</span>
+            <span class="call">the call</span>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="panel-copy">
+            <h3>One budget for the whole call tree</h3>
+            <p>
+              A verb declares every verb it may call, and an undeclared call is refused before it runs. Each callee draws
+              on the same pool, so a deep or wide tree costs about one call’s budget, not one per frame.
+            </p>
+          </div>
+          <div class="tree mono">
+            <div class="row"><MethodTag method="POST" /><span>/v1/docs/123<span class="c-sig">:</span>publish</span></div>
+            <div class="row i1"><span class="elbow">└</span><span class="kw">compose</span><span>docs/123<span class="c-sig">:</span>render</span><span class="note">function</span></div>
+            <div class="row i2"><span class="elbow">└</span><span class="kw">compose</span><span>docs/123<span class="c-sig">:</span>wordCount</span><span class="note">function</span></div>
+            <div class="row i1"><span class="elbow">└</span><span class="kw">compose</span><span>feeds/home<span class="c-sig">:</span>append</span><span class="note">action, declared</span></div>
+          </div>
+          <div class="budget">
+            <div class="bar" role="img" aria-label="One shared pool, spent by four frames">
+              <span style="width: 22%; background: var(--bar-1)"></span>
+              <span style="width: 17%; background: var(--bar-2)"></span>
+              <span style="width: 9%; background: var(--bar-3)"></span>
+              <span style="width: 14%; background: var(--bar-4)"></span>
+            </div>
+            <div class="bar-caption mono"><span>spent by four frames</span><span>one shared pool</span></div>
+          </div>
+          <div class="pills">
+            <span class="pill">depth, cycles · 508</span>
+            <span class="pill">function → action · 403</span>
+            <span class="pill">undeclared call · refused</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Limits -->
+  <section class="section container split limits">
+    <div class="copy">
+      <span class="eyebrow">Resource limits</span>
+      <h2 class="h2"><a href="/security/">A verb that never returns is cut off.</a></h2>
+      <p class="lede">
+        Servers enforce a wall-clock limit and a compute limit separately, because counting instructions does not stop a
+        verb that stalls, and a timer alone is not deterministic. Each breach has its own status code.
+      </p>
+      <div class="table card">
+        <div class="trow thead"><span>Limit</span><span>Status</span><span>restactd default</span></div>
+        {
+          limits.map((l) => (
+            <div class="trow">
+              <span>{l.limit}</span>
+              <span class="mono">{l.status}</span>
+              <span class="mono soft">{l.value}</span>
+            </div>
+          ))
+        }
+      </div>
+      <p class="fine">A verb that asks for more at deploy time is clamped to the operator’s ceilings.</p>
+    </div>
+    <div class="grow">
+      <CodeBlock variant="terminal" html={limitsSession} />
+    </div>
+  </section>
+
+  <!-- Authoring -->
+  <section class="section band">
+    <div class="container split top">
+      <div class="copy narrow">
+        <span class="eyebrow">Authoring</span>
+        <h2 class="h2"><a href="/start/">Write a verb. Deploy it with one request.</a></h2>
+        <p class="lede">
+          JavaScript and Python verbs are uploaded as source and interpreted by a runner the server ships, with no build
+          step. Rust and anything else that emits a WASI 0.2 component upload as compiled <span class="code-inline">.wasm</span>.
+        </p>
+        <p class="lede">
+          Inside the verb, <span class="code-inline">obj</span> is the object the URL names. Its writes are that object’s
+          data, readable with a plain GET.
+        </p>
+        <a class="link-arrow" href="/start/">Follow the quick start →</a>
+      </div>
+      <div class="grow wide">
+        <Tabs label="Verb language" tabs={tabs}>
+          <Fragment slot="js">
+            <CodeBlock lang="js" code={jsCode} label="visit.js · an action bound to every object under pages/" />
+            <CodeBlock html={jsShell} label="shell" />
+          </Fragment>
+          <Fragment slot="py">
+            <CodeBlock lang="python" code={pyCode} label="bump.py · an action bound to every object under counters/" />
+            <CodeBlock html={pyShell} label="shell" />
+          </Fragment>
+          <Fragment slot="rs">
+            <CodeBlock lang="rust" code={rsCode} label="src/lib.rs · a function written with restact-sdk" />
+            <CodeBlock html={rsShell} label="shell" />
+          </Fragment>
+        </Tabs>
+      </div>
+    </div>
+  </section>
+
+  <!-- Presentation verbs -->
+  <section class="section container split top" id="views">
+    <div class="copy narrow">
+      <span class="eyebrow">Presentation verbs</span>
+      <h2 class="h2"><a href="/presentation-verbs/">Screens are verbs too.</a></h2>
+      <p class="lede">
+        A presentation verb is a function that returns <span class="code-inline">application/vnd.restact.ui+json</span>, a tree of nodes from a closed catalog. A generic
+        client builds its navigation from the discovery document and renders whatever it finds, so deploying a verb adds a
+        screen without a client release.
+      </p>
+      <p class="lede">
+        The catalog is the trust boundary. It has no raw-HTML node, the client escapes every string, and a node type it
+        does not know renders inert.
+      </p>
+      <a class="link-arrow" href="/presentation-verbs/">How presentation verbs work →</a>
+    </div>
+    <div class="grow wide views">
+      <div class="json"><CodeBlock html={viewJson} copy={false} label="application/vnd.restact.ui+json" /></div>
+      <div class="card render">
+        <div class="eyebrow small">Rendered by a generic client</div>
+        <div class="render-title">Reading list</div>
+        <div class="stats">
+          <div class="stat"><div class="n mono">12</div><div class="l">saved</div></div>
+          <div class="stat"><div class="n mono">3</div><div class="l">unread</div></div>
+        </div>
+        <div class="mock-card">
+          <span class="rule-warn" aria-hidden="true"></span>
+          <div class="mock-body">
+            <div class="mock-row"><div class="mock-title">The REST:ACT draft</div><span class="badge mono">unread</span></div>
+            <div class="mock-sub">spec · 18 min</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Discovery -->
+  <section class="section band">
+    <div class="container split">
+      <div class="copy">
+        <span class="eyebrow">Discovery</span>
+        <h2 class="h2"><a href="/spec/">A small core, and the server says what else it does.</a></h2>
+        <p class="lede">
+          The mandatory core is addressing and invocation, capability confinement with per-call limits, the
+          runs-as-caller rule, Problem Details errors and a discovery document. The data plane, events, schedules and
+          queries are optional feature tokens.
+        </p>
+        <p class="lede">
+          A client never assumes a feature the server does not advertise, and a verb that needs a missing one gets <span class="code-inline">501</span>. A stateless function gateway and a full object server can both conform.
+        </p>
+      </div>
+      <div class="grow">
+        <CodeBlock html={discoveryJson} label="/.well-known/restact" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Compare -->
+  <section class="section container col" id="compare">
+    <div class="head-row between">
+      <div class="head-left">
+        <span class="eyebrow">Compared with other approaches</span>
+        <h2 class="h2"><a href="/compare/">Where REST:ACT sits</a></h2>
+      </div>
+      <a class="link-arrow" href="/compare/">Read the full comparison →</a>
+    </div>
+    <div class="compare">
+      {
+        compare.map((c) => (
+          <div class="cell">
+            <h3>{c.title}</h3>
+            <p>
+              {parts(c.body).map((p) => (p.startsWith('`') ? <code>{p.slice(1, -1)}</code> : p))}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Tools -->
+  <section class="section band" id="tools">
+    <div class="container col">
+      <div class="head-left">
+        <span class="eyebrow">Implementations and tools</span>
+        <h2 class="h2">Run it, test it, write for it</h2>
+      </div>
+      <div class="tools">
+        {
+          tools.map((t) => (
+            <a class:list={['card', 'tool', { primary: t.primary }]} href={t.href}>
+              <span class="tool-name mono">{t.name}</span>
+              <span class="tool-body">{t.body}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Closing call to action -->
+  <section class="final container">
+    <div class="final-card">
+      <div class="final-copy">
+        <h2>Read the draft, then run a server.</h2>
+        <p class="lede">
+          The draft is an individual Internet-Draft with intended category Experimental, on the independent stream. It is
+          not a standard, and it has one implementation.
+        </p>
+      </div>
+      <div class="final-actions">
+        <CodeBlock html={ctaSession} copy={false} />
+        <div class="btns">
+          <a class="btn btn--primary" href="/spec/">Read the specification</a>
+          <a class="btn" href="/start/">Get started</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Shared bits ------------------------------------------------------------------------- */
+  .strong {
+    color: var(--ink);
+  }
+  .soft {
+    color: var(--ink-2);
+  }
+  .copy {
+    flex: 1 1 360px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .copy.narrow {
+    flex-basis: 340px;
+  }
+  .grow {
+    flex: 1.2 1 520px;
+    min-width: 0;
+  }
+  .grow.wide {
+    flex: 1.4 1 560px;
+  }
+  .split {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    align-items: center;
+  }
+  .split.top {
+    align-items: flex-start;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .col > .head-left {
+    flex: none;
+  }
+  .head-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1 1 460px;
+    min-width: 0;
+  }
+  .head-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 48px;
+    align-items: flex-end;
+  }
+  .head-row.between {
+    justify-content: space-between;
+    gap: 16px 48px;
+  }
+  .head-right {
+    flex: 1 1 400px;
+    min-width: 0;
+  }
+  .card h3 {
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  /* Hero -------------------------------------------------------------------------------- */
+  .hero {
+    padding-block: clamp(48px, 8vw, 104px) clamp(56px, 7vw, 88px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 56px;
+    align-items: center;
+  }
+  .hero-copy {
+    flex: 1 1 420px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .draft-pill {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    padding: 7px 13px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-2);
+  }
+  .draft-pill:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .sq {
+    width: 7px;
+    height: 7px;
+    flex: none;
+    border-radius: 2px;
+    background: var(--signal);
+  }
+  h1 {
+    font-size: clamp(48px, 7vw, 88px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+  .hero-lede {
+    max-width: 540px;
+    font-size: clamp(17px, 1.6vw, 20px);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .hero-sub {
+    max-width: 520px;
+    color: var(--ink-3);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 4px;
+  }
+  .hero-demo {
+    flex: 1 1 540px;
+    min-width: 0;
+  }
+
+  /* Status strip ------------------------------------------------------------------------ */
+  .status {
+    border-block: 1px solid var(--hair);
+    background: var(--band);
+  }
+  .status-grid {
+    padding-block: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px 32px;
+  }
+  .status-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .status-item .label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .status-item .value {
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .status-item .value.mono {
+    font-size: 14px;
+  }
+
+  /* The colon --------------------------------------------------------------------------- */
+  .colon {
+    align-items: flex-start;
+  }
+  .stack {
+    flex: 1.3 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .grammar {
+    padding: 22px 24px;
+    background: var(--sunk);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 2;
+    overflow-x: auto;
+  }
+  .bnf {
+    padding-bottom: 6px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  .forms {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 28px;
+    min-width: 460px;
+    margin: 0;
+  }
+  .forms dt {
+    color: var(--ink);
+  }
+  .forms dd {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+    gap: 16px;
+  }
+  .kind {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .kind-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .kind p {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  /* Security ---------------------------------------------------------------------------- */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+    gap: 16px;
+  }
+  .rule {
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .rule .num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .rule p {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .rule .tag {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  .duo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .panel {
+    flex: 1 1 440px;
+    min-width: 0;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .panel-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .panel-copy h3 {
+    font-size: 22px;
+  }
+  .panel-copy p {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .venn {
+    position: relative;
+    height: 300px;
+    max-width: 420px;
+    width: 100%;
+    align-self: center;
+  }
+  .circle {
+    position: absolute;
+    width: 52%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: var(--venn);
+  }
+  .c1 { left: 8%; top: 0; }
+  .c2 { right: 8%; top: 0; }
+  .c3 { left: 24%; top: 32%; }
+  .vl {
+    position: absolute;
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .l1 { left: 0; top: 6px; }
+  .l2 { right: 0; top: 6px; text-align: right; }
+  .l3 { left: 0; right: 0; bottom: 0; text-align: center; }
+  .call {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: var(--signal);
+    color: var(--on-signal);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tree {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .tree .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 380px;
+    color: var(--ink);
+  }
+  .tree .row :global(.method) {
+    width: 40px;
+    font-size: 13px;
+  }
+  .tree .i1 { padding-left: 22px; }
+  .tree .i2 { padding-left: 44px; }
+  .tree .elbow { color: var(--mark-dash); }
+  .tree .kw { width: 64px; color: var(--ink-3); }
+  .tree .note { font-size: 11.5px; color: var(--ink-3); }
+  .budget {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bar {
+    display: flex;
+    height: 14px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--sunk);
+  }
+  .bar span + span {
+    border-left: 2px solid var(--sunk);
+  }
+  .bar-caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Limits ------------------------------------------------------------------------------ */
+  .table {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 14px;
+  }
+  .trow {
+    display: grid;
+    grid-template-columns: 1.3fr 0.6fr 1fr;
+    gap: 8px;
+    padding: 13px 18px;
+    font-size: 15px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .trow:last-child {
+    border-bottom: 0;
+  }
+  .trow.thead {
+    padding-block: 11px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .fine {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-3);
+  }
+
+  /* Presentation verbs ------------------------------------------------------------------ */
+  .views {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .json {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+  .json :global(pre) {
+    font-size: 12.5px;
+    line-height: 1.65;
+  }
+  .render {
+    flex: 1 1 240px;
+    min-width: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .eyebrow.small {
+    font-size: 11px;
+  }
+  .render-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .stat {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .stat .n {
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .stat .l {
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .mock-card {
+    display: flex;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .rule-warn {
+    width: 4px;
+    flex: none;
+    background: var(--warn);
+  }
+  .mock-body {
+    flex: 1;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mock-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .mock-title {
+    font-weight: 500;
+  }
+  .badge {
+    padding: 1px 7px;
+    border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--warn);
+  }
+  .mock-sub {
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+
+  /* Compare ----------------------------------------------------------------------------- */
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: 1px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--line);
+  }
+  .cell {
+    padding: 24px;
+    background: var(--ground);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cell h3 {
+    font-size: 18px;
+  }
+  .cell p {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .cell code {
+    background: none;
+    padding: 0;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  /* Tools ------------------------------------------------------------------------------- */
+  .tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+    gap: 14px;
+  }
+  .tool {
+    min-height: 150px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--ink);
+    transition: border-color 120ms ease;
+  }
+  .tool:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .tool.primary {
+    border-color: var(--line-strong);
+  }
+  .tool-name {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .tool-body {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  /* Closing card ------------------------------------------------------------------------ */
+  .final {
+    padding-block: clamp(64px, 8vw, 96px);
+  }
+  .final-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px 48px;
+    align-items: center;
+    padding: clamp(28px, 5vw, 56px);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--raised);
+  }
+  .final-copy {
+    flex: 1 1 420px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .final-copy h2 {
+    font-size: clamp(28px, 3vw, 40px);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+  }
+  .final-actions {
+    flex: 1 1 380px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 520px) {
+    .trow {
+      padding-inline: 12px;
+      font-size: 14px;
+    }
+  }
+</style>
