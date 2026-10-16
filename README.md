@@ -12,7 +12,11 @@ pnpm dev      # http://localhost:4321
 pnpm build    # writes dist/
 ```
 
-Node 22+ and pnpm 10 (`corepack enable` installs the pinned pnpm from `package.json`).
+Node 24+ and pnpm 12 (`corepack enable` installs the pnpm pinned in `package.json`).
+`pnpm-workspace.yaml` keeps the lockfile in the one-document form that GitHub's dependency graph,
+and so Dependabot, can read. It also carries the one-day supply-chain hold, which an install never
+bypasses, and the rulings on dependency install scripts. Dependabot proposes updates weekly,
+waiting out the same one-day hold.
 
 ## Deploy (Cloudflare Workers, static assets)
 
@@ -25,7 +29,8 @@ dashboard:
 | Build command | empty (or `pnpm build`; harmless) |
 | Deploy command | `npx wrangler deploy` |
 | Worker name | `restact-site` (must match `name` in `wrangler.jsonc`) |
-| Node version | `22` (read from `.node-version`) |
+| Node version | `24.22.0` (read from `.node-version`) |
+| pnpm version | from `packageManager` in `package.json` (the build image's own pnpm switches to it) |
 
 **Keep `wrangler.jsonc`.** Without it, `wrangler deploy` runs its framework autoconfig, which adds
 `@astrojs/cloudflare` (`astro add cloudflare`) and builds through the adapter. In October 2026 that
