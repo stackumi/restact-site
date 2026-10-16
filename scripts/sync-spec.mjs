@@ -51,7 +51,7 @@ const front = draft
       inAuthor = true;
       return [l];
     }
-    if (/^\S/.test(l)) inAuthor = false; // the next top-level key ends the author list
+    if (/^\S/.test(l) && !/^-(\s|$)/.test(l)) inAuthor = false; // the next top-level key ends the author list
     if (!inAuthor) return [l];
     if (/^\s*-\s+ins:/.test(l)) return [l]; // compact form: `- ins: N. Byrd`
     if (/^\s*-\s*$/.test(l) || /^\s*ins:/.test(l)) return [l];

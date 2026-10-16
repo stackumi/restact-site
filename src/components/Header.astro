@@ -6,7 +6,7 @@ import { NAV, GITHUB } from '../site.config';
 /**
  * Sticky, translucent site header. The DOM follows the visible desktop order (brand, nav, actions); the
  * menu button sits just before the nav so an open menu is the next Tab stop. The nav marks the current section with aria-current (a link is
- * current when the page path starts with its href). Below 880px the nav folds into a disclosure
+ * current when the page path starts with its href). Below 1040px the nav folds into a disclosure
  * button; without JavaScript it stays open as a wrapped row.
  *
  * Props
@@ -168,7 +168,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     display: none;
   }
 
-  @media (max-width: 879px) {
+  @media (max-width: 1039px) {
     .bar {
       position: relative;
       gap: 8px;
@@ -246,6 +246,10 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     document.addEventListener('click', (e) => {
       const t = e.target as Node;
       if (toggle.getAttribute('aria-expanded') === 'true' && !nav.contains(t) && !toggle.contains(t)) set(false);
+    });
+    // Close when keyboard focus leaves the header, so the open menu never covers the focused element.
+    document.addEventListener('focusin', (e) => {
+      if (toggle.getAttribute('aria-expanded') === 'true' && !toggle.closest('header')!.contains(e.target as Node)) set(false);
     });
   }
 </script>
