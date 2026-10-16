@@ -1,0 +1,69 @@
+---
+layout: ../layouts/MdPage.astro
+title: Compared with other approaches
+description: REST:ACT adds one thing to HTTP APIs, a way for a client to install new behavior at runtime under the caller's authority. This page sets it beside REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, and MCP.
+chips:
+  - Explanatory
+  - 'Normative text: draft, Relationship to Google AIP and JSON:API'
+---
+
+import Callout from '../components/Callout.astro';
+
+Each approach below solves a problem that REST:ACT does not try to solve, and the reverse holds too. The table gives the short form, and the sections under it give the differences in detail.
+
+| Approach | Who defines behavior, and when | What it provides that REST:ACT leaves out |
+|---|---|---|
+| REST and OpenAPI | The API's developers, before release | A large tooling ecosystem for describing a fixed API |
+| RPC and gRPC | The developers, in an IDL compiled into the server | Code generation, bidirectional streaming, a binary wire format |
+| GraphQL | The developers write resolvers; the client picks the shape of each read | Ad hoc reads with no deployment |
+| Serverless platforms | The account that deploys the function | Outbound network access, any library, platform-scale placement |
+| Wasm platforms | The application's developers or platform team | Packaging, workload placement, multi-host distribution |
+| MCP | The tool author, who exposes tools to an AI application | Prompts and a session model |
+
+## Plain REST and OpenAPI
+
+REST:ACT keeps methods, status codes, conditional requests and caching, and adds the `:verb` suffix from AIP-136. It sits at Richardson Level 2 and extends the uniform interface on purpose, as OData does with its actions and functions.
+
+A client that only does CRUD sees an ordinary REST API, and discovery can point to a generated OpenAPI 3.1 document. OpenAPI describes an API whose behavior its developers fixed. REST:ACT adds a way to change that behavior at runtime.
+
+## RPC and gRPC
+
+Procedures there are defined in an IDL and compiled into the server. A verb is addressed off a resource, uses the HTTP method that matches its side effects, reports errors as RFC 9457 problem details, and may carry a `restact_grpc_code` for clients that expect one.
+
+gRPC supplies code generation, bidirectional streaming calls and a binary wire format, which the draft leaves out of scope.
+
+## GraphQL
+
+The client picks the shape of a read at request time, over resolvers the server's developers wrote. REST:ACT accessor verbs (`:get`, `:list`) play the role of resolvers and can compose child accessors, but a new shape means deploying a verb.
+
+An ad hoc GraphQL read needs no deployment, while a REST:ACT function is a cacheable `GET`.
+
+## Serverless platforms
+
+On AWS Lambda or Cloudflare Workers for Platforms the deploying account typically owns the function's credentials and bill. A REST:ACT verb is deployed by an API client, runs as each caller, is charged to that caller, and is addressed by the resource it works on.
+
+Workers for Platforms runs customers' code in a multi-tenant setting, and REST:ACT specifies an open HTTP surface and authority rules for that job. The draft allows such sandboxes as executors; restactd ships in-process and process isolation only.
+
+A function platform gives code outbound network access and any library. A verb gets no socket interface. With the optional `llm-connector` feature it can ask the server for one bounded model completion through an owner-governed connector, and its descriptor then reports `networkAccess: "outbound"`.
+
+## Wasm platforms
+
+Spin and wasmCloud also run components with only the interfaces they are granted. There, the application's developers or platform team build and deploy components with tools like `spin` and `wash`.
+
+REST:ACT is a wire protocol for the clients of an API to upload components at runtime, bound to objects and run under per-caller authority. Packaging, workload placement and multi-host distribution belong to those platforms, and their standard interface sets are larger.
+
+## MCP
+
+The Model Context Protocol standardizes how an AI application discovers and calls the tools a server's author exposes. REST:ACT standardizes how a caller installs a new verb.
+
+The two compose. verbsmith serves a host's verbs as MCP tools and its objects as MCP resources, so an agent can deploy a verb and call it in one session. Prompts and a session model are part of MCP and outside REST:ACT.
+
+## Google AIP and JSON:API
+
+REST:ACT is a compatible extension of the Google API Design Guide. Its object and collection model follows AIP-122 and its data methods follow the standard methods. Verb invocation adopts the custom methods of AIP-136, and extends them by treating the colon-verb as an object that a path can continue past. AIP-136 is silent on what follows a custom method, so this is a superset that does not conflict, and any AIP-136 endpoint is already a valid REST:ACT endpoint. Pagination (AIP-158), filtering (AIP-160), field masks (AIP-161) and operations (AIP-151) are adopted as the draft describes.
+
+From JSON:API, REST:ACT borrows the optional relationship representation and the `source.pointer` error convention. It does not adopt JSON:API as its native representation, nor gRPC-style status objects.
+
+<Callout title="Where the ideas come from">
+  The draft draws on OData, AIP-136, JSON:API and the WebAssembly Component Model.
+</Callout>

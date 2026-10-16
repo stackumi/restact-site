@@ -1,0 +1,30 @@
+---
+/** Three overlapping sets: the authority intersection (caller, verb's declared capabilities, target's policy). */
+---
+
+<div
+  class="venn"
+  role="img"
+  aria-label="Three overlapping sets: the caller's permissions, the verb's declared capabilities and the target's policy. The call may do only what lies in all three."
+>
+  <span class="circle c1"></span>
+  <span class="circle c2"></span>
+  <span class="circle c3"></span>
+  <span class="vl l1">the caller’s<br />permissions</span>
+  <span class="vl l2">the verb’s declared<br />capabilities</span>
+  <span class="vl l3">the target’s policy</span>
+  <span class="call">the call</span>
+</div>
+
+<style>
+  .venn { position: relative; height: 300px; max-width: 420px; width: 100%; margin-inline: auto; }
+  .circle { position: absolute; width: 52%; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--venn); }
+  .c1 { left: 8%; top: 0; }
+  .c2 { right: 8%; top: 0; }
+  .c3 { left: 24%; top: 32%; }
+  .vl { position: absolute; font-size: 13px; color: var(--ink-2); }
+  .l1 { left: 0; top: 6px; }
+  .l2 { right: 0; top: 6px; text-align: right; }
+  .l3 { left: 0; right: 0; bottom: 0; text-align: center; }
+  .call { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); padding: 4px 9px; border-radius: 7px; background: var(--signal); color: var(--on-signal); font-family: var(--font-mono); font-size: 12px; font-weight: 600; white-space: nowrap; }
+</style>

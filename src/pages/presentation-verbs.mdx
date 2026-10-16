@@ -1,0 +1,90 @@
+---
+layout: ../layouts/MdPage.astro
+title: Presentation verbs
+description: A presentation verb is a function that returns a screen as data. The document is built from a closed catalog of node types, a generic client renders it, and the catalog has no node that can carry script.
+chips:
+  - Explanatory
+  - 'Normative text: Presentation verbs and the vnd.restact.ui+json media type'
+asideLinks:
+  - label: Normative text
+    href: /spec/presentation-verbs/
+---
+
+import CodeBlock from '../components/CodeBlock.astro';
+import Callout from '../components/Callout.astro';
+import UiDocumentDemo from '../components/UiDocumentDemo.astro';
+import NodeFamilies from '../components/NodeFamilies.astro';
+import { term } from '../lib/term';
+
+export const deploy = term(`
+$ curl -g -X POST --data-binary @home-view.js \\
+    'localhost:8080/v1/modules?verb=lists/{id}¦homeView&kind=function&lang=text/javascript&produces=application/vnd.restact.ui+json'
+$ curl -i localhost:8080/v1/lists/7¦homeView
+«HTTP/1.1 200 OK»
+content-type: application/vnd.restact.ui+json
+x-content-type-options: nosniff
+`);
+
+REST:ACT lets a client change what a server does by uploading a verb. Presentation verbs extend that to what a user sees. A verb returns a declarative UI document, and a generic client draws it. Deploying the verb adds a screen, a field or a view without a release of the client.
+
+This page explains the idea. The media type and the client's obligations are specified in the [normative text](/spec/presentation-verbs/).
+
+## What a presentation verb is
+
+A presentation verb is an ordinary verb with three properties.
+
+1. Its kind is `function`, so it is invoked with `GET`, is cacheable, and cannot write.
+2. It declares `produces=application/vnd.restact.ui+json` at deploy time.
+3. It returns a UI document, a JSON tree of catalog nodes. It usually reads the bound object's data through the gated `object` capability.
+
+Nothing else is special. It runs under the same sandbox, the same limits and the same run-as-caller rule as any verb, so a view only ever contains what the caller may read.
+
+<CodeBlock variant="terminal" html={deploy} />
+
+Two naming conventions are in use. A top-level view binds a collection with no `{id}` template, such as `library:homeView`, and becomes a navigation entry. A per-object view is templated, such as `library/book/{id}:detailView`, renders one object, and is reached by drill-down.
+
+## A document and the screen it becomes
+
+The document below is the output of a small view. A client that knows the catalog turns it into the screen beside it.
+
+<UiDocumentDemo />
+
+Every node is a JSON object with a `type` naming a catalog component. The rest of its fields are that component's properties. The root of a document is always a `page`.
+
+## The catalog is the trust boundary
+
+An untrusted verb can only compose from the catalog, and the catalog has no node for `<script>`, inline event handlers, `javascript:` URLs or arbitrary tags. The client is trusted and generic, and it does the following with whatever arrives.
+
+- It escapes every string, and creates text only through text nodes.
+- It restricts every URL field to safe schemes. Object paths in a document resolve only against the server's own data plane, so external URLs and `data:` URIs cannot be written.
+- It validates every verb route in the document against the route grammar before it requests anything.
+- It renders an unknown node type as an inert placeholder and ignores unknown fields on known nodes, so a newer verb degrades safely on an older client.
+- It parses markdown, where a field is declared as markdown source, to a closed set of elements. Raw HTML inside it shows as literal text.
+
+The catalog has one exception that carries code, `sandboxIframe`. It shows author-supplied content in an opaque-origin iframe with `sandbox="allow-scripts"` and no `allow-same-origin`, and the frame holds only a read-only, short-lived token confined to a subtree. No other node may emit markup, load a remote URL or run code.
+
+Because the view runs as the caller, a document cannot carry data past the object access rules.
+
+<Callout title="Declared constraints are advice">
+  A form can declare constraints and confirm prompts, and a client may use them to decline a submit. They are interface help, not a security control. The server validates all input whatever the document said.
+</Callout>
+
+## Node types
+
+The registry lists 41 node types, and it only grows: a registered type is never removed or redefined, and new capability arrives as new types or new optional fields. The names below are grouped for reading. Each field of each node, and the client's obligation for it, is in the registry.
+
+<NodeFamilies />
+
+## How a client finds views
+
+A server that supports presentation verbs lists `presentation-verbs` in `service.features`, and marks each view in its descriptor with `role: "view"`. A client fetches `GET /.well-known/restact`, takes every verb with that role, treats the untemplated ones as navigation and the templated ones as per-object views, and renders each by calling it. The client needs no built-in knowledge of the application's domain.
+
+Some nodes depend on other optional features. The `upload` node needs `binary-values` in the discovery document, and a client renders it inert, with a notice, when the token is missing. A view can ask for a refresh on a timer with `page.refresh`, or for a refetch when named objects change with `page.subscribe`, which needs `event-subscriptions`.
+
+## Where it sits
+
+The earlier technique for a verb to show something is `render-html`, a function that reads object data and returns a finished HTML page for a browser. A presentation verb returns a structured tree instead. That moves the trust boundary from sanitizing the verb's HTML to the verb never emitting HTML.
+
+A view can also take the name of a reserved accessor, `:get` or `:list`, so that a plain `GET` of the object serves the UI document.
+
+Presentation verbs are aimed at clients that know the catalog. They cannot restructure a fixed third-party client that has no extension point for them.

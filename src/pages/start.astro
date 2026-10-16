@@ -1,0 +1,434 @@
+---
+import Base from '../layouts/Base.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import Tabs from '../components/Tabs.astro';
+import Callout from '../components/Callout.astro';
+import { term } from '../lib/term';
+import { GITHUB, RESTACTD_DOCS } from '../site.config';
+
+/* Get started: a guided walk-through of restactd. Every command here is checked against the
+   restactd README and docs/getting-started.md; those documents win over the design canvas. */
+
+const modes = [
+  { id: 'docker', label: 'Docker' },
+  { id: 'source', label: 'From source' },
+];
+
+const dockerShell = term(`
+$ git clone https://github.com/stackumi/restactd
+$ cd restactd
+$ make docker-build     ⟨# host, example verbs, JavaScript and Python runners⟩
+$ make docker-run       ⟨# serves http://localhost:8080 until Ctrl-C⟩
+`);
+
+const sourceShell = term(`
+$ git clone https://github.com/stackumi/restactd
+$ cd restactd
+$ rustup toolchain install       ⟨# the toolchain pinned in rust-toolchain.toml⟩
+$ cargo install cargo-component --locked
+$ make build-js-runner           ⟨# the JavaScript verb tier⟩
+$ cargo run -p restactd          ⟨# serves http://127.0.0.1:8080⟩
+`);
+
+const health = term(`
+$ curl localhost:8080/healthz
+«ok»
+`);
+
+const helloJs = `// hello.js
+function invoke(input) {
+  return \`Hello, \${input || "world"}!\`;
+}`;
+
+const helloShell = term(`
+$ curl -X POST --data-binary @hello.js \\
+    'localhost:8080/v1/modules?verb=greeter¦hello&kind=function&lang=text/javascript'
+$ curl 'localhost:8080/v1/greeter¦hello?input=Ada'
+«Hello, Ada!»
+`);
+
+const visitJs = `// visit.js
+function invoke(input) {
+  const n = Number(obj.get("visits") ?? 0) + 1;
+  obj.set("visits", String(n));
+  return { visits: n };
+}`;
+
+const visitShell = term(`
+$ curl -g -X POST --data-binary @visit.js \\
+    'localhost:8080/v1/modules?verb=pages/{id}¦visit&kind=action&lang=text/javascript'
+$ curl -X POST localhost:8080/v1/pages/home¦visit
+«{"visits":1}»
+$ curl -X POST localhost:8080/v1/pages/home¦visit
+«{"visits":2}»
+$ curl localhost:8080/v1/pages/home
+«{"visits":"2"}»
+`);
+
+const spinShell = term(`
+$ echo 'function invoke(input) { while (true) {} }' > spin.js
+$ curl -X POST --data-binary @spin.js \\
+    'localhost:8080/v1/modules?verb=greeter¦spin&kind=function&lang=text/javascript'
+$ curl -i localhost:8080/v1/greeter¦spin
+«HTTP/1.1 429 Too Many Requests»
+⟨…⟩
+{ …, «"restact_code"»: ‹"cpu-budget"› }
+`);
+
+const endpoints = [
+  { route: '/.well-known/restact', note: 'features, languages, default limits, verbs' },
+  { route: '/openapi.json', note: 'OpenAPI 3.1 of the live surface' },
+  { route: '/v1', note: 'the objects you can read' },
+];
+
+const next = [
+  {
+    title: 'Authoring verbs',
+    body: 'JavaScript, Python, Rust with restact-sdk, and any toolchain that emits WASI 0.2 components.',
+    href: RESTACTD_DOCS.authoringVerbs,
+  },
+  { title: 'HTTP API', body: 'Every route, header and status code restactd serves.', href: RESTACTD_DOCS.httpApi },
+  {
+    title: 'Configuration',
+    body: 'Authentication, storage, process isolation and the production checklist.',
+    href: RESTACTD_DOCS.configuration,
+  },
+  {
+    title: 'Agents and MCP',
+    body: 'Plugins that teach a coding agent REST:ACT, and verbsmith, which serves verbs as MCP tools.',
+    href: GITHUB.plugins,
+  },
+];
+---
+
+<Base
+  title="Get started"
+  description="Run restactd, the reference server, on your own machine, deploy a JavaScript verb with one request, and watch a limit stop a verb that never returns."
+>
+  <div class="container page">
+    <header class="head">
+      <span class="eyebrow">Get started</span>
+      <h1>Run a server and deploy your first verb</h1>
+      <p class="lede">
+        This walk-through uses restactd, the reference server, on your own machine. The first build compiles Wasmtime and
+        takes a few minutes. After that, every step is a curl command.
+      </p>
+    </header>
+
+    <ol class="steps">
+      <li>
+        <div class="rail"><span class="num primary">1</span></div>
+        <div class="body">
+          <h2>Start restactd</h2>
+          <Tabs label="How to run restactd" tabs={modes} id="run-mode">
+            <Fragment slot="docker">
+              <p class="note-text">
+                You need git, make, Docker and curl. The image includes the example verbs and the JavaScript and Python
+                runners. No image is published yet, so you build one from a checkout.
+              </p>
+              <CodeBlock variant="terminal" html={dockerShell} />
+            </Fragment>
+            <Fragment slot="source">
+              <p class="note-text">
+                You need rustup 1.28 or later, git, make, curl and a C toolchain. The checkout pins Rust 1.99.0 and the <span class="code-inline">wasm32-wasip2</span> target, and installing <span class="code-inline">cargo-component</span> compiles it from source.
+              </p>
+              <CodeBlock variant="terminal" html={sourceShell} />
+            </Fragment>
+          </Tabs>
+          <p>
+            In a second terminal, confirm the server is up. Startup prints <span class="code-inline">warning:</span> lines
+            for example verbs that are not built, which is expected.
+          </p>
+          <CodeBlock variant="terminal" html={health} />
+          <Callout tone="warn" title="The default server is open">
+            With no authentication configured, every caller is anonymous and may deploy, replace or delete any verb. The
+            server binds to loopback by default. <span class="code-inline">make docker-run</span> publishes the port on
+            127.0.0.1 only; <span class="code-inline">PORT=0.0.0.0:8080</span> would publish an unauthenticated server on every
+            interface. Read the <a href={`${RESTACTD_DOCS.configuration}#security`}>security section of the configuration guide</a>
+            before exposing it.
+          </Callout>
+        </div>
+      </li>
+
+      <li>
+        <div class="rail"><span class="num">2</span></div>
+        <div class="body">
+          <h2>Deploy a function</h2>
+          <p> <span class="code-inline">kind=function</span> makes callers use GET, and the host refuses any write the verb
+            attempts. <span class="code-inline">lang=</span> selects the language; the request’s Content-Type does not. Verb
+            names are camelCase.
+          </p>
+          <div class="pair">
+            <div class="small"><CodeBlock lang="js" code={helloJs} label="hello.js" /></div>
+            <div class="large"><CodeBlock variant="terminal" html={helloShell} /></div>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <div class="rail"><span class="num">3</span></div>
+        <div class="body">
+          <h2>Bind an action to every page</h2>
+          <p> <span class="code-inline">pages/{'{id}'}</span> binds the verb to every object under <span class="code-inline">pages/</span>. Inside the verb, <span class="code-inline">obj</span> is the object the
+            URL names, and its writes are that object’s data, readable with a plain GET. <span class="code-inline">-g</span> stops
+            curl from expanding <span class="code-inline">{'{id}'}</span>. Object properties are stored as strings, so the verb
+            returns the number 2 and the object holds "2".
+          </p>
+          <CodeBlock lang="js" code={visitJs} label="visit.js" />
+          <CodeBlock variant="terminal" html={visitShell} />
+        </div>
+      </li>
+
+      <li>
+        <div class="rail"><span class="num">4</span></div>
+        <div class="body">
+          <h2>Watch a limit stop a verb</h2>
+          <p>
+            A verb that never returns is cut off. The default limits are 2 s of wall-clock time, 200,000,000 fuel and 32 MiB
+            of memory, and a breach returns <span class="code-inline">408</span>, <span class="code-inline">429</span> or <span class="code-inline">507</span>.
+          </p>
+          <CodeBlock variant="terminal" html={spinShell} />
+        </div>
+      </li>
+
+      <li>
+        <div class="rail"><span class="num">5</span></div>
+        <div class="body">
+          <h2>Ask the server what it serves</h2>
+          <div class="endpoints">
+            {
+              endpoints.map((e) => (
+                <div class="ep">
+                  <span class="mono route">{e.route}</span>
+                  <span class="note">{e.note}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </li>
+    </ol>
+
+    <aside class="langs card" aria-labelledby="langs-h">
+      <h2 id="langs-h">Write it in Python or Rust</h2>
+      <p>
+        A Python verb is uploaded the same way as the JavaScript one, with <span class="code-inline">lang=text/x-python</span> and a Python runner (<span class="code-inline">make build-py-runner</span>, or the Docker image). A Rust verb written
+        with <span class="code-inline">restact-sdk</span> builds with plain <span class="code-inline">cargo build --target wasm32-wasip2</span> and uploads as a compiled <span class="code-inline">.wasm</span> without <span class="code-inline">lang=</span>. The authoring guide has a
+        section for each, and one for any other language that emits a WASI 0.2 component.
+      </p>
+      <p class="links">
+        <a href={`${RESTACTD_DOCS.authoringVerbs}#python-server-side-no-toolchain`}>Python</a>
+        <a href={`${RESTACTD_DOCS.authoringVerbs}#authoring-in-rust-the-reference-path`}>Rust</a>
+        <a href={`${RESTACTD_DOCS.authoringVerbs}#language-agnostic-uploads`}>Other languages</a>
+        <a href={RESTACTD_DOCS.authoringVerbs}>Authoring guide</a>
+      </p>
+    </aside>
+
+    <section class="next" aria-labelledby="next-h">
+      <h2 id="next-h">Where to go next</h2>
+      <div class="next-grid">
+        {
+          next.map((n) => (
+            <a class="next-card" href={n.href}>
+              <span class="t">{n.title}</span>
+              <span class="b">{n.body}</span>
+            </a>
+          ))
+        }
+      </div>
+      <p class="more">
+        To see how verbs, objects and the shared budget fit together, read <a href="/how-it-works/">How it works</a>.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page {
+    padding-block: clamp(40px, 7vw, 80px) 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 720px;
+  }
+  h1 {
+    font-size: clamp(36px, 5.4vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .steps > li {
+    display: flex;
+    gap: clamp(14px, 3vw, 24px);
+  }
+  .rail {
+    flex: none;
+    width: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .rail::after {
+    content: '';
+    flex: 1;
+    width: 1px;
+    margin: 8px 0;
+    background: var(--line);
+  }
+  li:last-child .rail::after {
+    display: none;
+  }
+  .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .num.primary {
+    background: var(--signal);
+    border-color: var(--signal);
+    color: var(--on-signal);
+  }
+  .body {
+    flex: 1;
+    min-width: 0;
+    padding-bottom: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  li:last-child .body {
+    padding-bottom: 0;
+  }
+  h2 {
+    margin-top: 2px;
+    font-size: 24px;
+    letter-spacing: -0.025em;
+  }
+  .body > p,
+  .note-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 680px;
+  }
+  .note-text {
+    margin-bottom: 12px;
+  }
+  .pair {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .small {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+  .large {
+    flex: 2 1 420px;
+    min-width: 0;
+  }
+  .endpoints {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 12px;
+  }
+  .ep {
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .route {
+    font-size: 13.5px;
+    overflow-wrap: anywhere;
+  }
+  .note {
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .langs {
+    padding: clamp(20px, 3vw, 28px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .langs h2 {
+    font-size: 22px;
+  }
+  .langs p {
+    color: var(--ink-2);
+    line-height: 1.6;
+    max-width: 760px;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-weight: 500;
+  }
+  .next {
+    border-top: 1px solid var(--hair);
+    padding-top: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .next h2 {
+    font-size: 28px;
+    letter-spacing: -0.03em;
+  }
+  .next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 14px;
+  }
+  .next-card {
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 120ms ease;
+  }
+  .next-card:hover {
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  .next-card .t {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .next-card .b {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .more {
+    color: var(--ink-2);
+  }
+</style>

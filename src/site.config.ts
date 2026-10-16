@@ -69,15 +69,13 @@ export const DOCS_NAV: NavGroup[] = [
     items: [
       { label: 'How it works', href: '/how-it-works/' },
       { label: 'Security', href: '/security/' },
+      { label: 'Compared with other approaches', href: '/compare/' },
       { label: 'Presentation verbs', href: '/presentation-verbs/' },
     ],
   },
   {
     title: 'Build',
-    items: [
-      { label: 'Get started', href: '/start/' },
-      { label: 'Compared with other approaches', href: '/compare/' },
-    ],
+    items: [{ label: 'Get started', href: '/start/' }],
   },
   {
     title: 'Reference',

@@ -1,0 +1,36 @@
+---
+/** A UI document rendered by a generic client: the reading-list example. Static mock. */
+---
+
+<div class="card render">
+  <div class="eyebrow small">Rendered by a generic client</div>
+  <div class="render-title">Reading list</div>
+  <div class="stats">
+    <div class="stat"><div class="n mono">12</div><div class="l">saved</div></div>
+    <div class="stat"><div class="n mono">3</div><div class="l">unread</div></div>
+  </div>
+  <div class="mock-card">
+    <span class="rule-warn" aria-hidden="true"></span>
+    <div class="mock-body">
+      <div class="mock-row"><div class="mock-title">The REST:ACT draft</div><span class="badge mono">unread</span></div>
+      <div class="mock-sub">spec · 18 min</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .render { padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .eyebrow.small { font-size: 11px; }
+  .render-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+  .stat .n { font-size: 24px; font-weight: 600; }
+  .stat .l { font-size: 13px; color: var(--ink-2); }
+  .mock-card { display: flex; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+  .rule-warn { width: 4px; flex: none; background: var(--warn); }
+  .mock-body { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .mock-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .mock-title { font-weight: 500; }
+  .badge { padding: 1px 7px; border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); border-radius: 6px; font-size: 11px; color: var(--warn); }
+  .mock-sub { font-size: 13px; color: var(--ink-2); }
+</style>

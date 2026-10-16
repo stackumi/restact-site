@@ -1,0 +1,117 @@
+---
+layout: ../layouts/MdPage.astro
+title: Security model
+description: A REST:ACT server runs code its clients upload, so the protocol assumes every upload is hostile. Four rules, enforced by every conformant server, bound what that code can reach, whose authority it carries and how much it can spend.
+chips:
+  - Explanatory
+  - 'Normative text: draft, Capability Model, Composition, Security Considerations'
+---
+
+import CodeBlock from '../components/CodeBlock.astro';
+import Callout from '../components/Callout.astro';
+import Venn from '../components/Venn.astro';
+import BudgetFigure from '../components/BudgetFigure.astro';
+import { term } from '../lib/term';
+
+export const spin = term(`
+$ echo 'function invoke(input) { while (true) {} }' > spin.js
+$ curl -X POST --data-binary @spin.js \\
+    'localhost:8080/v1/modules?verb=greeter¦spin&kind=function&lang=text/javascript'
+$ curl -i localhost:8080/v1/greeter¦spin
+«HTTP/1.1 429 Too Many Requests»
+content-type: application/problem+json
+
+{ …, «"restact_code"»: ‹"cpu-budget"› }
+`);
+
+A REST:ACT server executes code that its clients wrote. Code-writing assistants raise the demand for that and also the chance that the code is wrong or hostile, so the draft does not ask a server to judge an upload. It asks the server to confine whatever runs.
+
+The model is short. Four rules apply to every verb, and a server that skips one is not conformant.
+
+## The four rules
+
+1. A verb is a WebAssembly component. Every verb runs as a WASI 0.2 component. JavaScript and Python verbs are interpreted by a runner component inside the same sandbox, so nothing is compiled per upload.
+2. A verb reaches only what it imports. The imports of the component are its capability manifest, and there is no ambient authority beyond them. A server answers `403` at upload for an interface it does not grant, and none of the standard interfaces opens a socket or a file.
+3. A verb runs as the caller. A call can do what the caller could do directly and the verb declared, within the policy of the target. Its compute is charged to the caller.
+4. A verb is metered. Wall-clock, compute and memory limits apply to every call, and a verb that calls other verbs shares one budget with them.
+
+### Capabilities are an import list
+
+Because the manifest is the import list of the component, it can be read from the uploaded bytes without running them. The standard interfaces are `host` (logging), `identity` (a read-only view of the caller), `object`, `compose` and `event`; the last three are gated and a server grants them by policy. The package `rest-act:plugin` only grows. A new capability is a new interface, or a new method with its own feature token, so a component built against an earlier set keeps linking, and a client can read the discovery document before upload to learn whether a component's imports are all supported.
+
+## Whose authority a verb carries
+
+The effective authority of a call is the intersection of three sets: the caller's permissions on the targets the verb touches, the capabilities the verb declared, and the policy of each target object. A verb can therefore do nothing the caller could not do directly, and nothing it did not declare.
+
+<Venn />
+
+| Case | Runs as | Compute charged to |
+|---|---|---|
+| An ordinary call | The caller | The caller |
+| A trigger or schedule | The principal that registered it, attenuated to the subject only: no roles, groups, scopes or claims | The registrant |
+| A verb deployed with the `runs-as-owner` opt-in | The owner of the verb, attenuated the same way | The real caller |
+| A request with a delegated token | The grant's subject, bounded by the grant | The subject |
+
+The owner's opt-in is a setuid-style switch and is deliberately narrow. The owner makes it at deploy time, the execute policy is still checked against the real caller, the server advertises `runsAs: "owner"` in the verb's descriptor so callers know the verb does not act as them, and cost still lands on the real caller. A verb that opts in has to treat its input as untrusted, and the server must not hand the verb the real caller's identity through a channel the caller could forge.
+
+Ownership is fixed: nobody can be made the owner of an existing resource. That rule exists because code that runs under its owner's authority must only ever run as a principal who chose it.
+
+### Identity and policy
+
+A client authenticates with an OAuth 2.0 bearer token, typically a JWT carrying a subject and optional scopes and claims. A request without acceptable credentials for a protected operation gets `401`, and an authenticated request that lacks permission gets `403`. Authorization is a policy of allow and deny rules attached to an object or a verb. Each rule names subject matchers (`public`, `owner`, `sub:`, `role:`, `group:`, `scope:`, `claim:`) bound to fixed claims of the token, so two servers evaluate the same policy the same way.
+
+## Calls between verbs
+
+A verb may call other verbs only through the `compose` interface, and the server enforces five rules.
+
+<BudgetFigure />
+
+1. A declared call graph. A verb names every verb it may call. A call to anything else is refused before it runs, and the graph can be read from the verb's metadata.
+2. Attenuation. A callee runs with no more authority than its caller. The one exception is a callee that itself carries the owner's `runs-as-owner` opt-in, and cost still lands on the real caller.
+3. One shared budget. Every invocation in a request tree draws on one pool. A sub-invocation never gets a fresh budget, so a deep or wide tree costs about one call's budget.
+4. Bounds. Depth and fan-out are bounded and cycles are detected. Exceeding depth or finding a cycle returns `508`.
+5. Function purity. A function may not call an action, and may not write: `object.set` and `event.publish` from a function return `403` with `restact_code` `forbidden-side-effect`. A `GET` therefore stays free of side effects and safe to cache. A server should also refuse at deploy, with `400 invalid-call-graph`, a function that declares a call to an action it already knows.
+
+## Resource limits
+
+A server enforces a wall-clock limit and a compute limit separately. Counting instructions does not stop a verb that stalls without computing, and a timer alone is not deterministic. Each breach has its own status code.
+
+| Limit | Status | restactd default |
+|---|---|---|
+| Wall-clock time | `408` | 2 s |
+| Compute (fuel) | `429` | 200,000,000 |
+| Memory | `507` | 32 MiB |
+
+A verb that asks for more at deploy time, with `?fuel=`, `?mem_mb=` or `?wall_ms=`, is clamped to the operator's ceilings, `RESTACT_MAX_VERB_FUEL`, `RESTACT_MAX_VERB_MEMORY_MB` and `RESTACT_MAX_VERB_WALL_MS`. Operators can also cap a tenant's cumulative compute and calls over a window with `RESTACT_QUOTA_FUEL`, `RESTACT_QUOTA_CALLS` and `RESTACT_QUOTA_WINDOW_SECS`. Triggers, subscriptions and schedules count against the quota of the principal who registered them.
+
+<CodeBlock variant="terminal" html={spin} />
+
+## Credentials the server handles
+
+Some optional features let a server hold or spend a credential on someone's behalf. Each is advertised by its own feature token in the discovery document, and a client does not assume one the server does not list.
+
+| Feature token | What it does |
+|---|---|
+| `path-scoped-tokens` | `POST /v1/tokens/sub` mints a short-lived, read-only bearer confined to one object-path prefix. The mint is refused for a prefix the caller cannot read itself, and the token can never write, deploy or mint another. |
+| `delegated-tokens` | One principal, the subject, lets another, the actor, act for them within bounds. Both identities stay visible. Revoking a grant stops its tokens and the schedules and code installed under it, but not the data the actor already wrote. |
+| `secrets-management` | Object paths under an operator-configured mount forward a written `value` to an external secrets backend and store metadata only. No path on the server returns the value. |
+| `mediated-egress` | The server performs one bounded outbound HTTPS request for the caller through a connector object, splicing the owner's secret in at the moment of sending. The destination is limited by an operator allowlist, every resolved address is checked, one is pinned, and redirects are refused. |
+
+The server never formats a resolved secret into a string it could return, log or store, so a response or an audit line cannot contain one. Verbs have no socket interface; the optional `llm-connector` feature lets a verb ask the server for one bounded model completion through an owner-governed connector.
+
+## What the model does not cover
+
+The protocol limits what a verb can do, and some risks sit below that line.
+
+- Runtime bugs. A flaw in the WebAssembly runtime can expose host memory. The draft asks servers to patch runtimes quickly and to add process or virtual-machine isolation between tenants. restactd offers process isolation with `RESTACT_ISOLATION=process`.
+- Side channels. In-process isolation does not fully stop speculative-execution attacks. Deployments with sensitive tenants should isolate at the process or VM level and reduce the timer precision verbs can see.
+- The budget stops at a server boundary. Calling a verb on another REST:ACT server starts a fresh budget and call stack there, so a loop across servers is not seen by either server's cycle check. The draft suggests a bounded hop count and leaves full loop prevention to a later revision.
+- Commit atomicity. Whether a verb's writes commit key by key or all at once per call is advertised per server and not mandated.
+- Memory-unsafe source languages. Compiling C or C++ to WebAssembly does not make the verb's own linear memory safe.
+- Maturity. The specification is a `-00` draft with one implementation.
+
+<Callout tone="warn" title="Before exposing a server">
+  A default restactd is open and anonymous, on localhost. The restactd configuration guide has a production checklist: authentication on (<code>RESTACT_JWT_SECRET</code> or an OIDC issuer), a durable data directory, <code>RESTACT_ISOLATION=process</code>, tenant quotas with a window, object-binding left at its authenticated default, a deliberate bind address behind TLS, and a review of who can reach the management plane.
+</Callout>
+
+The full list is in [Configuration, production checklist](https://github.com/stackumi/restactd/blob/main/docs/configuration.md#production-checklist). The normative text is the [Security Considerations section of the draft](/spec/draft/#security).

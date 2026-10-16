@@ -1,0 +1,38 @@
+---
+import MethodTag from './MethodTag.astro';
+/** A call tree and the one shared pool its frames draw on. */
+---
+
+<figure class="budget-fig">
+  <div class="tree mono">
+    <div class="row"><MethodTag method="POST" /><span>/v1/docs/123<span class="c-sig">:</span>publish</span></div>
+    <div class="row i1"><span class="elbow">└</span><span class="kw">compose</span><span>docs/123<span class="c-sig">:</span>render</span><span class="note">function</span></div>
+    <div class="row i2"><span class="elbow">└</span><span class="kw">compose</span><span>docs/123<span class="c-sig">:</span>wordCount</span><span class="note">function</span></div>
+    <div class="row i1"><span class="elbow">└</span><span class="kw">compose</span><span>feeds/home<span class="c-sig">:</span>append</span><span class="note">action, declared</span></div>
+  </div>
+  <div class="budget">
+    <div class="bar" role="img" aria-label="One shared pool, spent by four frames">
+      <span style="width: 22%; background: var(--bar-1)"></span>
+      <span style="width: 17%; background: var(--bar-2)"></span>
+      <span style="width: 9%; background: var(--bar-3)"></span>
+      <span style="width: 14%; background: var(--bar-4)"></span>
+    </div>
+    <div class="bar-caption mono"><span>spent by four frames</span><span>one shared pool</span></div>
+  </div>
+</figure>
+
+<style>
+  .budget-fig { display: flex; flex-direction: column; gap: 16px; margin: 0; }
+  .tree { display: flex; flex-direction: column; gap: 8px; font-size: 13px; overflow-x: auto; padding-bottom: 2px; }
+  .tree .row { display: flex; align-items: center; gap: 10px; min-width: 380px; color: var(--ink); }
+  .tree .row :global(.method) { width: 40px; font-size: 13px; }
+  .tree .i1 { padding-left: 22px; }
+  .tree .i2 { padding-left: 44px; }
+  .tree .elbow { color: var(--mark-dash); }
+  .tree .kw { width: 64px; color: var(--ink-3); }
+  .tree .note { font-size: 11.5px; color: var(--ink-3); }
+  .budget { display: flex; flex-direction: column; gap: 8px; }
+  .bar { display: flex; height: 14px; border-radius: 5px; overflow: hidden; border: 1px solid var(--line); background: var(--sunk); }
+  .bar span + span { border-left: 2px solid var(--sunk); }
+  .bar-caption { display: flex; justify-content: space-between; gap: 12px; font-size: 11.5px; color: var(--ink-3); }
+</style>
