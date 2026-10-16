@@ -1,0 +1,318 @@
+---
+/**
+ * "One object, four requests": the home page hero panel. Four requests against the object
+ * notes/42; selecting one re-labels the parts of its URL and explains what the server does with it.
+ *
+ * All four views are in the HTML. The first shows by default and the script swaps which one is
+ * visible, so without JavaScript the first request still reads correctly. The request list is a
+ * group of toggle buttons (aria-pressed), native keyboard operation (Tab, Enter, Space) plus the
+ * arrow keys.
+ *
+ * Tones: ink / soft = neutral, sig = signal (the GET method and the verb), act = the POST colour.
+ */
+type Tone = 'ink' | 'soft' | 'sig' | 'act';
+interface Part {
+  text: string;
+  caption: string;
+  tone: Tone;
+  rule: Tone | 'line';
+  lead?: string; // the signal-coloured colon in front of a verb
+  gap?: boolean; // space after this part
+}
+interface Req {
+  method: string;
+  methodTone: Tone;
+  path: string;
+  short: string;
+  parts: Part[];
+  kind: string;
+  kindTone: Tone;
+  gist: string;
+  desc: string;
+}
+const reqs: Req[] = [
+  {
+    method: 'PUT', methodTone: 'soft', path: '/v1/notes/42', short: 'data',
+    parts: [
+      { text: 'PUT', caption: 'method', tone: 'soft', rule: 'line', gap: true },
+      { text: '/v1/notes/42', caption: 'object path: the noun', tone: 'ink', rule: 'line' },
+    ],
+    kind: 'DATA', kindTone: 'soft', gist: 'The object’s data, a JSON document',
+    desc: 'Plain HTTP on the object path reads and writes its data. No verb runs, and a client that only does CRUD sees an ordinary REST API.',
+  },
+  {
+    method: 'GET', methodTone: 'sig', path: '/v1/notes/42:wordCount', short: 'function',
+    parts: [
+      { text: 'GET', caption: 'method', tone: 'sig', rule: 'sig', gap: true },
+      { text: '/v1/notes/42', caption: 'object path', tone: 'ink', rule: 'line' },
+      { text: 'wordCount', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
+    ],
+    kind: 'FUNCTION', kindTone: 'sig', gist: 'Safe and cacheable',
+    desc: 'GET makes the verb a function. The host refuses any write it attempts, and a function may not call an action, so the response can be cached.',
+  },
+  {
+    method: 'POST', methodTone: 'act', path: '/v1/notes/42:archive', short: 'action',
+    parts: [
+      { text: 'POST', caption: 'method', tone: 'act', rule: 'act', gap: true },
+      { text: '/v1/notes/42', caption: 'object path', tone: 'ink', rule: 'line' },
+      { text: 'archive', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
+    ],
+    kind: 'ACTION', kindTone: 'act', gist: 'May change state',
+    desc: 'POST makes it an action. It can write the data of the object it is bound to, with the caller’s permissions, and its compute is charged to the caller.',
+  },
+  {
+    method: 'GET', methodTone: 'sig', path: '/v1/notes/42:archive/meta', short: 'verb property',
+    parts: [
+      { text: 'GET', caption: 'method', tone: 'sig', rule: 'sig', gap: true },
+      { text: '/v1/notes/42', caption: 'object path', tone: 'ink', rule: 'line' },
+      { text: 'archive', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
+      { text: '/meta', caption: 'property', tone: 'soft', rule: 'line' },
+    ],
+    kind: 'VERB PROPERTY', kindTone: 'soft', gist: 'The verb’s own metadata',
+    desc: 'A verb is itself an object. Its meta property reports kind, capabilities and limits, and code and policy sit beside it.',
+  },
+];
+---
+
+<div class="anatomy" data-anatomy>
+  <div class="top">
+    <span class="title">One object, four requests</span>
+    <span class="obj">notes/42</span>
+  </div>
+
+  <div class="views" aria-live="polite">
+    {
+      reqs.map((r, i) => (
+        <div class="view" data-view={i} hidden={i !== 0}>
+          <div class="parts">
+            {r.parts.map((p) => (
+              <div class={`part ${p.gap ? 'gap' : ''}`}>
+                <span class={`text t-${p.tone}`}>
+                  {p.lead && <span class="lead">{p.lead}</span>}
+                  {p.text}
+                </span>
+                <span class={`cap r-${p.rule}`}>{p.caption}</span>
+              </div>
+            ))}
+          </div>
+          <div class="explain">
+            <div class="kindrow">
+              <span class={`kind k-${r.kindTone}`}>{r.kind}</span>
+              <span class="gist">{r.gist}</span>
+            </div>
+            <p>{r.desc}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="reqs" role="group" aria-label="Requests">
+    {
+      reqs.map((r, i) => (
+        <button type="button" data-req={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+          <span class="dot" aria-hidden="true" />
+          <span class={`m t-${r.methodTone}`}>{r.method}</span>
+          <span class="p">{r.path}</span>
+          <span class="s">{r.short}</span>
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .anatomy {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px clamp(16px, 2vw, 22px);
+    border-bottom: 1px solid var(--hair);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+  .title {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .views {
+    padding: clamp(22px, 3vw, 34px) clamp(16px, 3vw, 34px) 26px;
+  }
+  .view[hidden] {
+    display: none;
+  }
+  .view {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .parts {
+    display: flex;
+    align-items: flex-start;
+    font-family: var(--font-mono);
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .part {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: none;
+  }
+  .part.gap {
+    margin-right: 18px;
+  }
+  .text {
+    font-size: clamp(18px, 2.3vw, 27px);
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: pre;
+  }
+  .lead {
+    color: var(--signal);
+  }
+  .cap {
+    border-top: 2px solid var(--line-strong);
+    padding-top: 7px;
+    font-size: 11.5px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .t-ink { color: var(--ink); }
+  .t-soft { color: var(--ink-2); }
+  .t-sig { color: var(--signal); }
+  .t-act { color: var(--action); }
+  .r-sig { border-top-color: var(--signal); }
+  .r-act { border-top-color: var(--action); }
+
+  .explain {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 18px;
+    border: 1px solid var(--hair);
+    border-radius: 12px;
+    background: var(--sunk);
+  }
+  .kindrow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+  .kind {
+    padding: 2px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  .k-sig { border-color: var(--signal); color: var(--signal); }
+  .k-act { border-color: var(--action); color: var(--action); }
+  .gist {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .explain p {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  .reqs {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+    border-top: 1px solid var(--hair);
+  }
+  .reqs button {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+  .reqs button:hover {
+    background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  }
+  .reqs button[aria-pressed='true'] {
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 2px;
+    background: var(--line-strong);
+  }
+  button[aria-pressed='true'] .dot {
+    background: var(--signal);
+  }
+  .m {
+    width: 42px;
+    flex: none;
+    font-weight: 600;
+  }
+  .p {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .s {
+    flex: none;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  @media (max-width: 520px) {
+    .s {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-anatomy]').forEach((root) => {
+    const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-req]'));
+    const views = Array.from(root.querySelectorAll<HTMLElement>('[data-view]'));
+    const select = (i: number, focus = false) => {
+      buttons.forEach((b, j) => b.setAttribute('aria-pressed', String(i === j)));
+      views.forEach((v, j) => (v.hidden = i !== j));
+      if (focus) buttons[i].focus();
+    };
+    buttons.forEach((b, i) => {
+      b.addEventListener('click', () => select(i));
+      b.addEventListener('keydown', (e) => {
+        const n = buttons.length;
+        const to = e.key === 'ArrowDown' ? (i + 1) % n : e.key === 'ArrowUp' ? (i + n - 1) % n : -1;
+        if (to < 0) return;
+        e.preventDefault();
+        select(to, true);
+      });
+    });
+  });
+</script>

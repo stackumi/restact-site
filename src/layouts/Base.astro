@@ -1,0 +1,70 @@
+---
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/jetbrains-mono';
+import sansLatin from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { INDEXABLE, SITE, THEME_KEY } from '../site.config';
+/**
+ * The page shell every page uses: head, theme pre-paint script, skip link, Header, <main>, Footer.
+ *
+ * Props
+ *   title        page name; the document title is "<title> · REST:ACT". Omit for the home page,
+ *                which is "REST:ACT · Every noun can act".
+ *   description  meta description (default: the site description)
+ *   wide         use the 1360px docs width in the header (the Docs layout sets this)
+ * Robots: <meta name="robots"> and /robots.txt both follow INDEXABLE in site.config.ts.
+ */
+interface Props {
+  title?: string;
+  description?: string;
+  wide?: boolean;
+}
+const { title, description = SITE.description, wide = false } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.tagline}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {!INDEXABLE && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0d1418" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin />
+    <!-- Pick the theme before first paint: the stored choice, else the OS preference. -->
+    <script is:inline define:vars={{ key: THEME_KEY }}>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        var t = null;
+        try {
+          t = localStorage.getItem(key);
+        } catch (e) {}
+        if (t !== 'dark' && t !== 'light') {
+          t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        root.setAttribute('data-theme', t);
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header wide={wide} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/theme';
+    </script>
+  </body>
+</html>

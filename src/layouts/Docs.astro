@@ -1,0 +1,457 @@
+---
+import Base from './Base.astro';
+import { DOCS_NAV } from '../site.config';
+/**
+ * The documentation template: left section nav, article column (760px), right "On this page",
+ * breadcrumb, meta chips, previous/next and an optional "Edit on GitHub" link.
+ *
+ * Props
+ *   title        the h1 and the document title
+ *   description  the lead paragraph under the h1 and the meta description
+ *   headings     Astro's `headings` array ({ depth, slug, text }[]); h2 and h3 build "On this page"
+ *   section      breadcrumb group; default: the DOCS_NAV group that contains this page
+ *   chips        small meta chips under the lead, e.g. ["Explanatory", "Normative text: draft §5"]
+ *   editUrl      "Edit on GitHub" link target; omit where the page has no source file
+ *   prev, next   { label, href } to override the order of DOCS_NAV, or null to hide one
+ *   asideLinks   extra links under the TOC: [{ label, href }]
+ * Slot: the article body. Direct children get the .prose styles (headings, tables, pre, callouts).
+ *
+ * To add a page: put it in DOCS_NAV (src/site.config.ts), then either write Markdown/MDX with
+ * `layout: ../layouts/MdPage.astro` in its frontmatter, or use this layout from an .astro page.
+ */
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+interface Link {
+  label: string;
+  href: string;
+}
+interface Props {
+  title: string;
+  description?: string;
+  headings?: Heading[];
+  section?: string;
+  chips?: string[];
+  editUrl?: string;
+  prev?: Link | null;
+  next?: Link | null;
+  asideLinks?: Link[];
+}
+const { title, description, headings = [], chips = [], editUrl, asideLinks = [] } = Astro.props;
+const path = Astro.url.pathname;
+
+const flat = DOCS_NAV.flatMap((g) => g.items);
+const at = flat.findIndex((l) => l.href === path);
+const group = DOCS_NAV.find((g) => g.items.some((l) => l.href === path));
+const section = Astro.props.section ?? group?.title;
+const prev =
+  Astro.props.prev !== undefined ? Astro.props.prev : at > 0 ? flat[at - 1] : { label: 'Home', href: '/' };
+const next = Astro.props.next !== undefined ? Astro.props.next : at >= 0 ? (flat[at + 1] ?? null) : null;
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<Base title={title} description={description} wide>
+  <div class="docs">
+    <nav class="side" aria-label="Documentation">
+      {
+        DOCS_NAV.map((g) => (
+          <div class="group">
+            <div class="group-title">{g.title}</div>
+            {g.items.map((l) => (
+              <a href={l.href} aria-current={l.href === path ? 'page' : undefined}>
+                {l.label}
+              </a>
+            ))}
+          </div>
+        ))
+      }
+    </nav>
+
+    <article class="article">
+      <details class="sections">
+        <summary>Sections</summary>
+        <nav aria-label="Documentation sections">
+          {
+            DOCS_NAV.map((g) => (
+              <div class="group">
+                <div class="group-title">{g.title}</div>
+                {g.items.map((l) => (
+                  <a href={l.href} aria-current={l.href === path ? 'page' : undefined}>
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            ))
+          }
+        </nav>
+      </details>
+
+      <div class="head">
+        {
+          section && (
+            <div class="crumb">
+              {section} <span class="sep">/</span> {title}
+            </div>
+          )
+        }
+        <h1>{title}</h1>
+        {description && <p class="lead">{description}</p>}
+        {
+          chips.length > 0 && (
+            <ul class="chips">
+              {chips.map((c) => (
+                <li>{c}</li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+
+      <div class="prose" data-prose>
+        <slot />
+      </div>
+
+      {
+        (prev || next) && (
+          <nav class="pager" aria-label="Previous and next">
+            {prev ? (
+              <a class="prev" href={prev.href} rel="prev">
+                <span class="dir">Previous</span>
+                <span class="name">{prev.label}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {next && (
+              <a class="next" href={next.href} rel="next">
+                <span class="dir">Next</span>
+                <span class="name">{next.label}</span>
+              </a>
+            )}
+          </nav>
+        )
+      }
+    </article>
+
+    <aside class="toc" aria-label="On this page">
+      <div class="toc-title">On this page</div>
+      {
+        toc.map((h) => (
+          <a href={`#${h.slug}`} class={h.depth === 3 ? 'sub' : undefined} data-toc={h.slug}>
+            {h.text}
+          </a>
+        ))
+      }
+      {
+        (asideLinks.length > 0 || editUrl) && (
+          <>
+            <div class="rule" />
+            {asideLinks.map((l) => (
+              <a href={l.href}>{l.label} →</a>
+            ))}
+            {editUrl && <a href={editUrl}>Edit on GitHub →</a>}
+          </>
+        )
+      }
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .docs {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 3vw, 32px);
+    display: grid;
+    grid-template-columns: 240px minmax(0, 760px) 220px;
+    justify-content: space-between;
+    gap: 0 48px;
+    align-items: start;
+  }
+  .side,
+  .toc {
+    position: sticky;
+    top: 69px;
+    max-height: calc(100vh - 69px);
+    overflow-y: auto;
+  }
+  .side {
+    padding: 36px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    font-size: 14.5px;
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .group-title,
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .group-title {
+    padding: 0 10px 8px;
+  }
+  .group a {
+    padding: 7px 10px;
+    border-radius: 8px;
+    color: var(--ink-2);
+  }
+  .group a:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .group a[aria-current='page'] {
+    background: var(--surface-2);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .article {
+    min-width: 0;
+    padding: 40px 0 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .crumb {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  .sep {
+    color: var(--line-strong);
+  }
+  h1 {
+    font-size: clamp(36px, 4.6vw, 54px);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+  .lead {
+    font-size: 20px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .chips li {
+    padding: 4px 9px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-2);
+  }
+
+  .pager {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    transition: border-color 120ms ease;
+  }
+  .pager a:hover {
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  .pager .next {
+    align-items: flex-end;
+    text-align: right;
+  }
+  .dir {
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .name {
+    font-weight: 500;
+  }
+
+  .toc {
+    padding: 44px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .toc-title {
+    padding-bottom: 4px;
+  }
+  .toc a {
+    color: var(--ink-2);
+  }
+  .toc a:hover {
+    color: var(--ink);
+  }
+  .toc a.sub {
+    padding-left: 14px;
+  }
+  .toc a[aria-current='location'] {
+    color: var(--signal);
+    font-weight: 500;
+  }
+  .rule {
+    height: 1px;
+    background: var(--line);
+    margin: 10px 0;
+  }
+
+  .sections {
+    display: none;
+  }
+
+  /* Below 1100px the right column folds away. */
+  @media (max-width: 1099px) {
+    .docs {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+    .toc {
+      display: none;
+    }
+  }
+  /* Below 880px the section nav becomes a disclosure at the top of the article. */
+  @media (max-width: 879px) {
+    .docs {
+      display: block;
+    }
+    .side {
+      display: none;
+    }
+    .article {
+      padding-top: 20px;
+    }
+    .sections {
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .sections summary {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ink-2);
+      cursor: pointer;
+      list-style: none;
+    }
+    .sections summary::-webkit-details-marker {
+      display: none;
+    }
+    .sections summary::after {
+      content: '+';
+      margin-left: auto;
+      color: var(--ink-3);
+    }
+    .sections[open] summary::after {
+      content: '–';
+    }
+    .sections nav {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 4px 8px 16px;
+      font-size: 15px;
+    }
+    .sections .group a {
+      padding: 11px 10px;
+    }
+  }
+</style>
+
+<script>
+  import { wireCopy } from '../scripts/copy';
+
+  // Markdown code fences are plain <pre> blocks; give each a copy button.
+  document.querySelectorAll<HTMLElement>('[data-prose] > pre').forEach((pre) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'md-code';
+    pre.replaceWith(wrap);
+    wrap.append(pre);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'md-copy';
+    button.textContent = 'Copy';
+    const status = document.createElement('span');
+    status.className = 'sr-only';
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    wrap.append(button, status);
+    wireCopy(button, pre, status);
+  });
+
+  // Mark the "On this page" entry for the section being read.
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc]'));
+  if (links.length && 'IntersectionObserver' in window) {
+    const byId = new Map(links.map((a) => [a.dataset.toc!, a]));
+    const targets = links.map((a) => document.getElementById(a.dataset.toc!)).filter(Boolean) as HTMLElement[];
+    const show = (id: string) =>
+      links.forEach((a) =>
+        a.dataset.toc === id ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current'),
+      );
+    show(targets[0]?.id ?? '');
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (hit && byId.has(hit.target.id)) show(hit.target.id);
+      },
+      { rootMargin: '-80px 0px -65% 0px' },
+    );
+    targets.forEach((t) => io.observe(t));
+  }
+</script>
+
+<style is:global>
+  /* Copy button on Markdown code fences (added by the script above). */
+  .md-code {
+    position: relative;
+  }
+  .md-copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .md-copy:hover {
+    color: var(--ink);
+  }
+</style>

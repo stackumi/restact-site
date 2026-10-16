@@ -1,0 +1,143 @@
+---
+import { Code } from 'astro:components';
+import type { ComponentProps } from 'astro/types';
+import { restactTheme } from '../lib/shiki-theme.mjs';
+/**
+ * A code block: optional label strip, a copy button, and Shiki highlighting that follows the
+ * theme tokens (only keywords take the signal colour).
+ *
+ * Props
+ *   code     source text; highlighted with Shiki when `lang` is given
+ *   lang     a Shiki language id ("js", "python", "rust", "json", "bash"); default plain text
+ *   html     pre-marked HTML for the <code> element instead of `code` (see lib/term.ts)
+ *   label    text on the left of the strip, e.g. a filename or "http"
+ *   variant  "plain" (default) or "terminal" (three dots and the label "shell")
+ *   copy     show the copy button (default true)
+ * The button and its live region are wired by the script below. Without JavaScript the block is
+ * still fully readable; the button is hidden until the script runs.
+ */
+interface Props {
+  code?: string;
+  lang?: ComponentProps<typeof Code>['lang'];
+  html?: string;
+  label?: string;
+  variant?: 'plain' | 'terminal';
+  copy?: boolean;
+}
+const { code = '', lang = 'text', html, label, variant = 'plain', copy = true } = Astro.props;
+const stripLabel = label ?? (variant === 'terminal' ? 'shell' : undefined);
+const showStrip = copy || stripLabel;
+---
+
+<figure class:list={['codeblock', variant]} data-codeblock>
+  {
+    showStrip && (
+      <div class="strip">
+        {variant === 'terminal' && (
+          <span class="dots" aria-hidden="true">
+            <i /><i /><i />
+          </span>
+        )}
+        {stripLabel && <span class="label">{stripLabel}</span>}
+        {copy && (
+          <button type="button" class="copy" data-copy hidden>
+            Copy
+          </button>
+        )}
+      </div>
+    )
+  }
+  <div class="body">
+    {
+      html !== undefined ? (
+        <pre><code set:html={html} /></pre>
+      ) : (
+        <Code code={code} lang={lang} theme={restactTheme} />
+      )
+    }
+  </div>
+  <span class="sr-only" role="status" aria-live="polite" data-copy-status></span>
+</figure>
+
+<style>
+  .codeblock {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--sunk);
+    overflow: hidden;
+  }
+  .strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 4px 8px 4px 16px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--sunk-head);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .terminal .strip {
+    padding-left: 16px;
+  }
+  .dots {
+    display: inline-flex;
+    gap: 7px;
+    margin-right: 4px;
+  }
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+  .label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .copy {
+    margin-left: auto;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+  .copy:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .copy[hidden] {
+    display: none;
+  }
+  .body :global(pre) {
+    padding: 16px 20px;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: var(--ink-2);
+  }
+  .body :global(code) {
+    font-family: var(--font-mono);
+  }
+</style>
+
+<script>
+  import { wireCopy } from '../scripts/copy';
+  document.querySelectorAll<HTMLElement>('[data-codeblock]').forEach((block) => {
+    const button = block.querySelector<HTMLButtonElement>('[data-copy]');
+    const pre = block.querySelector('pre');
+    if (!button || !pre) return;
+    button.hidden = false;
+    wireCopy(button, pre, block.querySelector<HTMLElement>('[data-copy-status]'));
+  });
+</script>

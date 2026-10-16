@@ -1,0 +1,30 @@
+---
+/**
+ * "REST:ACT" as live text in the brand face: REST and the colon in ink, ACT (the verb) in signal.
+ * Beside the mark the colon stays ink, because the mark already carries the lit colon.
+ * In running text write the name as plain text instead; this is for lockups only.
+ *
+ * Props
+ *   size  font size in px (default 21)
+ */
+interface Props {
+  size?: number;
+}
+const { size = 21 } = Astro.props;
+---
+
+<span class="wordmark" style={`font-size:${size}px`}>REST:<span class="lit">ACT</span></span>
+
+<style>
+  .wordmark {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .lit {
+    color: var(--signal);
+  }
+</style>

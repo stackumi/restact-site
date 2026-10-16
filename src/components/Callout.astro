@@ -1,0 +1,52 @@
+---
+/**
+ * A tone callout with the 4px left rule (the only place that rule is used).
+ *
+ * Props
+ *   tone   "note" (signal rule, the default) | "warn" | "danger"
+ *   title  bold first line
+ * Slot: the body, as inline content or paragraphs.
+ */
+interface Props {
+  tone?: 'note' | 'warn' | 'danger';
+  title?: string;
+}
+const { tone = 'note', title } = Astro.props;
+---
+
+<aside class={`callout ${tone}`}>
+  {title && <div class="title">{title}</div>}
+  <div class="body"><slot /></div>
+</aside>
+
+<style>
+  .callout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 18px 14px 22px;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--rule);
+    border-radius: 12px;
+    background: var(--surface);
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .note {
+    --rule: var(--signal);
+  }
+  .warn {
+    --rule: var(--warn);
+  }
+  .danger {
+    --rule: var(--danger);
+  }
+  .title {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .body :global(p + p) {
+    margin-top: 8px;
+  }
+</style>

@@ -1,0 +1,91 @@
+---
+import Wordmark from './Wordmark.astro';
+import { FOOTER, DRAFT } from '../site.config';
+/** Site footer: blurb, the link columns from site.config.ts (FOOTER), and the draft's docname. */
+---
+
+<footer class="site-footer">
+  <div class="inner">
+    <div class="cols">
+      <div class="about">
+        <Wordmark size={20} />
+        <p>An HTTP protocol for adding code to a server at runtime, and its Rust reference server.</p>
+      </div>
+      {
+        FOOTER.map((group) => (
+          <nav aria-label={group.title}>
+            <div class="head">{group.title}</div>
+            {group.items.map((item) => (
+              <a href={item.href}>{item.label}</a>
+            ))}
+          </nav>
+        ))
+      }
+    </div>
+    <div class="legal">{DRAFT.docname}</div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--hair);
+  }
+  .inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px var(--gutter) 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .cols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 36px 64px;
+  }
+  .about {
+    flex: 1 1 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .about p {
+    max-width: 320px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-3);
+  }
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 14.5px;
+  }
+  .head {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 7px;
+  }
+  nav a {
+    color: var(--ink-2);
+    padding: 4px 0;
+  }
+  nav a:hover {
+    color: var(--ink);
+  }
+  @media (max-width: 879px) {
+    nav a {
+      padding: 11px 0;
+    }
+  }
+  .legal {
+    border-top: 1px solid var(--hair);
+    padding-top: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+</style>

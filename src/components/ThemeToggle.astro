@@ -1,0 +1,34 @@
+---
+/**
+ * The light/dark toggle (44x44). The label always names the theme a press switches to; the click
+ * handler and the stored choice live in src/scripts/theme.ts, loaded once by Base.astro.
+ */
+---
+
+<button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to the light theme">
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="8.5"></circle>
+    <path d="M12 3.5v17"></path>
+    <path d="M12 7h3.5M12 11h6M12 15h5.5"></path>
+  </svg>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+  .theme-toggle:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+</style>
