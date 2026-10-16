@@ -1,0 +1,29 @@
+# Not a workspace: this file exists only because pnpm reads these settings from
+# pnpm-workspace.yaml. `packages:` is deliberately absent, so this directory is its own only
+# project. stackumi/website and stackumi/restact-site carry the same file.
+#
+# pmOnFail: ignore keeps pnpm-lock.yaml a single YAML document. Without it, pnpm 12 writes the
+# pinned pnpm into a first "env" document, and GitHub's dependency graph reads only that first
+# document, so Dependabot would see pnpm itself and none of the site's dependencies
+# (dependabot/dependabot-core#15904, open as of October 2026). The cost: a local pnpm 12 of
+# another version no longer switches itself to the `packageManager` pin. Cloudflare's build image
+# still does, because its own older pnpm reads `packageManager` and switches before this file
+# applies. Remove the line once GitHub reads multi-document lockfiles.
+#
+# minimumReleaseAge is the supply-chain hold: pnpm will not install a version published less than
+# 1440 minutes (one day) ago. pnpm 12 holds for a day by default, but by default it also lets a
+# range that only a newer release satisfies through, by writing an exclusion here. Set
+# explicitly, it is strict and FAILS the install instead. Never add a minimumReleaseAgeExclude
+# entry to get past it; wait for the release to age.
+#
+# allowBuilds: every dependency install script is ruled on here, by name. pnpm 12's
+# strictDepBuilds (on by default) fails the install on an undecided one instead of running it
+# unread; rule on it after reading its script, never with `pnpm approve-builds` or a silent `true`.
+#
+# esbuild: FALSE (denied). Its install script only downloads its platform binary as a fallback; the
+# binary it uses arrives as the `@esbuild/<platform>` optional dependency. Today esbuild is only an
+# optional peer of vite and is not installed, so the ruling is waiting for the day it is.
+pmOnFail: ignore
+minimumReleaseAge: 1440
+allowBuilds:
+  esbuild: false
