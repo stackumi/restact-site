@@ -1,0 +1,16 @@
+// Deploy this static site as a Worker with static assets only: no Worker script, no adapter.
+//
+// The file must exist. Without a Wrangler config, `wrangler deploy` runs its framework
+// autoconfig, which installs `@astrojs/cloudflare` (`astro add cloudflare`) and prerenders through
+// the adapter. That fails for this page (October 2026: "Failed to get static paths from the
+// Cloudflare prerender server … getAllWithMetadata is not a function", from a miniflare beta),
+// and a one-page static site has no use for the adapter anyway.
+{
+  // Must match the Worker's name in the Cloudflare dashboard.
+  "name": "restact-site",
+  "compatibility_date": "2026-10-15",
+  // Wrangler runs the Astro build itself, so a deploy never depends on the dashboard's build
+  // command (an extra `pnpm build` there is harmless).
+  "build": { "command": "pnpm run build" },
+  "assets": { "directory": "./dist" }
+}
