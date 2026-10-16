@@ -1,0 +1,67 @@
+---
+/**
+ * A document's own section list for the Docs layout's `side` slot: the top-level sections of the
+ * draft, so the left column can jump within a long page. Styled to match the layout's nav groups.
+ */
+interface Props {
+  title: string;
+  items: { href: string; label: string; num?: string }[];
+}
+const { title, items } = Astro.props;
+---
+
+<div class="spec-side">
+  <div class="spec-side-title">{title}</div>
+  {
+    items.map((i) => (
+      <a href={i.href}>
+        {i.num && <span class="n">{i.num}</span>}
+        {i.label}
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  .spec-side {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 22px;
+    margin-top: 4px;
+    border-top: 1px solid var(--hair);
+  }
+  .spec-side-title {
+    padding: 0 10px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  a {
+    display: flex;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  a:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .n {
+    flex: 0 0 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    padding-top: 1px;
+  }
+  @media (max-width: 879px) {
+    a {
+      padding: 10px;
+    }
+  }
+</style>

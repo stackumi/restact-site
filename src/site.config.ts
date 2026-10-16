@@ -83,6 +83,7 @@ export const DOCS_NAV: NavGroup[] = [
       { label: 'Specification', href: '/spec/' },
       { label: 'The Internet-Draft', href: '/spec/draft/' },
       { label: 'Presentation verbs, normative', href: '/spec/presentation-verbs/' },
+      { label: 'Registries', href: '/spec/registries/' },
     ],
   },
 ];

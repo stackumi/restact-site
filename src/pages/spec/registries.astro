@@ -1,0 +1,32 @@
+---
+import Docs from '../../layouts/Docs.astro';
+import SpecBody from '../../components/SpecBody.astro';
+import { renderPlain, readSpec, REGISTRY_FILES, SPECS_REPO, type Segment, type Heading } from '../../lib/specmd';
+
+// The registries README is the introduction; each registry file follows under its own anchor
+// (#feature-tokens, #ui-catalog-nodes, ...), and its headings are prefixed with that slug.
+const parts = [
+  { slug: 'registries', file: 'registries/README.md', prefix: 'registries-' },
+  ...REGISTRY_FILES.map((r) => ({ slug: r.slug, file: r.file, prefix: `${r.slug}-` })),
+];
+const segments: Segment[] = [];
+const headings: Heading[] = [];
+for (const p of parts) {
+  const r = renderPlain(readSpec(p.file), { file: p.file, idPrefix: p.prefix, baseDepth: 2, rootId: p.slug });
+  segments.push(...r.segments);
+  headings.push(...r.headings);
+}
+// "On this page" lists each registry and its sections; the catalog's many sub-headings stay out.
+const toc = headings.filter((h) => h.depth === 2 || (h.depth === 3 && !h.slug.startsWith('ui-catalog-nodes-')));
+---
+
+<Docs
+  title="Registries"
+  description="The IANA-style registries the draft requests, kept as tables in the specification repository until a formal IANA action. On publication these tables become the initial contents."
+  headings={toc}
+  chips={['Normative initial contents', 'Specification Required']}
+  editUrl={`${SPECS_REPO}/tree/main/registries`}
+  asideLinks={[{ label: 'Feature token browser', href: '/spec/#feature-tokens' }]}
+>
+  <SpecBody segments={segments} />
+</Docs>

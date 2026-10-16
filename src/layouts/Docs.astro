@@ -14,7 +14,10 @@ import { DOCS_NAV } from '../site.config';
  *   editUrl      "Edit on GitHub" link target; omit where the page has no source file
  *   prev, next   { label, href } to override the order of DOCS_NAV, or null to hide one
  *   asideLinks   extra links under the TOC: [{ label, href }]
- * Slot: the article body. Direct children get the .prose styles (headings, tables, pre, callouts).
+ * Slots
+ *   (default)    the article body. Direct children get the .prose styles (headings, tables, pre, callouts).
+ *   side         optional extra navigation under the section nav (e.g. a long document's own
+ *                section list); also shown inside the "Sections" disclosure on narrow screens.
  *
  * To add a page: put it in DOCS_NAV (src/site.config.ts), then either write Markdown/MDX with
  * `layout: ../layouts/MdPage.astro` in its frontmatter, or use this layout from an .astro page.
@@ -67,6 +70,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
           </div>
         ))
       }
+      <slot name="side" />
     </nav>
 
     <article class="article">
@@ -85,6 +89,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
               </div>
             ))
           }
+          <slot name="side" />
         </nav>
       </details>
 

@@ -1,0 +1,25 @@
+---
+import Docs from '../../layouts/Docs.astro';
+import SpecBody from '../../components/SpecBody.astro';
+import { renderPlain, readSpec, SPECS_REPO } from '../../lib/specmd';
+
+const file = 'presentation-verbs.md';
+// The document's own title line becomes the page title; the rest renders as written.
+const md = readSpec(file).replace(/^# .*\n+/, '');
+const doc = renderPlain(md, { file, baseDepth: 1 });
+const sourceUrl = `${SPECS_REPO}/blob/main/${file}`;
+---
+
+<Docs
+  title="Presentation verbs and their media type"
+  description="The application/vnd.restact.ui+json media type and the presentation-verb contract: a verb returns a declarative UI document drawn from a closed component catalog that a trusted client renders."
+  headings={doc.headings}
+  chips={['Normative', 'Companion to the draft']}
+  editUrl={sourceUrl}
+  asideLinks={[
+    { label: 'Component catalog registry', href: '/spec/registries/#ui-catalog-nodes' },
+    { label: 'Presentation verbs, explained', href: '/presentation-verbs/' },
+  ]}
+>
+  <SpecBody segments={doc.segments} />
+</Docs>

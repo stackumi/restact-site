@@ -2,11 +2,15 @@
 //   node scripts/check-site.mjs        (or: pnpm run check:content)
 //
 // Errors exit non-zero; warnings do not. What it enforces:
-//   - banned marketing/AI-tell wording in visible text (allowed inside <code> and <pre>)
+//   - banned marketing/AI-tell wording in visible text (allowed inside <code> and <pre>); the three
+//     pages that render the vendored specification verbatim (VERBATIM) are exempt, because the
+//     normative text is not ours to reword. Their meta descriptions are still checked.
 //   - no email addresses, no names or hosts that must not be published
 //   - noindex meta on every page, and a disallowing robots.txt, while INDEXABLE is false
 //   - exactly one <h1> per page
-//   - internal links and same-site anchors resolve; links to routes of the planned site map that
+//   - no duplicate id on a page, and no kramdown or template leftovers ({{ref}}, {:ial}, {::ext},
+//     "--- middle") in the rendered specification pages under /spec/
+//   - internal links and same-site anchors resolve (every href="#x" needs a matching id="x"); links to routes of the planned site map that
 //     are not built yet are warnings, anything else is an error
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -17,6 +21,9 @@ const CONFIG = new URL('../src/site.config.ts', import.meta.url).pathname;
 // The planned site map (the brief's information architecture). A link to one of these that is not
 // built yet is a warning. Remove an entry once its page ships if you want the check to be strict.
 const PLANNED = ['/', '/how-it-works/', '/security/', '/compare/', '/presentation-verbs/', '/start/', '/spec/', '/spec/draft/', '/spec/presentation-verbs/'];
+
+// Pages whose body is the specification text itself, rendered from src/content/spec.
+const VERBATIM = ['/spec/draft/', '/spec/presentation-verbs/', '/spec/registries/'];
 
 const BANNED_WORDS = [
   /\bseamless(?:ly)?\b/i, /\brobust(?:ness)?\b/i, /\bleverag(?:e|es|ed|ing)\b/i, /\bpowerful\b/i,
@@ -89,7 +96,7 @@ for (const file of pages) {
 
   // (a) banned words, outside code
   for (const re of BANNED_WORDS) {
-    const m = (text + ' ' + desc).match(re);
+    const m = ((VERBATIM.includes(page) ? '' : text) + ' ' + desc).match(re);
     if (m) err(page, `banned wording "${m[0]}"`);
   }
   // (b) emails, anywhere in the markup (scripts and styles excluded)
@@ -104,6 +111,19 @@ for (const file of pages) {
   // (e) one h1
   const h1s = (noScripts.match(/<h1[\s>]/g) ?? []).length;
   if (h1s !== 1) err(page, `${h1s} <h1> elements (want exactly 1)`);
+  // (e2) duplicate ids
+  const seenIds = new Set();
+  for (const m of noScripts.matchAll(/\sid="([^"]+)"/g)) {
+    if (seenIds.has(m[1])) err(page, `duplicate id "${m[1]}"`);
+    seenIds.add(m[1]);
+  }
+  // (e3) markup that should have been consumed by the specification renderer
+  if (page.startsWith('/spec/')) {
+    const body = decode(noScripts.replace(/<[^>]+>/g, ' '));
+    for (const [re, label] of [[/\{\{/, '{{'], [/\{:/, '{:'], [/^---\s+(?:abstract|middle|back)\b/m, '--- section marker'], [/@@\w+@@/, '@@ placeholder'], [/\u0000/, 'NUL placeholder']]) {
+      if (re.test(body)) err(page, `unrendered markup "${label}"`);
+    }
+  }
   // (f) links
   for (const m of noScripts.matchAll(/<a\b[^>]*?\shref="([^"]*)"/g)) {
     const href = decode(m[1]);

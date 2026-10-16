@@ -24,6 +24,24 @@ be published, a second `<h1>`, a robots or `noindex` setting that disagrees with
 broken internal links or anchors. Routes that are planned but not built yet are reported as
 warnings, one per route.
 
+## The specification pages
+
+`/spec/`, `/spec/draft/`, `/spec/presentation-verbs/` and `/spec/registries/` are rendered at build
+time from copies of the sources in `stackumi/restact-specs`, committed under `src/content/spec/`
+(the Cloudflare build needs no sibling checkout). `SOURCE.json` there records the source commit.
+When the specification changes, a person runs
+
+```sh
+corepack pnpm sync:spec [path-to-restact-specs]   # default ../restact-specs
+corepack pnpm verify
+```
+
+and commits the result. The sync strips the draft author's `name:` and `email:` lines, so no
+address enters this repository. `src/lib/specmd.ts` turns the kramdown-rfc draft and the plain
+Markdown files into HTML (section numbering, `{#anchor}` ids, `{{xref}}` links, references,
+BCP 14 keywords). `src/lib/spec-map.ts` holds the hand-written gists and core/optional tags for the
+section map on `/spec/`; the build fails if the draft gains a top-level section with no entry.
+
 ## Layout
 
 | Path | What |

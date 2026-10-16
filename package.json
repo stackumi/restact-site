@@ -9,6 +9,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "sync:spec": "node scripts/sync-spec.mjs",
     "check:content": "node scripts/check-site.mjs",
     "verify": "astro check && astro build && node scripts/check-site.mjs"
   },
@@ -16,7 +17,8 @@
     "@astrojs/mdx": "^8.1.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
-    "astro": "^7.3.8"
+    "astro": "^7.3.8",
+    "marked": "^18.1.1"
   },
   "engines": {
     "node": ">=24"

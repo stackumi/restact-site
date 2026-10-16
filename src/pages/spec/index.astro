@@ -1,0 +1,691 @@
+---
+import Base from '../../layouts/Base.astro';
+import { plain, DRAFT_PATH, REGISTRIES_PATH, SPECS_REPO, DRAFT_FILE, featureTokens, renderDraft, readSpec, sectionText, witSummary } from '../../lib/specmd';
+import { SECTION_MAP, UNMAPPED, type Tag } from '../../lib/spec-map';
+import { GITHUB } from '../../site.config';
+
+/* The specification hub. Copy and structure follow the approved canvas (Spec.dc.html). The section
+   map, the mandatory core check, the feature-token list and the WIT summary are all read from the
+   vendored sources at build time (src/content/spec, scripts/sync-spec.mjs). */
+
+const doc = renderDraft();
+const f = doc.front;
+const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
+
+// The mandatory core is the list in "Conformance and Feature Discovery". The page words it in six
+// lines; fail the build if the draft's list stops saying these things.
+const conformance = plain(sectionText(doc, 'conformance')).replace(/\s+/g, ' ');
+for (const phrase of [
+  'A conformant server MUST implement',
+  'addressing grammar',
+  'invocation',
+  'capability confinement',
+  'resource limits',
+  'runs-as-caller',
+  'Problem Details',
+  'discovery',
+]) {
+  if (!conformance.includes(phrase)) throw new Error(`spec hub: the draft's conformance text no longer contains "${phrase}"`);
+}
+const core = [
+  'Addressing and verb invocation',
+  'Capability confinement, deny by default',
+  'Per-invocation resource limits',
+  'The runs-as-caller authority rule',
+  'Problem Details error responses',
+  'A discovery document',
+];
+
+const tiles = doc.sections
+  .filter((s) => s.depth === 1 && !UNMAPPED.has(s.id))
+  .map((s) => {
+    const m = SECTION_MAP[s.id];
+    if (!m) throw new Error(`spec hub: no gist for draft section "${s.id}" (${s.title}); add it to src/lib/spec-map.ts`);
+    return { ...s, ...m };
+  });
+const tagClass = (t: Tag) => ({ core: 't-core', optional: 't-opt', 'core + optional': 't-mixed', informative: 't-info', registry: 't-info' })[t];
+
+const tokens = featureTokens();
+const wit = witSummary();
+
+const documents = [
+  { name: 'The Internet-Draft', href: DRAFT_PATH, status: 'Normative', covers: 'The protocol: grammar, methods, capabilities, limits, discovery' },
+  {
+    name: 'Presentation verbs',
+    href: '/spec/presentation-verbs/',
+    status: 'Normative',
+    covers: 'The application/vnd.restact.ui+json media type',
+    mono: true,
+  },
+  { name: 'Registries', href: REGISTRIES_PATH, status: 'Normative initial contents', covers: 'Feature tokens, interfaces, languages, property names, catalog nodes, LLM providers' },
+  { name: 'WIT package', href: `${DRAFT_PATH}#appendix-wit`, status: 'Normative, draft appendix', covers: 'The host interfaces a verb may import' },
+  { name: 'x-restact OpenAPI extension', href: `${GITHUB.restactd}/tree/main/openapi`, status: 'Companion schema', covers: 'The schema of the x-restact extension in an OpenAPI document' },
+  { name: 'How it works', href: '/how-it-works/', status: 'Explanatory', covers: 'The model in prose, with diagrams' },
+];
+const registries = [
+  ['feature-tokens', 'Feature tokens'],
+  ['source-languages', 'Source languages'],
+  ['capability-interfaces', 'Capability interfaces'],
+  ['verb-property-names', 'Verb property names'],
+  ['ui-catalog-nodes', 'UI catalog nodes'],
+  ['llm-providers', 'LLM providers'],
+];
+---
+
+<Base
+  title="Specification"
+  description="The normative text of REST:ACT is an individual Internet-Draft, intended category Experimental, on the independent stream. It is not a standard."
+>
+  <section class="container hero">
+    <span class="eyebrow">Specification</span>
+    <h1>The draft is the contract.</h1>
+    <p class="lede">
+      The normative text is an individual Internet-Draft with intended category Experimental, on the independent
+      stream. It is not a standard. The key words <span class="kw">MUST</span>, <span class="kw">SHOULD</span> and{' '}
+      <span class="kw">MAY</span> are used as BCP 14 defines them (RFC 2119, RFC 8174) when they appear in capitals.
+    </p>
+  </section>
+
+  <section class="container draft">
+    <div class="card draftcard">
+      <div class="info">
+        <ul class="chips">
+          <li class="on">Normative</li>
+          <li>{f.category}</li>
+          <li>{f.stream.replace(' Submission', ' stream')}</li>
+        </ul>
+        <h2>{f.title}</h2>
+        <dl class="rows">
+          <dt>Document</dt>
+          <dd class="mono">{f.docname}</dd>
+          <dt>Author</dt>
+          <dd>{f.author}</dd>
+          <dt>Area</dt>
+          <dd>{f.area}</dd>
+          <dt>Guest contract</dt>
+          <dd class="mono">rest-act:plugin@0.1.0</dd>
+          <dt>Rendered from</dt>
+          <dd><a class="mono" href={`${SPECS_REPO}/commit/${source.commit}`}>restact-specs @ {source.commit.slice(0, 7)}</a></dd>
+        </dl>
+        <div class="actions">
+          <a class="btn btn--primary" href={DRAFT_PATH}>Read the draft</a>
+          <a class="btn" href={`${SPECS_REPO}/blob/main/${DRAFT_FILE}`}>Source on GitHub</a>
+        </div>
+      </div>
+      <div class="mandatory">
+        <div class="eyebrow">The mandatory core</div>
+        <p>
+          A conformant server implements these and advertises everything else
+          (<a href={`${DRAFT_PATH}#conformance`}>{doc.sections.find((s) => s.id === 'conformance')?.label}</a>).
+        </p>
+        <ul>
+          {
+            core.map((c) => (
+              <li>
+                <span class="kw">MUST</span>
+                {c}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="read">
+    <div class="container block">
+      <div class="head">
+        <h2 class="h2">The draft, section by section</h2>
+        <span class="note">each tile opens that section on this site</span>
+      </div>
+      <ul class="tiles">
+        {
+          tiles.map((t) => (
+            <li>
+              <a href={`${DRAFT_PATH}#${t.id}`}>
+                <span class="top">
+                  <span class="n">§{t.num}</span>
+                  <span class={`tag ${tagClass(t.tag)}`}>{t.tag}</span>
+                </span>
+                <span class="title">{t.title}</span>
+                <span class="gist">{t.gist}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="note">
+        Tags follow <a href={`${DRAFT_PATH}#conformance`}>the conformance section</a>: core is what a conformant server
+        must implement, optional is what it may implement and advertise.
+      </p>
+    </div>
+  </section>
+
+  <section class="container block split" id="feature-tokens">
+    <div class="intro">
+      <span class="eyebrow">Registry</span>
+      <h2 class="h2">Feature tokens</h2>
+      <p>
+        A server lists the optional features it supports in <span class="code-inline">service.features</span>. A client
+        may rely on a behavior only when its token is advertised. Token names are permanent; a feature whose contract
+        changes takes a new token.
+      </p>
+      <ul class="links">
+        {
+          registries
+            .filter(([slug]) => slug !== 'feature-tokens')
+            .map(([slug, label]) => (
+              <li>
+                <a href={`${REGISTRIES_PATH}#${slug}`}>{label}</a>
+              </li>
+            ))
+        }
+        <li><a href={`${REGISTRIES_PATH}#feature-tokens`}>The feature token registry, with its rules</a></li>
+      </ul>
+    </div>
+    <div class="browser" id="token-browser">
+      <div class="bar">
+        <label class="search">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"
+            ><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg
+          >
+          <input type="search" id="token-filter" placeholder={`Filter ${tokens.length} tokens`} aria-label="Filter feature tokens" autocomplete="off" />
+        </label>
+      </div>
+      <ul class="tokens" id="token-list">
+        {
+          tokens.map((t) => (
+            <li data-q={`${t.token} ${t.plain} ${t.status}`.toLowerCase()}>
+              <span class="name">{t.token}</span>
+              <span class="desc" set:html={t.html} />
+              <span class={`status ${t.status}`}>{t.status}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="count mono" id="token-count" role="status" aria-live="polite">{tokens.length} tokens</p>
+    </div>
+  </section>
+
+  <section class="band" id="wit">
+    <div class="container block">
+      <div class="head">
+        <h2 class="h2">The guest contract</h2>
+        <span class="note">
+          <a href={`${DRAFT_PATH}#appendix-wit`}>{doc.sections.find((s) => s.id === 'appendix-wit')?.label}</a>
+          of the draft, package rest-act:plugin@0.1.0
+        </span>
+      </div>
+      <div class="witgrid">
+        <div class="card witcol">
+          <h3>Interfaces</h3>
+          <dl>
+            {wit.interfaces.map((i) => (<><dt class="mono">{i.name}</dt><dd set:html={i.html} /></>))}
+          </dl>
+        </div>
+        <div class="card witcol">
+          <h3>Worlds</h3>
+          <dl>
+            {wit.worlds.map((i) => (<><dt class="mono">{i.name}</dt><dd set:html={i.html} /></>))}
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container block" id="documents">
+    <h2 class="h2">Every document</h2>
+    <div class="tablebox">
+      <table>
+        <thead>
+          <tr><th scope="col">Document</th><th scope="col">Status</th><th scope="col">Covers</th></tr>
+        </thead>
+        <tbody>
+          {
+            documents.map((d) => (
+              <tr>
+                <th scope="row"><a href={d.href}>{d.name}</a></th>
+                <td>{d.status}</td>
+                <td class={d.mono ? 'mono-cell' : undefined}>{d.covers}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(48px, 7vw, 88px) 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  h1 {
+    font-size: clamp(40px, 5.4vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .hero .lede {
+    max-width: 620px;
+    font-size: 18px;
+  }
+  .kw {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .draft {
+    padding-bottom: 56px;
+  }
+  .draftcard {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    border-color: var(--line-strong);
+    border-radius: 20px;
+  }
+  .info {
+    flex: 1.4 1 460px;
+    min-width: 0;
+    padding: clamp(24px, 4vw, 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .chips li {
+    padding: 4px 9px;
+    border-radius: 7px;
+    border: 1px solid var(--line-strong);
+    color: var(--ink-2);
+  }
+  .chips li.on {
+    border-color: var(--signal);
+    color: var(--signal);
+  }
+  .info h2 {
+    font-size: clamp(24px, 2.6vw, 32px);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  .rows {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 6px 22px;
+    margin: 0;
+    font-size: 15px;
+  }
+  .rows dt {
+    color: var(--ink-3);
+  }
+  .rows dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 6px;
+  }
+  .mandatory {
+    flex: 1 1 340px;
+    min-width: 0;
+    padding: clamp(24px, 4vw, 40px);
+    border-left: 1px solid var(--line);
+    background: var(--raised);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .mandatory p {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .mandatory ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    font-size: 15px;
+  }
+  .mandatory li {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .mandatory .kw {
+    width: 40px;
+    flex: none;
+    font-size: 11.5px;
+  }
+  @media (max-width: 700px) {
+    .mandatory {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  .block {
+    padding-block: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8px 16px;
+  }
+  .note {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  p.note {
+    margin: 0;
+  }
+
+  .tiles {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+  }
+  .tiles a {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    min-height: 108px;
+    padding: 18px 18px 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    transition: border-color 120ms ease;
+  }
+  .tiles a:hover {
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .n {
+    color: var(--ink-3);
+  }
+  .tag {
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .tag.t-core {
+    color: var(--signal);
+  }
+  .tag.t-mixed {
+    color: var(--ink-2);
+  }
+  .title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+  .gist {
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .split {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 40px;
+    align-items: flex-start;
+  }
+  .intro {
+    flex: 1 1 340px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .intro p {
+    color: var(--ink-2);
+  }
+  .links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .links a {
+    display: inline-block;
+    padding: 6px 0;
+  }
+  .browser {
+    flex: 1.6 1 560px;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--sunk);
+    overflow: hidden;
+  }
+  .bar {
+    display: none;
+    padding: 12px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--raised);
+  }
+  :global(.js) .bar {
+    display: block;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--sunk);
+    color: var(--ink-3);
+  }
+  .search:focus-within {
+    border-color: var(--signal);
+  }
+  .search input {
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    width: 100%;
+  }
+  .search input::placeholder {
+    color: var(--ink-3);
+  }
+  .tokens {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 640px;
+    overflow-y: auto;
+  }
+  .tokens li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .tokens li[hidden] {
+    display: none;
+  }
+  .tokens .name {
+    flex: 0 0 210px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .tokens .desc {
+    flex: 1 1 260px;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .tokens .status {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .tokens .status.reserved {
+    color: var(--warn);
+  }
+  .count {
+    margin: 0;
+    padding: 12px 18px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  @media (max-width: 560px) {
+    .tokens .name {
+      flex-basis: 100%;
+    }
+  }
+
+  .witgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+    gap: 16px;
+  }
+  .witcol {
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+  .witcol h3 {
+    font-size: 17px;
+    letter-spacing: -0.015em;
+  }
+  .witcol dl {
+    margin: 0;
+    display: grid;
+    gap: 14px;
+  }
+  .witcol dt {
+    font-size: 13.5px;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .witcol dd {
+    margin: 2px 0 0;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  .tablebox {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow-x: auto;
+    background: var(--surface);
+  }
+  table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  th,
+  td {
+    padding: 14px 20px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--hair);
+    color: var(--ink-2);
+  }
+  thead th {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  tbody th {
+    font-weight: 400;
+  }
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .mono-cell {
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+</style>
+
+<script>
+  // Filter the feature-token list. Without JavaScript the full list stays visible.
+  const input = document.getElementById('token-filter') as HTMLInputElement | null;
+  const items = Array.from(document.querySelectorAll<HTMLElement>('#token-list li'));
+  const count = document.getElementById('token-count');
+  if (input && count) {
+    const total = items.length;
+    const apply = () => {
+      const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+      let shown = 0;
+      for (const li of items) {
+        const q = li.dataset.q ?? '';
+        const hit = words.every((w) => q.includes(w));
+        li.hidden = !hit;
+        if (hit) shown++;
+      }
+      count.textContent = words.length ? `${shown} of ${total} shown` : `${total} of ${total} shown`;
+    };
+    input.addEventListener('input', apply);
+    apply();
+  }
+</script>

@@ -1,0 +1,147 @@
+/* Styles for rendered specification documents (the draft, presentation verbs, registries).
+   Everything hangs off .prose so it only applies inside the Docs layout. */
+
+/* BCP 14 key words: the wire face in quiet ink, not the signal colour. */
+.prose .kw {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Section numbers in headings, and the hover anchor link. */
+.prose .num {
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-3);
+  margin-right: 0.7em;
+  vertical-align: 0.12em;
+}
+.prose .anchor {
+  margin-left: 0.4em;
+  color: var(--ink-3);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.prose :is(h2, h3, h4):hover .anchor,
+.prose .anchor:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .prose .anchor {
+    opacity: 0.5;
+  }
+}
+
+/* Definition lists (the draft's terminology). */
+.prose dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 0;
+}
+.prose dt {
+  margin-top: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.prose dt:first-child {
+  margin-top: 0;
+}
+.prose dd {
+  margin: 0 0 0 18px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
+
+/* References: label column and entry. */
+.prose dl.refs {
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 10px 22px;
+  font-size: 15.5px;
+}
+.prose dl.refs dt {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.prose dl.refs dd {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .prose dl.refs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px 0;
+  }
+  .prose dl.refs dd {
+    margin-bottom: 10px;
+  }
+}
+
+/* The header card at the top of a rendered document. */
+.prose .doc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.prose .doc-card .rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 22px;
+  margin: 0;
+}
+.prose .doc-card .rows dt {
+  margin: 0;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.prose .doc-card .rows dd {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.prose .doc-card .mono {
+  font-size: 14px;
+}
+.prose .doc-card .statement {
+  margin: 0;
+  color: var(--ink);
+}
+.prose .doc-card .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.prose .doc-card .btn {
+  text-decoration: none;
+  min-height: 44px;
+  font-size: 15px;
+}
+@media (max-width: 560px) {
+  .prose .doc-card {
+    padding: 18px;
+  }
+  .prose .doc-card .rows {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .prose .doc-card .rows dd {
+    margin-bottom: 8px;
+  }
+}
