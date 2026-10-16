@@ -13,10 +13,10 @@ Each approach below solves a problem that REST:ACT does not try to solve, and th
 
 | Approach | Who defines behavior, and when | What it provides that REST:ACT leaves out |
 |---|---|---|
-| REST and OpenAPI | The API's developers, before release | A large tooling ecosystem for describing a fixed API |
+| REST and OpenAPI | The API's developers, before release | A contract fixed and documented before release |
 | RPC and gRPC | The developers, in an IDL compiled into the server | Code generation, bidirectional streaming, a binary wire format |
 | GraphQL | The developers write resolvers; the client picks the shape of each read | Ad hoc reads with no deployment |
-| Serverless platforms | The account that deploys the function | Outbound network access, any library, platform-scale placement |
+| Serverless platforms | The account that deploys the function | Outbound network access and any library |
 | Wasm platforms | The application's developers or platform team | Packaging, workload placement, multi-host distribution |
 | MCP | The tool author, who exposes tools to an AI application | Prompts and a session model |
 
@@ -60,7 +60,7 @@ The two compose. verbsmith serves a host's verbs as MCP tools and its objects as
 
 ## Google AIP and JSON:API
 
-REST:ACT is a compatible extension of the Google API Design Guide. Its object and collection model follows AIP-122 and its data methods follow the standard methods. Verb invocation adopts the custom methods of AIP-136, and extends them by treating the colon-verb as an object that a path can continue past. AIP-136 is silent on what follows a custom method, so this is a superset that does not conflict, and any AIP-136 endpoint is already a valid REST:ACT endpoint. Pagination (AIP-158), filtering (AIP-160), field masks (AIP-161) and operations (AIP-151) are adopted as the draft describes.
+REST:ACT is a compatible extension of the Google API Design Guide. Its object and collection model follows AIP-122 and its data methods follow the standard methods. Verb invocation adopts the custom methods of AIP-136, and extends them by treating the colon-verb as an object that a path can continue past. AIP-136 is silent on what follows a custom method, so this is a superset that does not conflict, and any AIP-136 custom method is already a valid REST:ACT verb invocation. Pagination (AIP-158), filtering (AIP-160), field masks (AIP-161) and operations (AIP-151) are adopted as the draft describes.
 
 From JSON:API, REST:ACT borrows the optional relationship representation and the `source.pointer` error convention. It does not adopt JSON:API as its native representation, nor gRPC-style status objects.
 

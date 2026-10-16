@@ -1,19 +1,13 @@
 ---
 /** The registered UI catalog node types, grouped for reading. Names only; the registry holds the contracts. */
-const families = [
-  { title: 'Layout', nodes: ['page', 'section', 'grid', 'columns', 'tabs', 'accordion', 'divider', 'toolbar', 'menu'] },
-  { title: 'Content', nodes: ['text', 'heading', 'quote', 'code', 'callout', 'badge', 'image', 'slideshow', 'field', 'fieldList', 'list', 'card'] },
-  { title: 'Data', nodes: ['table', 'dataGrid', 'stat', 'barChart', 'chartView', 'progress', 'meter', 'calendar', 'board', 'pageTree', 'diffView'] },
-  { title: 'Input and actions', nodes: ['form', 'action', 'upload', 'todo', 'cell'] },
-  { title: 'Links and embedding', nodes: ['link', 'externalLink', 'viewEmbed', 'sandboxIframe'] },
-];
+import { families } from '../lib/ui-catalog';
 ---
 
 <div class="families">
   {
     families.map((f) => (
       <section class="fam">
-        <h4>{f.title} <span class="count mono">{f.nodes.length}</span></h4>
+        <h3>{f.title} <span class="count mono">{f.nodes.length}</span></h3>
         <ul>
           {f.nodes.map((n) => (
             <li class="mono">{n}</li>
@@ -27,7 +21,7 @@ const families = [
 <style>
   .families { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin: 1.4em 0; }
   .fam { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
-  h4 { margin: 0 0 12px; font-size: 15px; font-weight: 600; letter-spacing: 0; display: flex; justify-content: space-between; gap: 8px; }
+  h3 { margin: 0 0 12px; font-size: 15px; font-weight: 600; letter-spacing: 0; display: flex; justify-content: space-between; gap: 8px; }
   .count { font-size: 12px; font-weight: 400; color: var(--ink-3); }
   ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
   li { padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 12.5px; color: var(--ink-2); background: var(--surface-2); }

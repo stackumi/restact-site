@@ -124,7 +124,7 @@ const next = [
             <Fragment slot="docker">
               <p class="note-text">
                 You need git, make, Docker and curl. The image includes the example verbs and the JavaScript and Python
-                runners. No image is published yet, so you build one from a checkout.
+                runners. No image is published, so you build one from a checkout.
               </p>
               <CodeBlock variant="terminal" html={dockerShell} />
             </Fragment>
@@ -237,7 +237,7 @@ const next = [
         }
       </div>
       <p class="more">
-        To see how verbs, objects and the shared budget fit together, read <a href="/how-it-works/">How it works</a>.
+        To see how objects, verbs and resolution fit together, read <a href="/how-it-works/">How it works</a>. The shared budget and limits are on <a href="/security/">Security</a>.
       </p>
     </section>
   </div>
@@ -331,6 +331,7 @@ const next = [
     max-width: 680px;
   }
   .note-text {
+    padding: 16px 20px 0;
     margin-bottom: 12px;
   }
   .pair {

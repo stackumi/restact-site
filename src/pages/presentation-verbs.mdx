@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/MdPage.astro
 title: Presentation verbs
-description: A presentation verb is a function that returns a screen as data. The document is built from a closed catalog of node types, a generic client renders it, and the catalog has no node that can carry script.
+description: A presentation verb is a function that returns a screen as data. The document is built from a closed catalog of node types, a generic client renders it, and only one node, a sandboxed iframe, can carry script.
 chips:
   - Explanatory
   - 'Normative text: Presentation verbs and the vnd.restact.ui+json media type'
@@ -15,17 +15,18 @@ import Callout from '../components/Callout.astro';
 import UiDocumentDemo from '../components/UiDocumentDemo.astro';
 import NodeFamilies from '../components/NodeFamilies.astro';
 import { term } from '../lib/term';
+import { nodeCount } from '../lib/ui-catalog';
 
 export const deploy = term(`
 $ curl -g -X POST --data-binary @home-view.js \\
-    'localhost:8080/v1/modules?verb=lists/{id}¦homeView&kind=function&lang=text/javascript&produces=application/vnd.restact.ui+json'
-$ curl -i localhost:8080/v1/lists/7¦homeView
+    'localhost:8080/v1/modules?verb=lists/{id}¦detailView&kind=function&lang=text/javascript&produces=application%2Fvnd.restact.ui%2Bjson'
+$ curl -i localhost:8080/v1/lists/7¦detailView
 «HTTP/1.1 200 OK»
 content-type: application/vnd.restact.ui+json
 x-content-type-options: nosniff
 `);
 
-REST:ACT lets a client change what a server does by uploading a verb. Presentation verbs extend that to what a user sees. A verb returns a declarative UI document, and a generic client draws it. Deploying the verb adds a screen, a field or a view without a release of the client.
+REST:ACT lets a client change what a server does by uploading a verb. Presentation verbs extend that to what a user sees. A verb returns a declarative UI document, and a generic client draws it. Deploying the verb adds a screen without a client release.
 
 This page explains the idea. The media type and the client's obligations are specified in the [normative text](/spec/presentation-verbs/).
 
@@ -56,7 +57,7 @@ Every node is a JSON object with a `type` naming a catalog component. The rest o
 An untrusted verb can only compose from the catalog, and the catalog has no node for `<script>`, inline event handlers, `javascript:` URLs or arbitrary tags. The client is trusted and generic, and it does the following with whatever arrives.
 
 - It escapes every string, and creates text only through text nodes.
-- It restricts every URL field to safe schemes. Object paths in a document resolve only against the server's own data plane, so external URLs and `data:` URIs cannot be written.
+- It restricts every URL field to safe schemes. Object-path fields resolve only against the server's own data plane, so an external URL or a `data:` URI cannot appear in one.
 - It validates every verb route in the document against the route grammar before it requests anything.
 - It renders an unknown node type as an inert placeholder and ignores unknown fields on known nodes, so a newer verb degrades safely on an older client.
 - It parses markdown, where a field is declared as markdown source, to a closed set of elements. Raw HTML inside it shows as literal text.
@@ -71,7 +72,7 @@ Because the view runs as the caller, a document cannot carry data past the objec
 
 ## Node types
 
-The registry lists 41 node types, and it only grows: a registered type is never removed or redefined, and new capability arrives as new types or new optional fields. The names below are grouped for reading. Each field of each node, and the client's obligation for it, is in the registry.
+The registry lists {nodeCount} node types, and it only grows: a registered type is never removed or redefined, and new capability arrives as new types or new optional fields. The names below are grouped for reading. Each field of each node, and the client's obligation for it, is in the registry.
 
 <NodeFamilies />
 
@@ -83,7 +84,7 @@ Some nodes depend on other optional features. The `upload` node needs `binary-va
 
 ## Where it sits
 
-The earlier technique for a verb to show something is `render-html`, a function that reads object data and returns a finished HTML page for a browser. A presentation verb returns a structured tree instead. That moves the trust boundary from sanitizing the verb's HTML to the verb never emitting HTML.
+The earlier technique for a verb to show something is restactd's `render-html` example verb, a function that reads object data and returns a finished HTML page for a browser. A presentation verb returns a structured tree instead. That moves the trust boundary from sanitizing the verb's HTML to the verb never emitting HTML.
 
 A view can also take the name of a reserved accessor, `:get` or `:list`, so that a plain `GET` of the object serves the UI document.
 

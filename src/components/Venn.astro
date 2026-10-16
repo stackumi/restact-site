@@ -26,5 +26,10 @@
   .l1 { left: 0; top: 6px; }
   .l2 { right: 0; top: 6px; text-align: right; }
   .l3 { left: 0; right: 0; bottom: 0; text-align: center; }
+  @media (max-width: 480px) {
+    .venn { height: auto; aspect-ratio: 1 / 0.8; margin-block: 46px 34px; }
+    .l1, .l2 { top: -44px; }
+    .l3 { bottom: -30px; }
+  }
   .call { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); padding: 4px 9px; border-radius: 7px; background: var(--signal); color: var(--on-signal); font-family: var(--font-mono); font-size: 12px; font-weight: 600; white-space: nowrap; }
 </style>

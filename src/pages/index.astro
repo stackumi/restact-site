@@ -4,7 +4,11 @@ import AnatomyDemo from '../components/AnatomyDemo.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import Tabs from '../components/Tabs.astro';
 import MethodTag from '../components/MethodTag.astro';
+import Venn from '../components/Venn.astro';
+import BudgetFigure from '../components/BudgetFigure.astro';
+import UiMock from '../components/UiMock.astro';
 import { term } from '../lib/term';
+import { viewJson } from '../lib/ui-example';
 import { DRAFT, GITHUB } from '../site.config';
 
 /* The home page. Copy and structure follow the approved canvas (Main.dc.html); sections link to the
@@ -20,7 +24,7 @@ const status = [
 const rules = [
   {
     title: 'A verb is a WebAssembly component',
-    body: 'Every verb runs as a WASI 0.2 component. JavaScript and Python are interpreted by a runner component inside the same sandbox, so nothing is compiled per upload.',
+    body: 'Every verb runs as a WASI 0.2 component. A server may compile JavaScript or Python at upload or interpret it in a runner component. restactd interprets, so nothing is compiled per upload.',
     tag: 'wasm32-wasip2',
   },
   {
@@ -107,26 +111,6 @@ $ curl -X POST --data-binary @target/wasm32-wasip2/release/word_count.wasm \\
     'localhost:8080/v1/modules?verb=text¦wordCount&kind=function'
 $ curl 'localhost:8080/v1/text¦wordCount?input=one%20two%20three'
 «3»
-`);
-
-const viewJson = term(`
-⟨GET /v1/lists/7¦homeView⟩
-{
-  «"type"»: "page",
-  «"title"»: "Reading list",
-  «"blocks"»: [
-    { "type": "grid", "items": [
-      { "type": "stat", "value": 12,
-        "label": "saved" },
-      { "type": "stat", "value": 3,
-        "label": "unread" } ] },
-    { "type": "card",
-      "title": "The REST:ACT draft",
-      "subtitle": "spec · 18 min",
-      "badges": [{ "label": "unread",
-                   "tone": "warn" }] }
-  ]
-}
 `);
 
 const discoveryJson = term(`
@@ -240,8 +224,8 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
       <h2 class="h2"><a href="/how-it-works/">The colon is the protocol.</a></h2>
       <p class="lede">
         REST:ACT keeps HTTP’s methods, status codes, conditional requests and caching, and adds one character to the
-        path. After the colon comes a verb, in the custom-method form of Google’s AIP-136, so an AIP-136 endpoint is
-        already a valid REST:ACT endpoint.
+        path. After the colon comes a verb, in the custom-method form of Google’s AIP-136, so an AIP-136 custom method is
+        already a valid REST:ACT verb invocation.
       </p>
       <p class="lede">
         Resolution walks up the path. A verb deployed on <span class="code-inline">notes/{'{id}'}</span> answers for every
@@ -272,7 +256,7 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
         <div class="card kind">
           <div class="kind-head"><h3>Action</h3><MethodTag method="POST" /></div>
           <p>
-            May change state: write the object it is bound to, publish an event, call other actions it declared. An <span class="code-inline">Idempotency-Key</span> makes a retry safe.
+            May change state: write the object it is bound to, publish an event, call other actions it declared. A server that honors an <span class="code-inline">Idempotency-Key</span> returns the first result to a retry.
           </p>
         </div>
       </div>
@@ -315,19 +299,7 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
               registered them; an owner can opt a verb into running as the owner, and the server then advertises it.
             </p>
           </div>
-          <div
-            class="venn"
-            role="img"
-            aria-label="Three overlapping sets: the caller's permissions, the verb's declared capabilities and the target's policy. The call may do only what lies in all three."
-          >
-            <span class="circle c1"></span>
-            <span class="circle c2"></span>
-            <span class="circle c3"></span>
-            <span class="vl l1">the caller’s<br />permissions</span>
-            <span class="vl l2">the verb’s declared<br />capabilities</span>
-            <span class="vl l3">the target’s policy</span>
-            <span class="call">the call</span>
-          </div>
+          <Venn />
         </div>
 
         <div class="card panel">
@@ -338,25 +310,11 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
               on the same pool, so a deep or wide tree costs about one call’s budget, not one per frame.
             </p>
           </div>
-          <div class="tree mono">
-            <div class="row"><MethodTag method="POST" /><span>/v1/docs/123<span class="c-sig">:</span>publish</span></div>
-            <div class="row i1"><span class="elbow">└</span><span class="kw">compose</span><span>docs/123<span class="c-sig">:</span>render</span><span class="note">function</span></div>
-            <div class="row i2"><span class="elbow">└</span><span class="kw">compose</span><span>docs/123<span class="c-sig">:</span>wordCount</span><span class="note">function</span></div>
-            <div class="row i1"><span class="elbow">└</span><span class="kw">compose</span><span>feeds/home<span class="c-sig">:</span>append</span><span class="note">action, declared</span></div>
-          </div>
-          <div class="budget">
-            <div class="bar" role="img" aria-label="One shared pool, spent by four frames">
-              <span style="width: 22%; background: var(--bar-1)"></span>
-              <span style="width: 17%; background: var(--bar-2)"></span>
-              <span style="width: 9%; background: var(--bar-3)"></span>
-              <span style="width: 14%; background: var(--bar-4)"></span>
-            </div>
-            <div class="bar-caption mono"><span>spent by four frames</span><span>one shared pool</span></div>
-          </div>
+          <BudgetFigure />
           <div class="pills">
             <span class="pill">depth, cycles · 508</span>
             <span class="pill">function → action · 403</span>
-            <span class="pill">undeclared call · refused</span>
+            <span class="pill">undeclared call · 403</span>
           </div>
         </div>
       </div>
@@ -444,21 +402,7 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
     </div>
     <div class="grow wide views">
       <div class="json"><CodeBlock html={viewJson} copy={false} label="application/vnd.restact.ui+json" /></div>
-      <div class="card render">
-        <div class="eyebrow small">Rendered by a generic client</div>
-        <div class="render-title">Reading list</div>
-        <div class="stats">
-          <div class="stat"><div class="n mono">12</div><div class="l">saved</div></div>
-          <div class="stat"><div class="n mono">3</div><div class="l">unread</div></div>
-        </div>
-        <div class="mock-card">
-          <span class="rule-warn" aria-hidden="true"></span>
-          <div class="mock-body">
-            <div class="mock-row"><div class="mock-title">The REST:ACT draft</div><span class="badge mono">unread</span></div>
-            <div class="mock-sub">spec · 18 min</div>
-          </div>
-        </div>
-      </div>
+      <div class="mock"><UiMock /></div>
     </div>
   </section>
 
@@ -511,7 +455,7 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
     <div class="container col">
       <div class="head-left">
         <span class="eyebrow">Implementations and tools</span>
-        <h2 class="h2">Run it, test it, write for it</h2>
+        <h2 class="h2">Servers, tests and tooling</h2>
       </div>
       <div class="tools">
         {
@@ -740,8 +684,15 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
     display: grid;
     grid-template-columns: max-content 1fr;
     column-gap: 28px;
-    min-width: 460px;
     margin: 0;
+  }
+  @media (max-width: 560px) {
+    .forms {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .forms dd {
+      margin-bottom: 10px;
+    }
   }
   .forms dt {
     color: var(--ink);
@@ -829,93 +780,6 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
     line-height: 1.55;
     color: var(--ink-2);
   }
-  .venn {
-    position: relative;
-    height: 300px;
-    max-width: 420px;
-    width: 100%;
-    align-self: center;
-  }
-  .circle {
-    position: absolute;
-    width: 52%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    border: 1px solid var(--line-strong);
-    background: var(--venn);
-  }
-  .c1 { left: 8%; top: 0; }
-  .c2 { right: 8%; top: 0; }
-  .c3 { left: 24%; top: 32%; }
-  .vl {
-    position: absolute;
-    font-size: 13px;
-    color: var(--ink-2);
-  }
-  .l1 { left: 0; top: 6px; }
-  .l2 { right: 0; top: 6px; text-align: right; }
-  .l3 { left: 0; right: 0; bottom: 0; text-align: center; }
-  .call {
-    position: absolute;
-    left: 50%;
-    top: 44%;
-    transform: translate(-50%, -50%);
-    padding: 4px 9px;
-    border-radius: 7px;
-    background: var(--signal);
-    color: var(--on-signal);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .tree {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 13px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
-  .tree .row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 380px;
-    color: var(--ink);
-  }
-  .tree .row :global(.method) {
-    width: 40px;
-    font-size: 13px;
-  }
-  .tree .i1 { padding-left: 22px; }
-  .tree .i2 { padding-left: 44px; }
-  .tree .elbow { color: var(--mark-dash); }
-  .tree .kw { width: 64px; color: var(--ink-3); }
-  .tree .note { font-size: 11.5px; color: var(--ink-3); }
-  .budget {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .bar {
-    display: flex;
-    height: 14px;
-    border-radius: 5px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    background: var(--sunk);
-  }
-  .bar span + span {
-    border-left: 2px solid var(--sunk);
-  }
-  .bar-caption {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 11.5px;
-    color: var(--ink-3);
-  }
   .pills {
     display: flex;
     flex-wrap: wrap;
@@ -969,79 +833,13 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
     font-size: 12.5px;
     line-height: 1.65;
   }
-  .render {
+  .mock {
     flex: 1 1 240px;
     min-width: 0;
-    padding: 20px;
     display: flex;
-    flex-direction: column;
-    gap: 14px;
   }
-  .eyebrow.small {
-    font-size: 11px;
-  }
-  .render-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-  .stat {
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--surface-2);
-  }
-  .stat .n {
-    font-size: 24px;
-    font-weight: 600;
-  }
-  .stat .l {
-    font-size: 13px;
-    color: var(--ink-2);
-  }
-  .mock-card {
-    display: flex;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--surface-2);
-  }
-  .rule-warn {
-    width: 4px;
-    flex: none;
-    background: var(--warn);
-  }
-  .mock-body {
+  .mock :global(.render) {
     flex: 1;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .mock-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-  .mock-title {
-    font-weight: 500;
-  }
-  .badge {
-    padding: 1px 7px;
-    border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
-    border-radius: 6px;
-    font-size: 11px;
-    color: var(--warn);
-  }
-  .mock-sub {
-    font-size: 13px;
-    color: var(--ink-2);
   }
 
   /* Compare ----------------------------------------------------------------------------- */

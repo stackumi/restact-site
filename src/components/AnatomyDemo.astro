@@ -48,7 +48,7 @@ const reqs: Req[] = [
       { text: 'wordCount', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
     ],
     kind: 'FUNCTION', kindTone: 'sig', gist: 'Safe and cacheable',
-    desc: 'GET makes the verb a function. The host refuses any write it attempts, and a function may not call an action, so the response can be cached.',
+    desc: 'A function is called with GET. The host refuses any write it attempts, and a function may not call an action, so the response can be cached.',
   },
   {
     method: 'POST', methodTone: 'act', path: '/v1/notes/42:archive', short: 'action',
@@ -58,7 +58,7 @@ const reqs: Req[] = [
       { text: 'archive', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
     ],
     kind: 'ACTION', kindTone: 'act', gist: 'May change state',
-    desc: 'POST makes it an action. It can write the data of the object it is bound to, with the caller’s permissions, and its compute is charged to the caller.',
+    desc: 'An action is called with POST. It can write the data of the object it is bound to, with the caller’s permissions, and its compute is charged to the caller.',
   },
   {
     method: 'GET', methodTone: 'sig', path: '/v1/notes/42:archive/meta', short: 'verb property',
@@ -72,6 +72,8 @@ const reqs: Req[] = [
     desc: 'A verb is itself an object. Its meta property reports kind, capabilities and limits, and code and policy sit beside it.',
   },
 ];
+/** The request shown first: GET :wordCount. */
+const first = 1;
 ---
 
 <div class="anatomy" data-anatomy>
@@ -83,7 +85,7 @@ const reqs: Req[] = [
   <div class="views" aria-live="polite">
     {
       reqs.map((r, i) => (
-        <div class="view" data-view={i} hidden={i !== 0}>
+        <div class="view" data-view={i} hidden={i !== first}>
           <div class="parts">
             {r.parts.map((p) => (
               <div class={`part ${p.gap ? 'gap' : ''}`}>
@@ -110,7 +112,7 @@ const reqs: Req[] = [
   <div class="reqs" role="group" aria-label="Requests">
     {
       reqs.map((r, i) => (
-        <button type="button" data-req={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+        <button type="button" data-req={i} aria-pressed={i === first ? 'true' : 'false'}>
           <span class="dot" aria-hidden="true" />
           <span class={`m t-${r.methodTone}`}>{r.method}</span>
           <span class="p">{r.path}</span>
@@ -291,6 +293,21 @@ const reqs: Req[] = [
   @media (max-width: 520px) {
     .s {
       display: none;
+    }
+    .p {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      padding: 6px 0;
+    }
+  }
+  @media (max-width: 400px) {
+    .reqs button {
+      gap: 10px;
+      padding: 0 10px;
+      font-size: 12.5px;
+    }
+    .m {
+      width: 36px;
     }
   }
 </style>

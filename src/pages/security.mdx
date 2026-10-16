@@ -4,7 +4,7 @@ title: Security model
 description: A REST:ACT server runs code its clients upload, so the protocol assumes every upload is hostile. Four rules, enforced by every conformant server, bound what that code can reach, whose authority it carries and how much it can spend.
 chips:
   - Explanatory
-  - 'Normative text: draft, Capability Model, Composition, Security Considerations'
+  - 'Normative text: draft, Capability Model, Composition, Resource Limits, Authorization and Identity, Security Considerations'
 ---
 
 import CodeBlock from '../components/CodeBlock.astro';
@@ -24,13 +24,13 @@ content-type: application/problem+json
 { …, «"restact_code"»: ‹"cpu-budget"› }
 `);
 
-A REST:ACT server executes code that its clients wrote. Code-writing assistants raise the demand for that and also the chance that the code is wrong or hostile, so the draft does not ask a server to judge an upload. It asks the server to confine whatever runs.
+Code-writing assistants raise the demand for uploaded code and also the chance that it is wrong or hostile, so the draft does not ask a server to judge an upload. It asks the server to confine whatever runs.
 
-The model is short. Four rules apply to every verb, and a server that skips one is not conformant.
+Four rules apply to every verb, and a server that skips one is not conformant.
 
 ## The four rules
 
-1. A verb is a WebAssembly component. Every verb runs as a WASI 0.2 component. JavaScript and Python verbs are interpreted by a runner component inside the same sandbox, so nothing is compiled per upload.
+1. A verb is a WebAssembly component. Every verb runs as a WASI 0.2 component. A server may compile JavaScript or Python to a component at upload or run it through an interpreter component, under the same confinement and limits either way. restactd interprets, so nothing is compiled per upload.
 2. A verb reaches only what it imports. The imports of the component are its capability manifest, and there is no ambient authority beyond them. A server answers `403` at upload for an interface it does not grant, and none of the standard interfaces opens a socket or a file.
 3. A verb runs as the caller. A call can do what the caller could do directly and the verb declared, within the policy of the target. Its compute is charged to the caller.
 4. A verb is metered. Wall-clock, compute and memory limits apply to every call, and a verb that calls other verbs shares one budget with them.
@@ -54,7 +54,7 @@ The effective authority of a call is the intersection of three sets: the caller'
 
 The owner's opt-in is a setuid-style switch and is deliberately narrow. The owner makes it at deploy time, the execute policy is still checked against the real caller, the server advertises `runsAs: "owner"` in the verb's descriptor so callers know the verb does not act as them, and cost still lands on the real caller. A verb that opts in has to treat its input as untrusted, and the server must not hand the verb the real caller's identity through a channel the caller could forge.
 
-Ownership is fixed: nobody can be made the owner of an existing resource. That rule exists because code that runs under its owner's authority must only ever run as a principal who chose it.
+Ownership is fixed: nobody can be made the owner of an existing resource. That rule exists because code that runs under its owner's authority must only ever run as a principal who chose it. A server may offer an operator recovery act, advertised as `admin-reown`, which reassigns a named owner's resources and strips the `runs-as-owner` opt-in from each moved verb.
 
 ### Identity and policy
 
@@ -93,11 +93,11 @@ Some optional features let a server hold or spend a credential on someone's beha
 | Feature token | What it does |
 |---|---|
 | `path-scoped-tokens` | `POST /v1/tokens/sub` mints a short-lived, read-only bearer confined to one object-path prefix. The mint is refused for a prefix the caller cannot read itself, and the token can never write, deploy or mint another. |
-| `delegated-tokens` | One principal, the subject, lets another, the actor, act for them within bounds. Both identities stay visible. Revoking a grant stops its tokens and the schedules and code installed under it, but not the data the actor already wrote. |
+| `delegated-tokens` | One principal, the subject, lets another, the actor, act for them within bounds. Both identities stay visible. Revoking a grant stops its tokens and the schedules, subscriptions and code installed under it with raised authority. The data the actor wrote and the ordinary verbs it deployed remain. |
 | `secrets-management` | Object paths under an operator-configured mount forward a written `value` to an external secrets backend and store metadata only. No path on the server returns the value. |
 | `mediated-egress` | The server performs one bounded outbound HTTPS request for the caller through a connector object, splicing the owner's secret in at the moment of sending. The destination is limited by an operator allowlist, every resolved address is checked, one is pinned, and redirects are refused. |
 
-The server never formats a resolved secret into a string it could return, log or store, so a response or an audit line cannot contain one. Verbs have no socket interface; the optional `llm-connector` feature lets a verb ask the server for one bounded model completion through an owner-governed connector.
+The server never formats a resolved secret into a string it could return, log or store. An upstream that echoes a secret back is a separate risk, which a server should scrub for but cannot fully rule out. Verbs have no socket interface; the optional `llm-connector` feature lets a verb ask the server for one bounded model completion through an owner-governed connector.
 
 ## What the model does not cover
 

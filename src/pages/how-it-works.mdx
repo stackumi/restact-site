@@ -4,7 +4,10 @@ title: How REST:ACT works
 description: A REST:ACT server is a tree of objects addressed by path. Each object has data, read and written with the standard HTTP methods, and verbs, uploaded programs addressed with a colon and invoked over HTTP.
 chips:
   - Explanatory
-  - 'Normative text: draft §5 to §7, §10'
+  - 'Normative text: draft §3, §5 to §8, §10'
+asideLinks:
+  - label: Read the draft’s text
+    href: /spec/draft/#addressing
 ---
 
 import CodeBlock from '../components/CodeBlock.astro';
@@ -13,7 +16,7 @@ import ResolutionWalk from '../components/ResolutionWalk.astro';
 
 ## Objects, data and verbs
 
-An object such as `/animals/dogs/fido` has data, its JSON representation, and verbs addressed off it. The path hierarchy is a single-inheritance chain: fido's parents are dogs, animals and the root.
+An object such as `/animals/dogs/fido` has data, its JSON representation, and verbs addressed off it. The path hierarchy is a single-inheritance chain: fido's ancestors are dogs, animals and the root.
 
 Invoking a verb searches the object first, then each ancestor in turn, and runs the first definition it finds, bound to the object named in the URL. When one level holds both a literal definition and a wildcard such as `{id}`, the literal one wins, whatever the deploy order.
 
@@ -51,11 +54,11 @@ The usual verb properties are `code`, `policy` and `meta`. They are recommended 
 |---|---|---|
 | Invoked with | `GET` | `POST` |
 | Side effects | none; writes are refused | allowed |
-| Cacheable | yes | no |
-| May call | functions | functions, and actions it declared |
+| Cacheable | yes, per caller | no |
+| May call | functions it declared | functions and actions it declared |
 
 <Callout title="Compatible with AIP-136">
-  The colon, camelCase verb names and GET-for-pure, POST-for-side-effects come from Google's AIP-136 custom methods. REST:ACT also lets a path continue after the verb, so any AIP-136 endpoint is already a valid REST:ACT endpoint.
+  The colon and camelCase verb names come from Google's AIP-136 custom methods. REST:ACT also lets a path continue after the verb, a superset AIP-136 does not conflict with, so any AIP-136 custom method is already a valid REST:ACT verb invocation.
 </Callout>
 
 ## What a verb can reach
@@ -65,7 +68,7 @@ A verb is a WebAssembly component, and the interfaces it imports are its capabil
 | Interface | Gives the verb | Grant |
 |---|---|---|
 | `host` | structured logging | ambient |
-| `identity` | a read-only view of the caller: subject, roles, scopes, groups, claims | ambient |
+| `identity` | a read-only view of the caller: subject, roles, scopes and claims; groups where `caller-groups` is advertised | ambient |
 | `object` | read and write the bound object's data, and others' under their access rules | gated |
 | `compose` | call the verbs it declared | gated |
 | `event` | publish an event on a topic | gated |
