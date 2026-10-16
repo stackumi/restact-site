@@ -18,7 +18,7 @@ import { term } from '../lib/term';
 import { nodeCount } from '../lib/ui-catalog';
 
 export const deploy = term(`
-$ curl -g -X POST --data-binary @home-view.js \\
+$ curl -g -X POST --data-binary @detail-view.js \\
     'localhost:8080/v1/modules?verb=lists/{id}¦detailView&kind=function&lang=text/javascript&produces=application%2Fvnd.restact.ui%2Bjson'
 $ curl -i localhost:8080/v1/lists/7¦detailView
 «HTTP/1.1 200 OK»

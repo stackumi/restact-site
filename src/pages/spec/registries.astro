@@ -24,6 +24,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   title="Registries"
   description="The IANA-style registries the draft requests, kept as tables in the specification repository until a formal IANA action. On publication these tables become the initial contents."
   headings={toc}
+  verbatimToc
   chips={['Normative initial contents', 'Specification Required']}
   editUrl={`${SPECS_REPO}/tree/main/registries`}
   asideLinks={[{ label: 'Feature token browser', href: '/spec/#feature-tokens' }]}

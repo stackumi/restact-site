@@ -356,8 +356,8 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
         <span class="eyebrow">Authoring</span>
         <h2 class="h2"><a href="/start/">Write a verb. Deploy it with one request.</a></h2>
         <p class="lede">
-          JavaScript and Python verbs are uploaded as source and interpreted by a runner the server ships, with no build
-          step. Rust and anything else that emits a WASI 0.2 component upload as compiled <span class="code-inline">.wasm</span>.
+          JavaScript and Python verbs are uploaded as source with no build step, and restactd interprets them in a runner it
+          ships. Rust and anything else that emits a WASI 0.2 component upload as compiled <span class="code-inline">.wasm</span>.
         </p>
         <p class="lede">
           Inside the verb, <span class="code-inline">obj</span> is the object the URL names. Its writes are that object’s
@@ -369,15 +369,15 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
         <Tabs label="Verb language" tabs={tabs}>
           <Fragment slot="js">
             <CodeBlock lang="js" code={jsCode} label="visit.js · an action bound to every object under pages/" />
-            <CodeBlock html={jsShell} label="shell" />
+            <CodeBlock html={jsShell} label="shell" wrap />
           </Fragment>
           <Fragment slot="py">
             <CodeBlock lang="python" code={pyCode} label="bump.py · an action bound to every object under counters/" />
-            <CodeBlock html={pyShell} label="shell" />
+            <CodeBlock html={pyShell} label="shell" wrap />
           </Fragment>
           <Fragment slot="rs">
             <CodeBlock lang="rust" code={rsCode} label="src/lib.rs · a function written with restact-sdk" />
-            <CodeBlock html={rsShell} label="shell" />
+            <CodeBlock html={rsShell} label="shell" wrap />
           </Fragment>
         </Tabs>
       </div>
@@ -455,7 +455,7 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
     <div class="container col">
       <div class="head-left">
         <span class="eyebrow">Implementations and tools</span>
-        <h2 class="h2">Servers, tests and tooling</h2>
+        <h2 class="h2">The reference server and tools</h2>
       </div>
       <div class="tools">
         {

@@ -13,6 +13,7 @@ import { DOCS_NAV } from '../site.config';
  *   chips        small meta chips under the lead, e.g. ["Explanatory", "Normative text: draft §5"]
  *   editUrl      "Edit on GitHub" link target; omit where the page has no source file
  *   prev, next   { label, href } to override the order of DOCS_NAV, or null to hide one
+ *   verbatimToc  "On this page" lists headings copied from a specification file: mark them verbatim for check-site
  *   asideLinks   extra links under the TOC: [{ label, href }]
  * Slots
  *   (default)    the article body. Direct children get the .prose styles (headings, tables, pre, callouts).
@@ -35,6 +36,7 @@ interface Props {
   title: string;
   description?: string;
   headings?: Heading[];
+  verbatimToc?: boolean;
   section?: string;
   chips?: string[];
   editUrl?: string;
@@ -42,7 +44,7 @@ interface Props {
   next?: Link | null;
   asideLinks?: Link[];
 }
-const { title, description, headings = [], chips = [], editUrl, asideLinks = [] } = Astro.props;
+const { title, description, headings = [], chips = [], editUrl, asideLinks = [], verbatimToc = false } = Astro.props;
 const path = Astro.url.pathname;
 
 const flat = DOCS_NAV.flatMap((g) => g.items);
@@ -142,6 +144,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
     <aside class="toc" aria-label="On this page">
       <div class="toc-title">On this page</div>
+      {verbatimToc && <Fragment set:html="<!--verbatim-->" />}
       {
         toc.map((h) => (
           <a href={`#${h.slug}`} class={h.depth === 3 ? 'sub' : undefined} data-toc={h.slug}>
@@ -149,6 +152,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
           </a>
         ))
       }
+      {verbatimToc && <Fragment set:html="<!--/verbatim-->" />}
       {
         (asideLinks.length > 0 || editUrl) && (
           <>

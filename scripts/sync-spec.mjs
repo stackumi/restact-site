@@ -30,31 +30,33 @@ if (git('status', '--porcelain', '--', DRAFT, 'presentation-verbs.md', 'registri
   process.exit(2);
 }
 
-rmSync(out, { recursive: true, force: true });
-mkdirSync(join(out, 'registries'), { recursive: true });
-
 // Strip the author's name and address from the front matter (the first `---` ... `---` block).
 // Inside the top-level `author:` list only `author:`, `-` and `ins:` lines survive, so any other
 // key (name, email, org, uri, phone, a second author's address) is dropped rather than copied.
 const draft = readFileSync(join(src, DRAFT), 'utf8');
 const end = draft.startsWith('---\n') ? draft.indexOf('\n---', 4) : -1;
 if (end === -1) {
-  console.error('sync-spec: no YAML front matter found in the draft; nothing was written.');
-  rmSync(out, { recursive: true, force: true });
+  console.error('sync-spec: no YAML front matter found in the draft; nothing was written or removed.');
   process.exit(1);
 }
+rmSync(out, { recursive: true, force: true });
+mkdirSync(join(out, 'registries'), { recursive: true });
+
 let inAuthor = false;
 const front = draft
   .slice(0, end)
   .split('\n')
-  .filter((l) => {
+  .flatMap((l) => {
     if (/^author:\s*$/.test(l)) {
       inAuthor = true;
-      return true;
+      return [l];
     }
     if (/^\S/.test(l)) inAuthor = false; // the next top-level key ends the author list
-    if (!inAuthor) return true;
-    return /^\s*-\s*$/.test(l) || /^\s*ins:/.test(l);
+    if (!inAuthor) return [l];
+    if (/^\s*-\s+ins:/.test(l)) return [l]; // compact form: `- ins: N. Byrd`
+    if (/^\s*-\s*$/.test(l) || /^\s*ins:/.test(l)) return [l];
+    if (/^\s*-\s+\S/.test(l)) return [l.replace(/^(\s*-).*$/, '$1')]; // `- name: ...` keeps only the list marker
+    return [];
   })
   .join('\n');
 writeFileSync(join(out, DRAFT), front + draft.slice(end));

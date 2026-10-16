@@ -12,6 +12,7 @@ const { title, items } = Astro.props;
 
 <div class="spec-side">
   <div class="spec-side-title">{title}</div>
+  <Fragment set:html="<!--verbatim-->" />
   {
     items.map((i) => (
       <a href={i.href}>
@@ -20,6 +21,7 @@ const { title, items } = Astro.props;
       </a>
     ))
   }
+  <Fragment set:html="<!--/verbatim-->" />
 </div>
 
 <style>

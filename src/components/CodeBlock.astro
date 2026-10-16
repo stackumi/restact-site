@@ -13,6 +13,7 @@ import { restactTheme } from '../lib/shiki-theme.mjs';
  *   label    text on the left of the strip, e.g. a filename or "http"
  *   variant  "plain" (default) or "terminal" (three dots and the label "shell")
  *   copy     show the copy button (default true)
+ *   wrap     wrap long lines at the box edge on wide screens (terminal blocks always do)
  * The button and its live region are wired by the script below. Without JavaScript the block is
  * still fully readable; the button is hidden until the script runs.
  */
@@ -23,13 +24,14 @@ interface Props {
   label?: string;
   variant?: 'plain' | 'terminal';
   copy?: boolean;
+  wrap?: boolean;
 }
-const { code = '', lang = 'text', html, label, variant = 'plain', copy = true } = Astro.props;
+const { code = '', lang = 'text', html, label, variant = 'plain', copy = true, wrap = false } = Astro.props;
 const stripLabel = label ?? (variant === 'terminal' ? 'shell' : undefined);
 const showStrip = copy || stripLabel;
 ---
 
-<figure class:list={['codeblock', variant]} data-codeblock>
+<figure class:list={['codeblock', variant, { wrap }]} data-codeblock>
   {
     showStrip && (
       <div class="strip">
@@ -134,9 +136,11 @@ const showStrip = copy || stripLabel;
     color: var(--ink-2);
   }
   /* A terminal line is a command: wrap it at the box edge (a quoted URL has no break point). */
-  .terminal .body :global(pre) {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+  @media (min-width: 640px) {
+    :is(.terminal, .wrap) .body :global(pre) {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
   }
   .body :global(code) {
     font-family: var(--font-mono);

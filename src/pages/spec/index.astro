@@ -210,7 +210,8 @@ const registries = [
           <input type="search" id="token-filter" placeholder={`Filter ${tokens.length} tokens`} aria-label="Filter feature tokens" autocomplete="off" />
         </label>
       </div>
-      <ul class="tokens" id="token-list" tabindex="0" role="region" aria-label="Feature tokens">
+      <div class="tokens-scroll" tabindex="0" role="region" aria-label="Feature tokens">
+      <ul class="tokens" id="token-list">
         {
           tokens.map((t) => (
             <li data-q={`${t.token} ${t.plain} ${t.status}`.toLowerCase()}>
@@ -221,6 +222,7 @@ const registries = [
           ))
         }
       </ul>
+      </div>
       <p class="count mono" id="token-count" role="status" aria-live="polite">{tokens.length} tokens</p>
     </div>
   </section>
@@ -562,6 +564,8 @@ const registries = [
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+  .tokens-scroll {
     max-height: 640px;
     overflow-y: auto;
   }
