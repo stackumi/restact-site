@@ -1,0 +1,405 @@
+/* Global styles: reset, type, links, focus, shared utilities, code and the docs prose.
+   Components keep their own layout in scoped <style> blocks; what several pages share lives here.
+   Tokens come from tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 88px; /* room for the sticky header when jumping to an anchor */
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 1.2;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+p,
+figure {
+  margin: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+a {
+  color: var(--signal);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+a:hover {
+  color: var(--signal-hover);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--signal) 35%, transparent);
+}
+
+code,
+kbd,
+samp,
+pre,
+.mono {
+  font-family: var(--font-mono);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--signal);
+  color: var(--on-signal);
+  font-weight: 700;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+  color: var(--on-signal);
+}
+
+/* ---- Layout utilities ------------------------------------------------------------------- */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* A full-width home/marketing section. `.band` gives it the alternate ground. */
+.section {
+  padding-block: clamp(64px, 8vw, 104px);
+}
+.band {
+  background: var(--band);
+  border-top: 1px solid var(--hair);
+}
+
+/* Small uppercase label above a heading, in the wire face. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Section heading on the home page and other full-width pages. */
+.h2 {
+  font-size: clamp(30px, 3.4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+.h2 a {
+  color: inherit;
+}
+.h2 a:hover {
+  color: var(--signal);
+}
+
+.lede {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* Inline mono inside running text outside docs prose. */
+.code-inline {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--ink);
+}
+
+/* "Read more →" link. */
+.link-arrow {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.btn:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+.btn--primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+  font-weight: 700;
+}
+.btn--primary:hover {
+  background: var(--signal-hover);
+  border-color: var(--signal-hover);
+  color: var(--on-signal);
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+/* A mono status/feature pill: `408`, `403 disallowed-import`, a feature token. */
+.pill {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ---- Code ------------------------------------------------------------------------------- */
+
+pre {
+  tab-size: 2;
+  margin: 0;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Hand-marked spans inside a <pre> (terminal sessions, wire examples). Shiki output does not need
+   these. The prompt is not copied: the copy button strips `.c-prompt`. */
+.c-prompt {
+  color: var(--ink-3);
+  user-select: none;
+}
+.c-out {
+  color: var(--ink);
+}
+.c-dim {
+  color: var(--ink-3);
+}
+.c-sig {
+  color: var(--signal);
+}
+.c-act {
+  color: var(--action);
+}
+
+/* Shiki blocks inside prose and CodeBlock: no own background, the frame provides it. */
+pre.astro-code {
+  background: transparent !important;
+}
+
+/* Inline `code`. */
+:not(pre) > code {
+  font-size: 0.88em;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* ---- Docs prose (article column of the Docs layout) ------------------------------------- */
+
+.prose {
+  font-size: 17px;
+  line-height: 1.68;
+  color: var(--ink-2);
+}
+.prose > * + * {
+  margin-top: 22px;
+}
+.prose > h2 {
+  margin-top: 48px;
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.prose > h3 {
+  margin-top: 36px;
+  font-size: 21px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.prose > h4 {
+  margin-top: 28px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.prose > h2 + *,
+.prose > h3 + * {
+  margin-top: 16px;
+}
+.prose strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.prose a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--signal) 50%, transparent);
+}
+.prose a:hover {
+  text-decoration-color: currentColor;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3em;
+}
+.prose li + li {
+  margin-top: 6px;
+}
+.prose li::marker {
+  color: var(--ink-3);
+}
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin-block: 36px;
+}
+.prose blockquote {
+  margin-inline: 0;
+  padding-left: 18px;
+  border-left: 1px solid var(--line-strong);
+  color: var(--ink-2);
+}
+/* Heading anchors: Astro adds ids; the link icon is not drawn, the id is enough for TOC links. */
+
+/* A fenced code block in Markdown. CodeBlock.astro gives the same look with a label strip. */
+.prose > pre.astro-code,
+.prose > pre,
+.prose .md-code > pre {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--sunk) !important;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.prose pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Tables: a framed box that scrolls inside itself. The table is a block so the frame can clip
+   and scroll; it hugs its content. */
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  border-spacing: 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+.prose th,
+.prose td {
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--surface-2);
+}
+.prose tr:last-child td {
+  border-bottom: 0;
+}
+.prose th {
+  background: var(--sunk-head);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.prose td code {
+  white-space: nowrap;
+}
+
+.prose figure:not(.codeblock):not(.walk) {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.prose figure:not(.codeblock):not(.walk) figcaption {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

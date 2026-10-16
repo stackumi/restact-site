@@ -1,0 +1,126 @@
+/* Design tokens. Dark is the default look; light is fully supported.
+
+   The theme lives on <html data-theme="dark|light">, set before first paint by the inline script in
+   Base.astro. Without JavaScript there is no attribute, and the prefers-color-scheme block below
+   picks the scheme instead. Both light blocks must stay identical.
+
+   The one-light rule: --signal marks the verb and whatever is primary, focused or live. Do not use
+   it for decoration. --action is for POST tags only. */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ground: #0d1418;
+  --band: #0f171c;
+  --surface: #141c21;
+  --surface-2: #1a242a;
+  --raised: #111a1f; /* hero panel, closing card */
+  --sunk: #0b1114; /* code blocks */
+  --sunk-head: #111a1f; /* strip above a code block, tab bars */
+  --hair: #1d282f;
+  --line: #26323a;
+  --line-strong: #36444d;
+  --ink: #e7edf0;
+  --ink-2: #a3b0b8;
+  --ink-3: #8794a0;
+  --signal: #56d5c9;
+  --signal-hover: #8ee6dc;
+  --on-signal: #062320;
+  --action: #f2906f;
+  --good: #63cc9a;
+  --warn: #eaa24e;
+  --danger: #ec7373;
+  --header-bg: rgb(13 20 24 / 0.86);
+  --venn: rgb(86 213 201 / 0.07);
+  --bar-1: #a3b0b8;
+  --bar-2: #8794a0;
+  --bar-3: #57646f;
+  --bar-4: #45525e;
+  /* The mark. */
+  --mark-tile: #1a242a;
+  --mark-edge: #36444d;
+  --mark-dash: #4a5963;
+  --mark-top: #56d5c9;
+  --mark-wall-l: #2a9e93;
+  --mark-wall-r: #1f7a72;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --ground: #f4f6f8;
+  --band: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #e9edf1;
+  --raised: #ffffff;
+  --sunk: #ffffff;
+  --sunk-head: #f8fafb;
+  --hair: #e2e7ec;
+  --line: #d5dce2;
+  --line-strong: #b3bfc8;
+  --ink: #14212a;
+  --ink-2: #45525e;
+  --ink-3: #57646f;
+  --signal: #0d7a70;
+  --signal-hover: #095c55;
+  --on-signal: #ffffff;
+  --action: #b8461f;
+  --good: #1f8a5b;
+  --warn: #9a5b0b;
+  --danger: #b93a3a;
+  --header-bg: rgb(244 246 248 / 0.9);
+  --venn: rgb(13 122 112 / 0.07);
+  --bar-1: #45525e;
+  --bar-2: #57646f;
+  --bar-3: #8a97a1;
+  --bar-4: #b3bfc8;
+  --mark-tile: #ffffff;
+  --mark-edge: #b3bfc8;
+  --mark-dash: #8a97a1;
+  --mark-top: #2fb3a6;
+  --mark-wall-l: #138a7f;
+  --mark-wall-r: #0c6d64;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --ground: #f4f6f8;
+    --band: #eef1f4;
+    --surface: #ffffff;
+    --surface-2: #e9edf1;
+    --raised: #ffffff;
+    --sunk: #ffffff;
+    --sunk-head: #f8fafb;
+    --hair: #e2e7ec;
+    --line: #d5dce2;
+    --line-strong: #b3bfc8;
+    --ink: #14212a;
+    --ink-2: #45525e;
+    --ink-3: #57646f;
+    --signal: #0d7a70;
+    --signal-hover: #095c55;
+    --on-signal: #ffffff;
+    --action: #b8461f;
+    --good: #1f8a5b;
+    --warn: #9a5b0b;
+    --danger: #b93a3a;
+    --header-bg: rgb(244 246 248 / 0.9);
+    --venn: rgb(13 122 112 / 0.07);
+    --bar-1: #45525e;
+    --bar-2: #57646f;
+    --bar-3: #8a97a1;
+    --bar-4: #b3bfc8;
+    --mark-tile: #ffffff;
+    --mark-edge: #b3bfc8;
+    --mark-dash: #8a97a1;
+    --mark-top: #2fb3a6;
+    --mark-wall-l: #138a7f;
+    --mark-wall-r: #0c6d64;
+  }
+}
+
+:root {
+  --font-sans: 'Space Grotesk Variable', 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --gutter: clamp(16px, 4vw, 40px);
+}
