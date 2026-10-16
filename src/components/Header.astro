@@ -4,7 +4,8 @@ import Wordmark from './Wordmark.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { NAV, GITHUB } from '../site.config';
 /**
- * Sticky, translucent site header. The nav marks the current section with aria-current (a link is
+ * Sticky, translucent site header. In the DOM the actions (including the menu button) come before the
+ * nav, so after opening the menu a Tab moves into its links; CSS `order` keeps the desktop row. The nav marks the current section with aria-current (a link is
  * current when the page path starts with its href). Below 880px the nav folds into a disclosure
  * button; without JavaScript it stays open as a wrapped row.
  *
@@ -25,16 +26,6 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
       <Mark rise uid="nav" />
       <Wordmark />
     </a>
-    <nav id="site-nav" class="nav" aria-label="Primary" data-site-nav>
-      {
-        NAV.map((item) => (
-          <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
-            {item.label}
-          </a>
-        ))
-      }
-      <a class="cta cta-in-menu" href="/start/">Get started</a>
-    </nav>
     <div class="actions">
       <a class="icon-link" href={GITHUB.specs} aria-label="GitHub: restact-specs">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -50,6 +41,16 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
         </svg>
       </button>
     </div>
+    <nav id="site-nav" class="nav" aria-label="Primary" data-site-nav>
+      {
+        NAV.map((item) => (
+          <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+      <a class="cta cta-in-menu" href="/start/">Get started</a>
+    </nav>
   </div>
 </header>
 
@@ -64,7 +65,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     backdrop-filter: blur(10px);
   }
   .bar {
-    max-width: 1200px;
+    max-width: calc(1200px + 2 * var(--gutter));
     margin: 0 auto;
     padding: 12px var(--gutter);
     display: flex;
@@ -73,9 +74,10 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     gap: 8px 28px;
   }
   .bar.wide {
-    max-width: 1360px;
+    max-width: calc(1360px + 2 * var(--gutter));
   }
   .brand {
+    order: 0;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -85,15 +87,18 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     color: var(--ink);
   }
   .nav {
+    order: 1;
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 22px;
+    gap: 0 22px;
     flex: 1 1 auto;
     font-size: 15px;
   }
   .nav a {
     color: var(--ink-2);
-    padding: 8px 0;
+    padding: 10px 0;
+    min-height: 44px;
+    box-sizing: border-box;
   }
   .nav a:hover,
   .nav a[aria-current] {
@@ -103,6 +108,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     font-weight: 500;
   }
   .actions {
+    order: 2;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -123,7 +129,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
   .cta {
     display: inline-flex;
     align-items: center;
-    height: 40px;
+    height: 44px;
     padding: 0 16px;
     border: 1px solid var(--line-strong);
     border-radius: 10px;
@@ -235,6 +241,10 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     });
     nav.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('a')) set(false);
+    });
+    document.addEventListener('click', (e) => {
+      const t = e.target as Node;
+      if (toggle.getAttribute('aria-expanded') === 'true' && !nav.contains(t) && !toggle.contains(t)) set(false);
     });
   }
 </script>

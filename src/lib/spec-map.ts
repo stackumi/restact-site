@@ -45,7 +45,7 @@ export const SECTION_MAP: Record<string, { gist: string; tag: Tag }> = {
   operations: { gist: 'Prefer: respond-async returns 202 and an operation resource the client polls.', tag: 'optional' },
   events: { gist: 'Server-initiated invocation: lifecycle hooks, schedules, SSE delivery and verb subscriptions.', tag: 'optional' },
   errors: { gist: 'RFC 9457 Problem Details, with the restact_code and restact_verb members.', tag: 'core' },
-  discovery: { gist: 'OPTIONS on every path, and the document at /.well-known/restact.', tag: 'core' },
+  discovery: { gist: 'OPTIONS on object, verb and property paths, and the document at /.well-known/restact.', tag: 'core' },
   'relationship-to-google-aip-and-jsonapi': {
     gist: 'How the protocol extends the Google API Design Guide, and what it borrows from JSON:API.',
     tag: 'informative',

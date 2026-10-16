@@ -1,7 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
-/* Served by Cloudflare for any unknown path. The mono line shows the requested path, filled in by
-   the script (the page itself is static), and reads as a failed request. */
+/* Served by Cloudflare, with status 404, for any unknown path: wrangler.jsonc sets
+   assets.not_found_handling to "404-page", which serves this build output (dist/404.html). The
+   mono line shows the requested path, filled in by the script (the page itself is static), and
+   reads as a failed request. */
 ---
 
 <Base title="Not found" description="This page does not exist.">

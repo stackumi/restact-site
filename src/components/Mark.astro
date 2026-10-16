@@ -4,8 +4,8 @@
  * Colours come from the --mark-* tokens, so it re-colours with the theme.
  *
  * Props
- *   rise    play the rise once on first paint (back tile, then the front one 60 ms later). Use it on
- *           the header mark only. It never plays under prefers-reduced-motion.
+ *   rise    play the rise once per visit (back tile, then the front one 60 ms later; later pages of the
+ *           visit skip it, see Base.astro). Use it on the header mark only. It never plays under prefers-reduced-motion.
  *   height  rendered height in px (default 32, which is 40 wide). The full mark is for 40px and up.
  *   uid     suffix for the clipPath id. Give each Mark on a page a different one.
  */
@@ -106,5 +106,10 @@ const clip = `restact-mark-clip-${uid}`;
     .rise .front {
       animation: none;
     }
+  }
+  /* Set by the head script in Base.astro once the rise has played in this visit. */
+  :global(html.no-rise) .rise .back,
+  :global(html.no-rise) .rise .front {
+    animation: none;
   }
 </style>

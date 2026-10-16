@@ -27,6 +27,14 @@ for (const phrase of [
 ]) {
   if (!conformance.includes(phrase)) throw new Error(`spec hub: the draft's conformance text no longer contains "${phrase}"`);
 }
+// The list itself: exactly five bullets between the lead-in and "Everything else is OPTIONAL",
+// and the same words in the same order, so a sixth item or a reordering also fails the build.
+const coreList = sectionText(doc, 'conformance').split('A conformant server MUST implement:')[1]?.split('Everything else is OPTIONAL')[0] ?? '';
+const bullets = coreList.split('\n').filter((l) => /^\* /.test(l));
+if (bullets.length !== 5) throw new Error(`spec hub: the draft's mandatory core now has ${bullets.length} bullets (the page words five); update the page`);
+const order = ['addressing grammar', 'capability confinement', 'runs-as-caller', 'Problem Details', 'discovery'];
+const at = order.map((w) => bullets.findIndex((b) => b.includes(w)));
+if (at.some((n, i) => n < 0 || (i > 0 && n < at[i - 1]))) throw new Error('spec hub: the mandatory core bullets no longer match the page');
 const core = [
   'Addressing and verb invocation',
   'Capability confinement, deny by default',
@@ -43,6 +51,16 @@ const tiles = doc.sections
     if (!m) throw new Error(`spec hub: no gist for draft section "${s.id}" (${s.title}); add it to src/lib/spec-map.ts`);
     return { ...s, ...m };
   });
+// The draft's headings are Title Case; the tiles follow the site's sentence case.
+const KEEP = new Set(['HTTP', 'JSON:API', 'Google', 'AIP', 'IANA', 'WIT', 'REST', 'REST:ACT', 'SSE', 'OPTIONS', 'API', 'URI']);
+const sentence = (t: string) =>
+  t
+    .split(' ')
+    .map((w, i) => {
+      const bare = w.replace(/^[(]|[):,]+$/g, '');
+      return i === 0 || KEEP.has(bare) || /[`:.]/.test(bare) ? w : w.toLowerCase();
+    })
+    .join(' ');
 const tagClass = (t: Tag) => ({ core: 't-core', optional: 't-opt', 'core + optional': 't-mixed', informative: 't-info', registry: 't-info' })[t];
 
 const tokens = featureTokens();
@@ -122,7 +140,7 @@ const registries = [
           {
             core.map((c) => (
               <li>
-                <span class="kw">MUST</span>
+                <span class="kw">MUST</span>{' '}
                 {c}
               </li>
             ))
@@ -144,10 +162,10 @@ const registries = [
             <li>
               <a href={`${DRAFT_PATH}#${t.id}`}>
                 <span class="top">
-                  <span class="n">§{t.num}</span>
+                  <span class="n">{/^[A-Z]/.test(t.num) ? `Appendix ${t.num}` : `§${t.num}`}</span>
                   <span class={`tag ${tagClass(t.tag)}`}>{t.tag}</span>
                 </span>
-                <span class="title">{t.title}</span>
+                <span class="title">{sentence(t.title)}</span>
                 <span class="gist">{t.gist}</span>
               </a>
             </li>
@@ -168,7 +186,7 @@ const registries = [
       <p>
         A server lists the optional features it supports in <span class="code-inline">service.features</span>. A client
         may rely on a behavior only when its token is advertised. Token names are permanent; a feature whose contract
-        changes takes a new token.
+        changes incompatibly takes a new token.
       </p>
       <ul class="links">
         {
@@ -192,7 +210,7 @@ const registries = [
           <input type="search" id="token-filter" placeholder={`Filter ${tokens.length} tokens`} aria-label="Filter feature tokens" autocomplete="off" />
         </label>
       </div>
-      <ul class="tokens" id="token-list">
+      <ul class="tokens" id="token-list" tabindex="0" role="region" aria-label="Feature tokens">
         {
           tokens.map((t) => (
             <li data-q={`${t.token} ${t.plain} ${t.status}`.toLowerCase()}>
@@ -212,7 +230,7 @@ const registries = [
       <div class="head">
         <h2 class="h2">The guest contract</h2>
         <span class="note">
-          <a href={`${DRAFT_PATH}#appendix-wit`}>{doc.sections.find((s) => s.id === 'appendix-wit')?.label}</a>
+          <a href={`${DRAFT_PATH}#appendix-wit`}>{doc.sections.find((s) => s.id === 'appendix-wit')?.label}</a>{' '}
           of the draft, package rest-act:plugin@0.1.0
         </span>
       </div>
@@ -525,6 +543,8 @@ const registries = [
   }
   .search:focus-within {
     border-color: var(--signal);
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
   }
   .search input {
     border: 0;

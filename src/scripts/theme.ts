@@ -1,5 +1,5 @@
 /** Theme toggle. The first paint is handled by the inline script in Base.astro; this only reacts to clicks. */
-const KEY = 'restact-theme'; // keep in sync with THEME_KEY in site.config.ts
+import { THEME_KEY as KEY } from '../site.config';
 
 const root = document.documentElement;
 const current = () => root.getAttribute('data-theme') ?? 'dark';
@@ -9,8 +9,8 @@ function sync() {
   document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((b) => {
     b.setAttribute('aria-label', `Switch to the ${next} theme`);
   });
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', getComputedStyle(document.body).backgroundColor);
+  const ground = getComputedStyle(document.body).backgroundColor;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', ground));
 }
 
 document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((b) => {

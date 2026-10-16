@@ -14,7 +14,7 @@ interface Props {
 const { tone = 'note', title } = Astro.props;
 ---
 
-<aside class={`callout ${tone}`}>
+<aside class={`callout ${tone}`} role="note">
   {title && <div class="title">{title}</div>}
   <div class="body"><slot /></div>
 </aside>

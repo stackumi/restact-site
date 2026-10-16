@@ -7,6 +7,7 @@ import { DRAFT } from '../../site.config';
 
 const doc = renderDraft();
 const f = doc.front;
+if (f.docname !== DRAFT.docname) throw new Error(`site.config DRAFT.docname (${DRAFT.docname}) differs from the draft's front matter (${f.docname})`);
 const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
 const sourceUrl = `${SPECS_REPO}/blob/main/${DRAFT_FILE}`;
 const top = doc.sections.filter((s) => s.depth === 1);

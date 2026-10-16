@@ -1,8 +1,9 @@
 # restact.org · restact.dev
 
-The REST:ACT website: a static Astro site (no adapter, no server runtime). The home page, the
-"How it works" page and the shared layouts and components are in place; the remaining pages follow
-the route plan in `src/site.config.ts` (`DOCS_NAV`).
+The REST:ACT website: a static Astro site (no adapter, no server runtime). Pages: the home page,
+How it works, Security, Compare, Presentation verbs, Get started, the specification hub and the
+rendered specification documents under `/spec/`, and a 404 page. The docs routes are listed in
+`DOCS_NAV` in `src/site.config.ts`.
 
 ## Run
 
@@ -19,10 +20,16 @@ and so Dependabot, can read. It also carries the one-day supply-chain hold, whic
 bypasses, and the rulings on dependency install scripts. Dependabot proposes updates weekly,
 waiting out the same one-day hold.
 
-`check-site.mjs` fails the build on banned words in prose, email addresses, strings that must not
-be published, a second `<h1>`, a robots or `noindex` setting that disagrees with `INDEXABLE`, and
-broken internal links or anchors. Routes that are planned but not built yet are reported as
-warnings, one per route.
+`check-site.mjs` fails the build on banned words in prose, email addresses (in the built pages and in
+the vendored `src/content/spec/` sources), strings that must not be published, a second `<h1>`, a
+duplicate `id`, kramdown or template leftovers on the `/spec/` pages, a robots or `noindex` setting
+that disagrees with `INDEXABLE`, and broken internal links or anchors. It prints the number of
+pages checked and exits non-zero on any error.
+
+The banned-word check skips the specification text itself, because the normative wording is not
+ours to change. `SpecBody.astro` wraps exactly that text in `<!--verbatim-->` ... `<!--/verbatim-->`
+markers and the check drops only that span, so our own copy on the same pages (the document card,
+the hub, the page descriptions) is still checked. Meta descriptions are always checked.
 
 ## The specification pages
 
@@ -36,8 +43,10 @@ corepack pnpm sync:spec [path-to-restact-specs]   # default ../restact-specs
 corepack pnpm verify
 ```
 
-and commits the result. The sync strips the draft author's `name:` and `email:` lines, so no
-address enters this repository. `src/lib/specmd.ts` turns the kramdown-rfc draft and the plain
+and commits the result. The sync keeps only the `ins:` line of the draft's `author:` list (any
+other key there is dropped), stops with an error if the draft has no front matter, and scans every
+copied file for an email address, deleting its output and failing if it finds one. No address
+enters this repository. `src/lib/specmd.ts` turns the kramdown-rfc draft and the plain
 Markdown files into HTML (section numbering, `{#anchor}` ids, `{{xref}}` links, references,
 BCP 14 keywords). `src/lib/spec-map.ts` holds the hand-written gists and core/optional tags for the
 section map on `/spec/`; the build fails if the draft gains a top-level section with no entry.
@@ -52,7 +61,9 @@ section map on `/spec/`; the build fails if the draft gains a top-level section 
 | `src/layouts/Base.astro` | document shell: head, theme script, header, footer. Props `title`, `description`, `wide` |
 | `src/layouts/Docs.astro` | docs page: side nav, article, on-this-page list, prev/next |
 | `src/layouts/MdPage.astro` | maps MDX frontmatter onto `Docs.astro` |
-| `src/components/` | Mark, Wordmark, Header, ThemeToggle, Footer, CodeBlock, Tabs, Callout, MethodTag, AnatomyDemo, ResolutionWalk |
+| `src/components/` | Shell: Mark, Wordmark, Header, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
+| `src/pages/spec/` | the specification hub, the draft, presentation verbs and registries pages |
+| `scripts/` | `sync-spec.mjs` (vendor the specification sources), `check-site.mjs` (content checks) |
 | `src/lib/term.ts` | markup helper for hand-coloured terminal and JSON blocks |
 | `src/lib/shiki-theme.mjs` | the highlighting theme, built from the CSS tokens |
 
@@ -71,7 +82,7 @@ chips: [Explanatory]
 ```
 
 Then make sure the route is listed in `DOCS_NAV` in `src/site.config.ts`; the side nav, the prev/next
-links and the `check:content` route list all read it. Use `h2` and `h3` headings: they build the
+links read it. `check:content` does not read it: it checks every link in the built pages against `dist/`. Use `h2` and `h3` headings: they build the
 on-this-page list. Components (`CodeBlock`, `Tabs`, `Callout`, `ResolutionWalk`) can be imported in
 the MDX body.
 
@@ -88,7 +99,9 @@ To go public, set it to `true`, run `corepack pnpm verify`, and deploy. There is
 
 ## Deploy (Cloudflare Workers, static assets)
 
-`wrangler.jsonc` deploys `dist/` as static assets with no Worker script. Wrangler runs
+`wrangler.jsonc` deploys `dist/` as static assets with no Worker script. Its
+`assets.not_found_handling` is `"404-page"`, so an unknown path gets `dist/404.html` (built from
+`src/pages/404.astro`) with status 404; without it Cloudflare answers with a bare 404. Wrangler runs
 `pnpm run build` itself before uploading. In the Worker's build settings in the Cloudflare
 dashboard:
 
@@ -112,6 +125,6 @@ the other to it (a Cloudflare redirect rule), so search engines see a single sit
 ## Identity
 
 The mark, wordmark, colours and motion follow `docs/design/restact-visual-identity.md` in the
-restact repository (with the SVG originals in `docs/images/`). The wordmark is Space Grotesk Bold
-converted to outlines, so it needs no font. Space Grotesk and JetBrains Mono for the page text are self-hosted from the fontsource packages. The mark's two lit tiles rise once when the
-page first paints, and not at all under reduced motion.
+restactd repository (with the SVG originals in `docs/images/`). The wordmark is Space Grotesk Bold
+converted to outlines, so it needs no font. Space Grotesk and JetBrains Mono for the page text are self-hosted from the fontsource packages. The mark's two lit tiles rise once per visit (a `sessionStorage` flag, read in the head script in
+`Base.astro`), and not at all under reduced motion.

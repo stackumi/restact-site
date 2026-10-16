@@ -16,8 +16,8 @@ for (const p of parts) {
   segments.push(...r.segments);
   headings.push(...r.headings);
 }
-// "On this page" lists each registry and its sections; the catalog's many sub-headings stay out.
-const toc = headings.filter((h) => h.depth === 2 || (h.depth === 3 && !h.slug.startsWith('ui-catalog-nodes-')));
+// "On this page" lists each registry (h2) and its sections (h3) from every file.
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 <Docs

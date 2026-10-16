@@ -101,6 +101,7 @@ const showStrip = copy || stripLabel;
     white-space: nowrap;
   }
   .copy {
+    position: relative;
     margin-left: auto;
     min-height: 32px;
     padding: 0 10px;
@@ -112,6 +113,12 @@ const showStrip = copy || stripLabel;
     color: var(--ink-2);
     cursor: pointer;
     transition: color 120ms ease, background-color 120ms ease;
+  }
+  /* The button looks 32px tall; its hit area is 44px. */
+  .copy::after {
+    content: '';
+    position: absolute;
+    inset: -6px -4px;
   }
   .copy:hover {
     color: var(--ink);
@@ -125,6 +132,11 @@ const showStrip = copy || stripLabel;
     font-size: 13.5px;
     line-height: 1.75;
     color: var(--ink-2);
+  }
+  /* A terminal line is a command: wrap it at the box edge (a quoted URL has no break point). */
+  .terminal .body :global(pre) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .body :global(code) {
     font-family: var(--font-mono);

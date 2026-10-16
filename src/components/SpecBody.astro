@@ -6,6 +6,10 @@ import '../styles/spec.css';
  * The article body of a rendered specification document: HTML segments from lib/specmd.ts with
  * the code fences drawn by CodeBlock. Render it directly inside the Docs layout's default slot so
  * its headings, paragraphs and tables are direct children of .prose.
+ *
+ * The output is wrapped in <!--verbatim--> ... <!--/verbatim--> markers: scripts/check-site.mjs skips
+ * the banned-word check inside that span only (the normative text is not ours to reword), so the
+ * page's own copy around it is still checked.
  */
 interface Props {
   segments: Segment[];
@@ -13,8 +17,10 @@ interface Props {
 const { segments } = Astro.props;
 ---
 
+<Fragment set:html="<!--verbatim-->" />
 {
   segments.map((s) =>
     'html' in s ? <Fragment set:html={s.html} /> : <CodeBlock code={s.code} lang={s.lang as any} label={s.label} />,
   )
 }
+<Fragment set:html="<!--/verbatim-->" />

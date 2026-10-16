@@ -183,15 +183,49 @@ export function rewriteHref(href: string, opts: { file?: string; idPrefix?: stri
     if (/^https:\/\/github\.com\/stackumi\/restactd\/(?:blob|tree)\/main\/spec(?:\/|$)/.test(href)) return null;
     return href;
   }
-  const [path, frag] = href.split('#');
-  const base = path.split('/').pop() ?? '';
-  if (base === DRAFT_FILE) return DRAFT_PATH;
-  if (base === 'presentation-verbs.md') return PV_PATH;
-  if (base === 'README.md') return `${REGISTRIES_PATH}#registries`;
-  const reg = base.match(/^(.+)\.md$/);
-  if (reg && REGISTRY_FILES.some((r) => r.slug === reg[1])) return `${REGISTRIES_PATH}#${reg[1]}${frag ? `-${frag}` : ''}`;
+  // Resolve against the vendored file's own place in the restact-specs repository.
+  const [rel, frag] = href.split('#');
+  const from = opts.file ?? DRAFT_FILE;
+  let abs: string;
+  try {
+    abs = new URL(rel, `x:/${from}`).pathname.replace(/^\//, '');
+  } catch {
+    abs = '';
+  }
+  if (abs) {
+    const fragPart = frag ? `#${frag}` : '';
+    if (abs === DRAFT_FILE) return DRAFT_PATH + fragPart;
+    if (abs === 'presentation-verbs.md') return PV_PATH + fragPart;
+    if (abs === 'registries/README.md') return `${REGISTRIES_PATH}#registries`;
+    const reg = abs.match(/^registries\/(.+)\.md$/);
+    if (reg && REGISTRY_FILES.some((r) => r.slug === reg[1])) return `${REGISTRIES_PATH}#${reg[1]}${frag ? `-${frag}` : ''}`;
+    // Anything else in the repository (fixtures, concepts.md, the root README) stays on GitHub.
+    const dir = /\/$/.test(rel) || !/\.[A-Za-z0-9]+$/.test(abs);
+    return `${SPECS_REPO}/${dir ? 'tree' : 'blob'}/main/${abs.replace(/\/$/, '')}${fragPart}`;
+  }
   console.warn(`specmd: dropped link ${href} in ${opts.file ?? 'a vendored file'}`);
   return null;
+}
+
+/** The text a link to a vendored file shows when the source wrote the file name as a code span. */
+const DOC_LABELS: Record<string, string> = {
+  [DRAFT_FILE]: 'draft',
+  'presentation-verbs.md': 'Presentation verbs',
+  'registries/README.md': 'Registries',
+  'registries/feature-tokens.md': 'Feature Tokens',
+  'registries/capability-interfaces.md': 'Capability Interfaces',
+  'registries/source-languages.md': 'Source Languages',
+  'registries/verb-property-names.md': 'Verb Property Names',
+  'registries/ui-catalog-nodes.md': 'UI Catalog Nodes',
+  'registries/llm-providers.md': 'LLM Providers',
+};
+function docLabel(codeText: string, hrefPath: string, from: string): string | null {
+  if (hrefPath !== codeText) return null;
+  try {
+    return DOC_LABELS[new URL(hrefPath, `x:/${from}`).pathname.replace(/^\//, '')] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export const REGISTRY_FILES = [
@@ -226,6 +260,9 @@ function prepareDraft(src: string) {
 
   const letter = (n: number) => String.fromCharCode(64 + n);
   const push = (depth: number, raw: string, id: string | undefined) => {
+    // kramdown-rfc nesting: a heading deeper than one level below the last numbered one counts as
+    // the next level down (a "###" straight under a "#" is the section's first subsection).
+    if (part !== 'abstract') depth = Math.min(depth, counters.length + 1);
     const title = plain(raw);
     let num = '';
     let label = '';
@@ -233,7 +270,6 @@ function prepareDraft(src: string) {
     if (!unnumbered) {
       counters.length = depth;
       counters[depth - 1] = (counters[depth - 1] ?? 0) + 1;
-      for (let i = 0; i < depth - 1; i++) counters[i] ||= 0;
       num = counters.map((n, i) => (i === 0 && part === 'back' ? letter(n) : String(n))).join('.');
       label = `${part === 'back' ? 'Appendix' : 'Section'} ${num}`;
     }
@@ -394,6 +430,10 @@ function engine(opts: EngineOpts) {
       },
     ],
     renderer: {
+      // Raw HTML in a vendored file is shown as text, never passed through.
+      html(token: Tokens.HTML | Tokens.Tag) {
+        return esc(token.text);
+      },
       heading(token: Tokens.Heading) {
         const inner = this.parser.parseInline(token.tokens);
         let id: string;
@@ -415,7 +455,7 @@ function engine(opts: EngineOpts) {
         }
         ids.add(id);
         headings.push({ depth, slug: id, text: `${num ? num + ' ' : ''}${plain(token.text)}` });
-        const n = num ? `<span class="num">${num}</span>` : '';
+        const n = num ? `<span class="num">${num}</span> ` : '';
         const aria = label ? `Link to ${label}` : `Link to this section`;
         return `<h${depth} id="${id}">${n}${inner}<a class="anchor" href="#${id}" aria-label="${esc(aria)}">#</a></h${depth}>\n`;
       },
@@ -438,6 +478,12 @@ function engine(opts: EngineOpts) {
         const inner = this.parser.parseInline(token.tokens);
         const href = rewriteHref(token.href, { file: opts.file, idPrefix: opts.idPrefix });
         if (href === null) return inner;
+        const only = token.tokens.length === 1 && token.tokens[0].type === 'codespan' ? (token.tokens[0] as Tokens.Codespan).text : null;
+        const label = only !== null && !/^(?:https?:|#)/.test(token.href) ? docLabel(only, token.href.split('#')[0], opts.file) : null;
+        if (label !== null) {
+          const t = token.title ? ` title="${esc(token.title)}"` : '';
+          return `<a href="${esc(href)}"${t}>${esc(label)}</a>`;
+        }
         const t = token.title ? ` title="${esc(token.title)}"` : '';
         return `<a href="${esc(href)}"${t}>${inner}</a>`;
       },

@@ -1,7 +1,8 @@
 ---
 /**
- * ARIA tabs: real buttons, arrow keys/Home/End move and select, and the first panel shows without
- * JavaScript (the others carry `hidden` until the script reveals them).
+ * ARIA tabs: real buttons, arrow keys/Home/End move and select. Without JavaScript every panel is
+ * shown in turn under its label and the tab list is hidden; with it (html.js, set before paint)
+ * only the panel marked data-active shows.
  *
  * Props
  *   label  accessible name of the tab list, e.g. "Verb language"
@@ -48,7 +49,8 @@ const uid = Astro.props.id ?? label.toLowerCase().replace(/[^a-z0-9]+/g, '-').re
         role="tabpanel"
         id={`${uid}-panel-${t.id}`}
         aria-labelledby={`${uid}-tab-${t.id}`}
-        hidden={i !== 0}
+        data-label={t.label}
+        data-active={i === 0 ? '' : undefined}
       >
         <slot name={t.id} />
       </div>
@@ -84,7 +86,7 @@ const uid = Astro.props.id ?? label.toLowerCase().replace(/[^a-z0-9]+/g, '-').re
     margin-bottom: 12px;
   }
   button {
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 14px;
     border: 1px solid transparent;
     border-radius: 9px;
@@ -103,6 +105,23 @@ const uid = Astro.props.id ?? label.toLowerCase().replace(/[^a-z0-9]+/g, '-').re
     background: var(--surface-2);
     border-color: var(--line-strong);
     color: var(--ink);
+  }
+  /* No script: all panels in turn, each under its label; the tab list does nothing, so it goes. */
+  :global(html:not(.js)) .list {
+    display: none;
+  }
+  :global(html:not(.js)) .panel::before {
+    content: attr(data-label);
+    display: block;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--sunk-head);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  :global(html.js) .panel:not([data-active]) {
+    display: none;
   }
   /* A CodeBlock inside a tab panel drops its own frame; the tab frame provides it. */
   .panel :global([data-codeblock]) {
@@ -127,7 +146,7 @@ const uid = Astro.props.id ?? label.toLowerCase().replace(/[^a-z0-9]+/g, '-').re
         tab.setAttribute('aria-selected', String(on));
         tab.tabIndex = on ? 0 : -1;
         const panel = document.getElementById(tab.getAttribute('aria-controls') ?? '');
-        if (panel) panel.hidden = !on;
+        if (panel) panel.toggleAttribute('data-active', on);
       });
       if (focus) next.focus();
     };

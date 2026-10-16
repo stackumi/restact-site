@@ -97,7 +97,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
         {
           section && (
             <div class="crumb">
-              {section} <span class="sep">/</span> {title}
+              {section} <span class="sep" aria-hidden="true">/</span> {title}
             </div>
           )
         }
@@ -166,9 +166,11 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
 <style>
   .docs {
-    max-width: 1360px;
+    --docs-pad: clamp(16px, 3vw, 32px);
+    /* The padding is inside border-box, so add it to get the full 1360px measure. */
+    max-width: calc(1360px + 2 * var(--docs-pad));
     margin: 0 auto;
-    padding: 0 clamp(16px, 3vw, 32px);
+    padding: 0 var(--docs-pad);
     display: grid;
     grid-template-columns: 240px minmax(0, 760px) 220px;
     justify-content: space-between;
@@ -455,6 +457,11 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     font-size: 12px;
     color: var(--ink-2);
     cursor: pointer;
+  }
+  .md-copy::after {
+    content: '';
+    position: absolute;
+    inset: -6px -4px;
   }
   .md-copy:hover {
     color: var(--ink);

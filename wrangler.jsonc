@@ -12,5 +12,7 @@
   // Wrangler runs the Astro build itself, so a deploy never depends on the dashboard's build
   // command (an extra `pnpm build` there is harmless).
   "build": { "command": "pnpm run build" },
-  "assets": { "directory": "./dist" }
+  // Serve dist/404.html (the built src/pages/404.astro) with status 404 for any path that is not a
+  // file. Without this, assets default to "none" and an unknown path gets a bare 404.
+  "assets": { "directory": "./dist", "not_found_handling": "404-page" }
 }

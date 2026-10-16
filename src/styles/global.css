@@ -113,7 +113,8 @@ pre,
 /* ---- Layout utilities ------------------------------------------------------------------- */
 
 .container {
-  max-width: 1200px;
+  /* The gutter sits inside border-box padding, so the content measure is a full 1200px. */
+  max-width: calc(1200px + 2 * var(--gutter));
   margin: 0 auto;
   padding-inline: var(--gutter);
 }

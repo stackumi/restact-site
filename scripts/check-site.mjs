@@ -1,29 +1,23 @@
 // Content checks over the built site (dist/**/*.html). Run after `astro build`:
 //   node scripts/check-site.mjs        (or: pnpm run check:content)
 //
-// Errors exit non-zero; warnings do not. What it enforces:
-//   - banned marketing/AI-tell wording in visible text (allowed inside <code> and <pre>); the three
-//     pages that render the vendored specification verbatim (VERBATIM) are exempt, because the
-//     normative text is not ours to reword. Their meta descriptions are still checked.
+// Any error exits non-zero. What it enforces:
+//   - banned marketing/AI-tell wording in visible text (allowed inside <code> and <pre>); the
+//     specification text itself is exempt, because the normative text is not ours to reword. Pages
+//     that render it wrap exactly that span in <!--verbatim-->...<!--/verbatim--> (SpecBody does),
+//     so our own copy on those pages is still checked, as are all meta descriptions.
 //   - no email addresses, no names or hosts that must not be published
 //   - noindex meta on every page, and a disallowing robots.txt, while INDEXABLE is false
 //   - exactly one <h1> per page
 //   - no duplicate id on a page, and no kramdown or template leftovers ({{ref}}, {:ial}, {::ext},
 //     "--- middle") in the rendered specification pages under /spec/
-//   - internal links and same-site anchors resolve (every href="#x" needs a matching id="x"); links to routes of the planned site map that
-//     are not built yet are warnings, anything else is an error
+//   - internal links and same-site anchors resolve (every href="#x" needs a matching id="x")
+//   - no email address in src/content/spec/** (the vendored specification sources)
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const CONFIG = new URL('../src/site.config.ts', import.meta.url).pathname;
-
-// The planned site map (the brief's information architecture). A link to one of these that is not
-// built yet is a warning. Remove an entry once its page ships if you want the check to be strict.
-const PLANNED = ['/', '/how-it-works/', '/security/', '/compare/', '/presentation-verbs/', '/start/', '/spec/', '/spec/draft/', '/spec/presentation-verbs/'];
-
-// Pages whose body is the specification text itself, rendered from src/content/spec.
-const VERBATIM = ['/spec/draft/', '/spec/presentation-verbs/', '/spec/registries/'];
 
 const BANNED_WORDS = [
   /\bseamless(?:ly)?\b/i, /\brobust(?:ness)?\b/i, /\bleverag(?:e|es|ed|ing)\b/i, /\bpowerful\b/i,
@@ -45,10 +39,7 @@ const FORBIDDEN = [
 const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b/;
 
 const errors = [];
-const warnings = [];
-const pending = new Map(); // planned route -> pages linking to it
 const err = (page, msg) => errors.push(`${page}: ${msg}`);
-const warn = (page, msg) => warnings.push(`${page}: ${msg}`);
 
 if (!existsSync(DIST)) {
   console.error('dist/ not found. Run `astro build` first.');
@@ -62,6 +53,16 @@ function* walk(dir) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) yield* walk(p);
     else yield p;
+  }
+}
+
+// Vendored specification sources must hold no email address.
+const SPEC_SRC = new URL('../src/content/spec/', import.meta.url).pathname;
+if (existsSync(SPEC_SRC)) {
+  for (const f of walk(SPEC_SRC)) {
+    if (!f.endsWith('.md')) continue;
+    const m = readFileSync(f, 'utf8').match(EMAIL);
+    if (m) err(relative(SPEC_SRC, f), `email address "${m[0]}" in a vendored specification file`);
   }
 }
 
@@ -90,13 +91,15 @@ for (const file of pages) {
   const page = route(file);
   const html = readFileSync(file, 'utf8');
   const noScripts = strip(html, 'script', 'style');
-  const visibleHtml = strip(noScripts, 'pre', 'code', 'svg').replace(/<!--[\s\S]*?-->/g, ' ');
+  // Drop only the verbatim specification span (comments are removed below, so do this first).
+  const ours = noScripts.replace(/<!--verbatim-->[\s\S]*?<!--\/verbatim-->/g, ' ');
+  const visibleHtml = strip(ours, 'pre', 'code', 'svg').replace(/<!--[\s\S]*?-->/g, ' ');
   const text = decode(visibleHtml.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
   const desc = decode((html.match(/<meta name="description" content="([^"]*)"/) ?? [])[1] ?? '');
 
   // (a) banned words, outside code
   for (const re of BANNED_WORDS) {
-    const m = ((VERBATIM.includes(page) ? '' : text) + ' ' + desc).match(re);
+    const m = (text + ' ' + desc).match(re);
     if (m) err(page, `banned wording "${m[0]}"`);
   }
   // (b) emails, anywhere in the markup (scripts and styles excluded)
@@ -120,7 +123,7 @@ for (const file of pages) {
   // (e3) markup that should have been consumed by the specification renderer
   if (page.startsWith('/spec/')) {
     const body = decode(noScripts.replace(/<[^>]+>/g, ' '));
-    for (const [re, label] of [[/\{\{/, '{{'], [/\{:/, '{:'], [/^---\s+(?:abstract|middle|back)\b/m, '--- section marker'], [/@@\w+@@/, '@@ placeholder'], [/\u0000/, 'NUL placeholder']]) {
+    for (const [re, label] of [[/\{\{/, '{{'], [/\{:/, '{:'], [/(?:^|\s)---\s+(?:abstract|middle|back)\b/, '--- section marker'], [/@@\w+@@/, '@@ placeholder'], [/\u0000/, 'NUL placeholder']]) {
       if (re.test(body)) err(page, `unrendered markup "${label}"`);
     }
   }
@@ -133,8 +136,7 @@ for (const file of pages) {
     const abs = target.startsWith('/') ? target : new URL(target, 'http://x' + page).pathname;
     const dest = fileFor(abs);
     if (!dest) {
-      if (PLANNED.includes(abs)) pending.set(abs, (pending.get(abs) ?? new Set()).add(page));
-      else err(page, `link to ${abs} (no such route)`);
+      err(page, `link to ${abs} (no such route)`);
       continue;
     }
     if (hash && dest.endsWith('.html') && !idsOf(dest).has(hash)) err(page, `anchor #${hash} not found on ${abs}`);
@@ -146,10 +148,7 @@ const robots = existsSync(join(DIST, 'robots.txt')) ? readFileSync(join(DIST, 'r
 if (!indexable && !/^Disallow:\s*\/\s*$/m.test(robots)) err('/robots.txt', 'does not disallow everything while INDEXABLE is false');
 if (indexable && /^Disallow:\s*\/\s*$/m.test(robots)) err('/robots.txt', 'disallows everything while INDEXABLE is true');
 
-for (const [r, from] of pending) warn(r, `planned page not built yet, linked from ${[...from].join(', ')}`);
-
 const unique = (a) => [...new Set(a)];
-for (const w of unique(warnings)) console.warn(`warning  ${w}`);
 for (const e of unique(errors)) console.error(`error    ${e}`);
-console.log(`checked ${pages.length} pages, ${unique(errors).length} errors, ${unique(warnings).length} warnings`);
+console.log(`checked ${pages.length} pages, ${unique(errors).length} errors`);
 process.exit(errors.length ? 1 : 0);
