@@ -1,0 +1,396 @@
+---
+/* "Browsers made this move once already": the browser's path from static pages to running any site's
+   code, set against the server's path to code from its own users, then a side-by-side of how each one
+   confines that code. Desktop shows two horizontal tracks; under 720px they turn into two columns.
+   The server track draws itself once when it scrolls into view (off under reduced motion, and the
+   finished state shows without JavaScript). */
+
+const tracks = [
+  {
+    id: 'browser',
+    label: 'The browser',
+    stages: [
+      { title: 'Static pages', note: 'It displays what the server sent.' },
+      { title: 'Scripts in pages', note: 'Pages gain behavior.' },
+      { title: 'Apps from any site', note: 'Any site’s code runs, in a sandbox.' },
+    ],
+  },
+  {
+    id: 'server',
+    label: 'The server',
+    stages: [
+      { title: 'Static files', note: 'It returns what is on disk.' },
+      { title: 'Apps its operator ships', note: 'Behavior changes with each release.' },
+      { title: 'Code from its users', note: 'Users and their agents add verbs, in a sandbox.', now: true },
+    ],
+  },
+];
+
+const rows = [
+  { q: 'Who writes the code', browser: 'Any site you open', restact: 'Its users, or agents acting for them' },
+  { q: 'How it arrives', browser: 'A script in a page', restact: 'A verb uploaded to a path' },
+  { q: 'What it can reach', browser: 'What the browser exposes to the page', restact: 'Only the host interfaces it imports' },
+  { q: 'Whose authority it has', browser: 'The page’s origin', restact: 'The caller’s permissions' },
+  { q: 'What stops runaway code', browser: 'The browser can stop a stuck script', restact: 'Time, compute and memory limits' },
+];
+---
+
+<section class="evo section" aria-labelledby="evo-title">
+  <div class="container">
+    <div class="head">
+      <span class="eyebrow">The same move</span>
+      <h2 class="h2" id="evo-title">Browsers made this move once already.</h2>
+      <p class="lede">
+        A browser once only displayed documents. Today it runs code from every site you open, inside a sandbox, and
+        we hardly notice how extraordinary that is. Servers are still at the earlier step: what an application does stays fixed until its operator
+        ships a release. REST:ACT lets the people who use a server, and their agents, add to it under the same kind of
+        confinement.
+      </p>
+    </div>
+
+    <div class="tracks" data-evo>
+      {
+        tracks.map((t, ti) => (
+          <>
+            <span class:list={['track-label', t.id]} style={`--t:${ti + 1}`}>
+              {t.label}
+            </span>
+            {t.stages.map((st, si) => (
+              <div class:list={['stage', t.id, { now: st.now, last: si === t.stages.length - 1, 'to-now': t.stages[si + 1]?.now }]} data-s={si + 1} style={`--t:${ti + 1}; --s:${si + 1}`}>
+                <span class="node" aria-hidden="true" />
+                <span class="title">{st.title}</span>
+                <span class="note">{st.note}</span>
+                {st.now && <span class="tag">REST:ACT</span>}
+              </div>
+            ))}
+          </>
+        ))
+      }
+    </div>
+
+    <div class="compare-wrap">
+      <table class="compare">
+        <caption class="sr-only">How the browser confines code from any site, and how REST:ACT confines code from a server’s users</caption>
+        <thead>
+          <tr>
+            <td></td>
+            <th scope="col">In the browser</th>
+            <th scope="col" class="rc">In REST:ACT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rows.map((r) => (
+              <tr>
+                <th scope="row">{r.q}</th>
+                <td>{r.browser}</td>
+                <td class="rc">{r.restact}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <a class="more" href="/security/">How the confinement works →</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const el = document.querySelector<HTMLElement>('[data-evo]');
+  if (el && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.classList.add('armed');
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          el.classList.add('drawn');
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+  }
+</script>
+
+<style>
+  .evo {
+    border-top: 1px solid var(--hair);
+    overflow-x: clip; /* the lit stage's glow must not widen the page on a phone */
+  }
+  .head {
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* Tracks: a 4-column grid (label + three stages), one row per track. */
+  .tracks {
+    --gap: clamp(20px, 3vw, 40px);
+    margin-top: clamp(40px, 5vw, 64px);
+    display: grid;
+    grid-template-columns: 132px repeat(3, minmax(0, 1fr));
+    column-gap: var(--gap);
+    row-gap: 36px;
+  }
+  .track-label {
+    grid-row: var(--t);
+    grid-column: 1;
+    padding-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .track-label.server {
+    color: var(--ink);
+  }
+  .stage {
+    grid-row: var(--t);
+    grid-column: calc(var(--s) + 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 30px;
+  }
+  .node {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--ground);
+    border: 1.5px solid var(--line-strong);
+    z-index: 1;
+  }
+  /* The connector from this stage's node to the next one. */
+  .stage:not(.last)::after {
+    content: '';
+    position: absolute;
+    top: 6.25px;
+    left: 14px;
+    right: calc(-1 * var(--gap));
+    height: 1.5px;
+    background: var(--line-strong);
+    transform-origin: left center;
+  }
+  .stage.browser .node {
+    background: var(--ink-3);
+    border-color: var(--ink-3);
+  }
+  .stage.browser::after {
+    background: var(--ink-3);
+  }
+  .title {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .browser .title {
+    color: var(--ink-2);
+  }
+  .note {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+  .head .h2 {
+    text-wrap: balance;
+  }
+  /* A soft light behind the lit stage, the one place the signal colour spreads. */
+  .stage.now::before {
+    content: '';
+    position: absolute;
+    inset: -28px -24px -24px -32px;
+    z-index: -1;
+    border-radius: 18px;
+    background: radial-gradient(closest-side at 18% 20%, color-mix(in srgb, var(--signal) 14%, transparent), transparent);
+    pointer-events: none;
+  }
+  .stage.now {
+    isolation: isolate;
+  }
+  .armed .stage.now::before {
+    opacity: 0;
+    transition: opacity 700ms ease 1000ms;
+  }
+  .armed.drawn .stage.now::before {
+    opacity: 1;
+  }
+  .stage.now .node {
+    background: var(--signal);
+    border-color: var(--signal);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--signal) 22%, transparent);
+  }
+  .stage.to-now::after {
+    background: linear-gradient(90deg, var(--line-strong), var(--signal));
+  }
+  .stage.now .title {
+    color: var(--ink);
+  }
+  .tag {
+    align-self: flex-start;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border: 1px solid var(--signal);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--signal);
+  }
+
+  /* Draw-in: armed by the script, so the finished state shows without JS or with reduced motion. */
+  .armed .stage.server::after {
+    transform: scaleX(0);
+    transition: transform 520ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  }
+  .armed .stage.server[data-s='2']::after {
+    transition-delay: 520ms;
+  }
+  .armed .stage.server :is(.node, .title, .note, .tag) {
+    opacity: 0.25;
+    transition: opacity 360ms ease;
+  }
+  .armed .stage.server[data-s='2'] :is(.node, .title, .note) {
+    transition-delay: 420ms;
+  }
+  .armed .stage.server[data-s='3'] :is(.node, .title, .note, .tag) {
+    transition-delay: 940ms;
+  }
+  .armed.drawn .stage.server::after {
+    transform: none;
+  }
+  .armed.drawn .stage.server :is(.node, .title, .note, .tag) {
+    opacity: 1;
+  }
+
+  /* Phone: two columns (browser | server), one row per stage, vertical connectors. */
+  @media (max-width: 719px) {
+    .tracks {
+      --gap: 28px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 18px;
+      row-gap: var(--gap);
+    }
+    .track-label {
+      grid-row: 1;
+      grid-column: var(--t);
+    }
+    .stage {
+      grid-row: calc(var(--s) + 1);
+      grid-column: var(--t);
+      padding-top: 0;
+      padding-left: 26px;
+    }
+    .node {
+      top: 3px;
+    }
+    .stage:not(.last)::after {
+      top: 17px;
+      bottom: calc(-1 * var(--gap) - 3px);
+      left: 6.25px;
+      right: auto;
+      width: 1.5px;
+      height: auto;
+      transform-origin: center top;
+    }
+    .stage.to-now::after {
+      background: linear-gradient(180deg, var(--line-strong), var(--signal));
+    }
+    .armed .stage.server::after {
+      transform: scaleY(0);
+    }
+    .title {
+      font-size: 16px;
+    }
+    .note {
+      font-size: 13.5px;
+    }
+  }
+
+  /* Comparison table */
+  .compare-wrap {
+    margin-top: clamp(48px, 6vw, 72px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .compare {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15.5px;
+  }
+  .compare th,
+  .compare td {
+    padding: 14px 18px 14px 0;
+    text-align: left;
+    vertical-align: top;
+    border-top: 1px solid var(--hair);
+  }
+  .compare thead th {
+    border-top: 0;
+    padding-bottom: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .compare thead td {
+    border-top: 0;
+  }
+  .compare thead th.rc {
+    color: var(--signal);
+  }
+  .compare tbody th {
+    width: 26%;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .compare tbody td {
+    width: 37%;
+    color: var(--ink-3);
+  }
+  .compare tbody td.rc {
+    color: var(--ink);
+  }
+  .more {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 500;
+  }
+  @media (max-width: 719px) {
+    .compare thead td {
+      display: none;
+    }
+    .compare tr {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 18px;
+    }
+    .compare thead tr {
+      padding-bottom: 4px;
+    }
+    .compare tbody th {
+      grid-column: 1 / -1;
+      width: auto;
+      padding: 16px 0 4px;
+    }
+    .compare tbody td {
+      width: auto;
+      border-top: 0;
+      padding: 0 0 16px;
+      font-size: 14.5px;
+    }
+    .compare thead th {
+      padding: 0 0 8px;
+    }
+  }
+</style>

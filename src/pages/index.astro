@@ -5,6 +5,7 @@ import CodeBlock from '../components/CodeBlock.astro';
 import Tabs from '../components/Tabs.astro';
 import MethodTag from '../components/MethodTag.astro';
 import Venn from '../components/Venn.astro';
+import Evolution from '../components/Evolution.astro';
 import BudgetFigure from '../components/BudgetFigure.astro';
 import UiMock from '../components/UiMock.astro';
 import { term } from '../lib/term';
@@ -217,6 +218,9 @@ const parts = (s: string) => s.split(/(`[^`]+`)/g).filter(Boolean);
       }
     </div>
   </section>
+
+  <!-- The same move -->
+  <Evolution />
 
   <!-- The colon -->
   <section class="section container split colon">
