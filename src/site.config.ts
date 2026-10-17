@@ -9,9 +9,9 @@ export const INDEXABLE = false;
 
 export const SITE = {
   name: 'REST:ACT',
-  tagline: 'Every noun can act',
+  tagline: 'A web users and their agents can program',
   description:
-    'REST:ACT is an HTTP protocol for adding code to a server at runtime. A client uploads a sandboxed WebAssembly verb to a path, and anyone allowed to can call it with an ordinary GET or POST.',
+    'REST:ACT is an HTTP protocol that lets users, and the agents acting for them, add code to the servers they use: a sandboxed WebAssembly verb on a path, called with an ordinary GET or POST.',
 };
 
 /** The Internet-Draft the protocol is specified in. */
