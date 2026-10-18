@@ -24,10 +24,8 @@ export const DRAFT = {
 export const GITHUB = {
   specs: 'https://github.com/stackumi/restact-specs',
   restactd: 'https://github.com/stackumi/restactd',
-  conformance: 'https://github.com/stackumi/restactd/blob/main/conformance/README.md',
   verbsmith: 'https://github.com/stackumi/restactd/blob/main/mcp/README.md',
   sdk: 'https://github.com/stackumi/restactd/tree/main/sdk/rust',
-  plugins: 'https://github.com/stackumi/restactd/blob/main/plugins/README.md',
 };
 
 /** The restactd documentation site. A custom domain later is a change to this one line. */
@@ -42,6 +40,7 @@ export const RESTACTD_DOCS = {
   javascript: `${DOCS}/guides/javascript/`,
   python: `${DOCS}/guides/python/`,
   rust: `${DOCS}/guides/rust/`,
+  conformance: `${DOCS}/reference/conformance/`,
   aiAgents: `${DOCS}/guides/ai-agents/`,
   httpApi: `${DOCS}/reference/http-api/`,
   configuration: `${DOCS}/reference/configuration/`,
