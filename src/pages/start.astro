@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock.astro';
 import Tabs from '../components/Tabs.astro';
 import Callout from '../components/Callout.astro';
 import { term } from '../lib/term';
-import { GITHUB, RESTACTD_DOCS } from '../site.config';
+import { RESTACTD_DOCS } from '../site.config';
 
 /* Get started: a guided walk-through of restactd. Every command here is checked against the
    restactd README and docs/getting-started.md; those documents win over the design canvas. */
@@ -83,7 +83,7 @@ const endpoints = [
 
 const next = [
   {
-    title: 'Authoring verbs',
+    title: 'Authoring reference',
     body: 'JavaScript, Python, Rust with restact-sdk, and any toolchain that emits WASI 0.2 components.',
     href: RESTACTD_DOCS.authoringVerbs,
   },
@@ -96,7 +96,7 @@ const next = [
   {
     title: 'Agents and MCP',
     body: 'Plugins that teach a coding agent REST:ACT, and verbsmith, which serves verbs as MCP tools.',
-    href: GITHUB.plugins,
+    href: RESTACTD_DOCS.aiAgents,
   },
 ];
 ---
@@ -144,7 +144,7 @@ const next = [
             With no authentication configured, every caller is anonymous and may deploy, replace or delete any verb. The
             server binds to loopback by default. <span class="code-inline">make docker-run</span> publishes the port on
             127.0.0.1 only; <span class="code-inline">PORT=0.0.0.0:8080</span> would publish an unauthenticated server on every
-            interface. Read the <a href={`${RESTACTD_DOCS.configuration}#security`}>security section of the configuration guide</a>
+            interface. Read the <a href={RESTACTD_DOCS.production}>production checklist</a>
             before exposing it.
           </Callout>
         </div>
@@ -217,10 +217,10 @@ const next = [
         section for each, and one for any other language that emits a WASI 0.2 component.
       </p>
       <p class="links">
-        <a href={`${RESTACTD_DOCS.authoringVerbs}#python-server-side-no-toolchain`}>Python</a>
-        <a href={`${RESTACTD_DOCS.authoringVerbs}#authoring-in-rust-the-reference-path`}>Rust</a>
+        <a href={RESTACTD_DOCS.python}>Python</a>
+        <a href={RESTACTD_DOCS.rust}>Rust</a>
         <a href={`${RESTACTD_DOCS.authoringVerbs}#language-agnostic-uploads`}>Other languages</a>
-        <a href={RESTACTD_DOCS.authoringVerbs}>Authoring guide</a>
+        <a href={RESTACTD_DOCS.authoringVerbs}>Authoring reference</a>
       </p>
     </aside>
 

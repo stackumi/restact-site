@@ -10,7 +10,7 @@ import BudgetFigure from '../components/BudgetFigure.astro';
 import UiMock from '../components/UiMock.astro';
 import { term } from '../lib/term';
 import { viewJson } from '../lib/ui-example';
-import { DRAFT, GITHUB } from '../site.config';
+import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
 
 /* The home page. Copy and structure follow the approved canvas (Main.dc.html); sections link to the
    page that covers them in full. Data for repeated blocks sits up here, markup below. */
@@ -165,7 +165,7 @@ const tools = [
   { name: 'restact-conformance', href: GITHUB.conformance, body: 'Black-box tests for any server. Runs only the checks for the features the server advertises.' },
   { name: 'verbsmith', href: GITHUB.verbsmith, body: 'An MCP server that exposes a REST:ACT host’s verbs as tools and its objects as resources.' },
   { name: 'restact-sdk', href: GITHUB.sdk, body: 'A Rust crate for writing verbs: implement one trait, add one macro, build with plain cargo.' },
-  { name: 'agent plugins', href: GITHUB.plugins, body: 'Skills for Claude Code, Codex CLI and Cursor that teach a coding agent to write, deploy and call verbs.' },
+  { name: 'agent plugins', href: RESTACTD_DOCS.aiAgents, body: 'Skills for Claude Code, Codex CLI and Cursor that teach a coding agent to write, deploy and call verbs.' },
 ];
 
 const ctaSession = term(`

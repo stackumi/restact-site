@@ -120,7 +120,7 @@ Compiling C or C++ to WebAssembly does not make the code memory-safe inside the 
 The specification is a `-00` draft with one implementation.
 
 <Callout tone="warn" title="Before exposing a server">
-  A default restactd is open and anonymous, on localhost. The restactd configuration guide has a production checklist: authentication on (<code>RESTACT_JWT_SECRET</code> or an OIDC issuer), a durable data directory, <code>RESTACT_ISOLATION=process</code>, tenant quotas with a window, object-binding left at its authenticated default, a deliberate bind address behind TLS, and a review of who can reach the management plane.
+  A default restactd is open and anonymous, on localhost. The restactd production checklist lists authentication on (<code>RESTACT_JWT_SECRET</code> or an OIDC issuer), a durable data directory, <code>RESTACT_ISOLATION=process</code>, tenant quotas with a window, object-binding left at its authenticated default, a deliberate bind address behind TLS, and a review of who can reach the management plane.
 </Callout>
 
-The full list is in [Configuration, production checklist](https://github.com/stackumi/restactd/blob/main/docs/configuration.md#production-checklist). The normative text is the [Security Considerations section of the draft](/spec/draft/#security).
+The full list is in the restactd [production checklist](https://stackumi.github.io/restactd/operate/production/), and the host's layers (sandbox, capability confinement, metering, process isolation) are described in its [security model](https://stackumi.github.io/restactd/architecture/security-model/). The normative text is the [Security Considerations section of the draft](/spec/draft/#security).

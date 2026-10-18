@@ -30,15 +30,25 @@ export const GITHUB = {
   plugins: 'https://github.com/stackumi/restactd/blob/main/plugins/README.md',
 };
 
-/** restactd documentation, rendered by GitHub. */
-const DOCS = `${GITHUB.restactd}/blob/main/docs`;
+/** The restactd documentation site. A custom domain later is a change to this one line. */
+export const DOCS_SITE_URL = 'https://stackumi.github.io/restactd';
+const DOCS = DOCS_SITE_URL;
 export const RESTACTD_DOCS = {
-  gettingStarted: `${DOCS}/getting-started.md`,
-  authoringVerbs: `${DOCS}/authoring-verbs.md`,
-  httpApi: `${DOCS}/http-api.md`,
-  configuration: `${DOCS}/configuration.md`,
-  buildingApplications: `${DOCS}/building-applications.md`,
-  architecture: `${DOCS}/architecture.md`,
+  home: `${DOCS}/`,
+  install: `${DOCS}/start/install/`,
+  quickstart: `${DOCS}/start/quickstart/`,
+  concepts: `${DOCS}/concepts/overview/`,
+  authoringVerbs: `${DOCS}/guides/authoring-verbs/`,
+  javascript: `${DOCS}/guides/javascript/`,
+  python: `${DOCS}/guides/python/`,
+  rust: `${DOCS}/guides/rust/`,
+  aiAgents: `${DOCS}/guides/ai-agents/`,
+  httpApi: `${DOCS}/reference/http-api/`,
+  configuration: `${DOCS}/reference/configuration/`,
+  buildingApplications: `${DOCS}/guides/embedding/`,
+  architecture: `${DOCS}/architecture/overview/`,
+  securityModel: `${DOCS}/architecture/security-model/`,
+  production: `${DOCS}/operate/production/`,
 };
 
 export interface NavLink {
@@ -104,10 +114,11 @@ export const FOOTER: NavGroup[] = [
     title: 'Build',
     items: [
       { label: 'Get started', href: '/start/' },
-      { label: 'Authoring verbs', href: RESTACTD_DOCS.authoringVerbs },
+      { label: 'restactd docs', href: RESTACTD_DOCS.home },
+      { label: 'Authoring reference', href: RESTACTD_DOCS.authoringVerbs },
       { label: 'HTTP API', href: RESTACTD_DOCS.httpApi },
       { label: 'Configuration', href: RESTACTD_DOCS.configuration },
-      { label: 'Building applications', href: RESTACTD_DOCS.buildingApplications },
+      { label: 'Embed restactd in a Rust app', href: RESTACTD_DOCS.buildingApplications },
       { label: 'Architecture', href: RESTACTD_DOCS.architecture },
     ],
   },
