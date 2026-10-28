@@ -55,13 +55,13 @@ section map on `/spec/`; the build fails if the draft gains a top-level section 
 
 | Path | What |
 |---|---|
-| `src/site.config.ts` | `INDEXABLE`, site constants, header `NAV`, docs side nav `DOCS_NAV`, `FOOTER`, `THEME_KEY` |
-| `src/styles/tokens.css` | colour, type and spacing tokens, dark default and light |
-| `src/styles/global.css` | reset, shared utilities (`.container`, `.section`, `.btn`, `.card`, `.pill`, `.eyebrow`, `.h2`), code span classes, `.prose` |
-| `src/layouts/Base.astro` | document shell: head, theme script, header, footer. Props `title`, `description`, `wide` |
+| `src/site.config.ts` | `INDEXABLE`, site constants, header `NAV`, docs side nav `DOCS_NAV`, `THEME_KEY` |
+| `src/styles/tokens.css` | colour, type and spacing tokens, light (the default) and opt-in dark |
+| `src/styles/global.css` | reset, shared utilities (`.container`, `.band`, `.btn`, `.card`, `.eyebrow`, `.h2`), code span classes, `.prose` |
+| `src/layouts/Base.astro` | document shell: head, theme script, header, tagline bar, footer. Props `title`, `description`, `wide` |
 | `src/layouts/Docs.astro` | docs page: side nav, article, on-this-page list, prev/next |
 | `src/layouts/MdPage.astro` | maps MDX frontmatter onto `Docs.astro` |
-| `src/components/` | Shell: Mark, Wordmark, Header, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
+| `src/components/` | Shell: Header, Tagline, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
 | `src/pages/spec/` | the specification hub, the draft, presentation verbs and registries pages |
 | `scripts/` | `sync-spec.mjs` (vendor the specification sources), `check-site.mjs` (content checks) |
 | `src/lib/term.ts` | markup helper for hand-coloured terminal and JSON blocks |
@@ -88,8 +88,8 @@ the MDX body.
 
 ### Theme
 
-The theme is stored under the `restact-theme` key in `localStorage` (`dark` or `light`). With no
-stored value the system preference applies.
+The theme is stored under the `restact-theme` key in `localStorage` (`light` or `dark`). With no
+stored value the site is light, whatever the OS prefers: dark applies only after a visitor picks it.
 
 ## Going public
 
@@ -124,7 +124,8 @@ the other to it (a Cloudflare redirect rule), so search engines see a single sit
 
 ## Identity
 
-The mark, wordmark, colours and motion follow `docs/design/restact-visual-identity.md` in the
-restactd repository (with the SVG originals in `docs/images/`). The wordmark is Space Grotesk Bold
-converted to outlines, so it needs no font. Space Grotesk and JetBrains Mono for the page text are self-hosted from the fontsource packages. The mark's two lit tiles rise once per visit (a `sessionStorage` flag, read in the head script in
-`Base.astro`), and not at all under reduced motion.
+The site frame is a petrol masthead band (`--brand`) with the name REST:ACT set as text, a
+pale-petrol tagline bar under it, and white reading space with hairline rules. Petrol is the only
+hue; rust marks POST. Public Sans sets headings, UI and body text, and JetBrains Mono sets only
+code, paths and identifiers. Both are self-hosted from the fontsource packages. The SVG mark and
+wordmark in `src/assets/` are not used by the site.

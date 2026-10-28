@@ -1,98 +1,80 @@
 ---
-import Wordmark from './Wordmark.astro';
-import { FOOTER, DRAFT } from '../site.config';
-/** Site footer: blurb, the link columns from site.config.ts (FOOTER), and the draft's docname. */
+import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
+/**
+ * Site footer: one quiet row. The source repositories and the restactd documentation on the left,
+ * the draft's docname on the right. Every protocol page is already in the header nav.
+ */
 interface Props {
   wide?: boolean;
 }
 const { wide = false } = Astro.props;
+const sources = [
+  { label: 'restact-specs', href: GITHUB.specs },
+  { label: 'restactd', href: GITHUB.restactd },
+  { label: 'restactd documentation', href: RESTACTD_DOCS.home },
+];
 ---
 
 <footer class="site-footer">
-  <div class:list={['inner', { wide }]}>
-    <div class="cols">
-      <div class="about">
-        <Wordmark size={20} />
-        <p>An HTTP protocol for adding code to a server at runtime, and its Rust reference server.</p>
-      </div>
-      {
-        FOOTER.map((group) => (
-          <nav aria-label={group.title}>
-            <div class="head">{group.title}</div>
-            {group.items.map((item) => (
-              <a href={item.href}>{item.label}</a>
-            ))}
-          </nav>
-        ))
-      }
-    </div>
-    <div class="legal">{DRAFT.docname}</div>
+  <div class:list={['row', { wide }]}>
+    <nav aria-label="Source and documentation">
+      <ul>
+        {
+          sources.map((s) => (
+            <li>
+              <a href={s.href}>{s.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <p class="docname mono">{DRAFT.docname}</p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    border-top: 1px solid var(--hair);
+    background: var(--band);
+    border-top: 1px solid var(--line);
+    font-size: 15px;
+    color: var(--ink-2);
   }
-  .inner {
-    max-width: calc(1200px + 2 * var(--gutter));
+  .row {
+    max-width: calc(var(--measure) + 2 * var(--gutter));
     margin: 0 auto;
-    padding: 48px var(--gutter) 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 36px;
-  }
-  .inner.wide {
-    max-width: calc(1360px + 2 * var(--gutter));
-  }
-  .cols {
+    padding: 22px var(--gutter);
     display: flex;
     flex-wrap: wrap;
-    gap: 36px 64px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px 32px;
   }
-  .about {
-    flex: 1 1 280px;
+  .row.wide {
+    max-width: calc(1360px + 2 * var(--gutter));
+  }
+  ul {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 0 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .about p {
-    max-width: 320px;
-    font-size: 14px;
-    line-height: 1.55;
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .docname {
+    font-size: 13.5px;
     color: var(--ink-3);
   }
-  nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    font-size: 14.5px;
-  }
-  .head {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    padding-bottom: 7px;
-  }
-  nav a {
-    color: var(--ink-2);
-    padding: 4px 0;
-  }
-  nav a:hover {
-    color: var(--ink);
-  }
-  @media (max-width: 879px) {
-    nav a {
-      padding: 11px 0;
+  @media (max-width: 560px) {
+    .row {
+      padding-block: 16px 24px;
     }
-  }
-  .legal {
-    border-top: 1px solid var(--hair);
-    padding-top: 20px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--ink-3);
+    ul {
+      gap: 0 22px;
+    }
   }
 </style>

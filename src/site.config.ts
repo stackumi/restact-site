@@ -97,38 +97,5 @@ export const DOCS_NAV: NavGroup[] = [
   },
 ];
 
-/** Footer columns. External links open in the same tab; the site has no tracking to protect. */
-export const FOOTER: NavGroup[] = [
-  {
-    title: 'Protocol',
-    items: [
-      { label: 'How it works', href: '/how-it-works/' },
-      { label: 'Specification', href: '/spec/' },
-      { label: 'Presentation verbs', href: '/presentation-verbs/' },
-      { label: 'Security', href: '/security/' },
-      { label: 'Compare', href: '/compare/' },
-    ],
-  },
-  {
-    title: 'Build',
-    items: [
-      { label: 'Get started', href: '/start/' },
-      { label: 'restactd docs', href: RESTACTD_DOCS.home },
-      { label: 'Authoring reference', href: RESTACTD_DOCS.authoringVerbs },
-      { label: 'HTTP API', href: RESTACTD_DOCS.httpApi },
-      { label: 'Configuration', href: RESTACTD_DOCS.configuration },
-      { label: 'Embed restactd in a Rust app', href: RESTACTD_DOCS.buildingApplications },
-      { label: 'Architecture', href: RESTACTD_DOCS.architecture },
-    ],
-  },
-  {
-    title: 'Source',
-    items: [
-      { label: 'restact-specs', href: GITHUB.specs },
-      { label: 'restactd', href: GITHUB.restactd },
-    ],
-  },
-];
-
-/** localStorage key holding the chosen theme: "dark" or "light". Absent means follow the OS. */
+/** localStorage key holding the chosen theme: "light" or "dark". Absent means light; dark is opt-in. */
 export const THEME_KEY = 'restact-theme';

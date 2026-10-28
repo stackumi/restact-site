@@ -44,14 +44,14 @@ const core = [
   'A discovery document',
 ];
 
-const tiles = doc.sections
+const sections = doc.sections
   .filter((s) => s.depth === 1 && !UNMAPPED.has(s.id))
   .map((s) => {
     const m = SECTION_MAP[s.id];
     if (!m) throw new Error(`spec hub: no gist for draft section "${s.id}" (${s.title}); add it to src/lib/spec-map.ts`);
     return { ...s, ...m };
   });
-// The draft's headings are Title Case; the tiles follow the site's sentence case.
+// The draft's headings are Title Case; the section table follows the site's sentence case.
 const KEEP = new Set(['HTTP', 'JSON:API', 'Google', 'AIP', 'IANA', 'WIT', 'REST', 'REST:ACT', 'SSE', 'OPTIONS', 'API', 'URI']);
 const sentence = (t: string) =>
   t
@@ -62,6 +62,8 @@ const sentence = (t: string) =>
     })
     .join(' ');
 const tagClass = (t: Tag) => ({ core: 't-core', optional: 't-opt', 'core + optional': 't-mixed', informative: 't-info', registry: 't-info' })[t];
+const sectionNo = (num: string) => (/^[A-Z]/.test(num) ? `Appendix ${num}` : `§${num}`);
+const status = ['Normative', f.category, f.stream.replace(' Submission', ' stream')].join(', ');
 
 const tokens = featureTokens();
 const wit = witSummary();
@@ -94,9 +96,8 @@ const registries = [
   title="Specification"
   description="The normative text of REST:ACT is written as an individual Internet-Draft, intended category Experimental, on the independent stream. It has not yet been submitted to the IETF and is not a standard."
 >
-  <section class="container hero">
-    <span class="eyebrow">Specification</span>
-    <h1>The draft is the contract.</h1>
+  <section class="container opening">
+    <h1>Specification</h1>
     <p class="lede">
       The normative text is written as an individual Internet-Draft with intended category Experimental, on the
       independent stream. It has not yet been submitted to the IETF, and it is not a standard. The key words <span class="kw">MUST</span>, <span class="kw">SHOULD</span> and{' '}
@@ -104,85 +105,75 @@ const registries = [
     </p>
   </section>
 
-  <section class="container draft">
-    <div class="card draftcard">
-      <div class="info">
-        <ul class="chips">
-          <li class="on">Normative</li>
-          <li>{f.category}</li>
-          <li>{f.stream.replace(' Submission', ' stream')}</li>
-        </ul>
-        <h2>{f.title}</h2>
-        <dl class="rows">
-          <dt>Document</dt>
-          <dd class="mono">{f.docname}</dd>
-          <dt>Author</dt>
-          <dd>{f.author}</dd>
-          <dt>Area</dt>
-          <dd>{f.area}</dd>
-          <dt>Guest contract</dt>
-          <dd class="mono">rest-act:plugin@0.1.0</dd>
-          <dt>Rendered from</dt>
-          <dd><a class="mono" href={`${SPECS_REPO}/commit/${source.commit}`}>restact-specs @ {source.commit.slice(0, 7)}</a></dd>
-        </dl>
-        <div class="actions">
-          <a class="btn btn--primary" href={DRAFT_PATH}>Read the draft</a>
-          <a class="btn" href={`${SPECS_REPO}/blob/main/${DRAFT_FILE}`}>Source on GitHub</a>
-        </div>
-      </div>
-      <div class="mandatory">
-        <div class="eyebrow">The mandatory core</div>
-        <p>
-          A conformant server implements these and advertises everything else
-          (<a href={`${DRAFT_PATH}#conformance`}>{doc.sections.find((s) => s.id === 'conformance')?.label}</a>).
-        </p>
-        <ul>
-          {
-            core.map((c) => (
-              <li>
-                <span class="kw">MUST</span>{' '}
-                {c}
-              </li>
-            ))
-          }
-        </ul>
+  <section class="container sect draft" aria-labelledby="draft-title">
+    <div class="info">
+      <h2 id="draft-title">{f.title}</h2>
+      <dl class="rows">
+        <dt>Status</dt>
+        <dd>{status}</dd>
+        <dt>Document</dt>
+        <dd class="mono">{f.docname}</dd>
+        <dt>Author</dt>
+        <dd>{f.author}</dd>
+        <dt>Area</dt>
+        <dd>{f.area}</dd>
+        <dt>Guest contract</dt>
+        <dd class="mono">rest-act:plugin@0.1.0</dd>
+        <dt>Rendered from</dt>
+        <dd><a class="mono" href={`${SPECS_REPO}/commit/${source.commit}`}>restact-specs @ {source.commit.slice(0, 7)}</a></dd>
+      </dl>
+      <div class="actions">
+        <a class="btn btn--primary" href={DRAFT_PATH}>Read the draft</a>
+        <a class="btn" href={`${SPECS_REPO}/blob/main/${DRAFT_FILE}`}>Source on GitHub</a>
       </div>
     </div>
-  </section>
-
-  <section class="band" id="read">
-    <div class="container block">
-      <div class="head">
-        <h2 class="h2">The draft, section by section</h2>
-        <span class="note">each tile opens that section on this site</span>
-      </div>
-      <ul class="tiles">
+    <div class="mandatory">
+      <h3>The mandatory core</h3>
+      <p>
+        A conformant server implements these and advertises everything else
+        (<a href={`${DRAFT_PATH}#conformance`}>{doc.sections.find((s) => s.id === 'conformance')?.label}</a>).
+      </p>
+      <ul>
         {
-          tiles.map((t) => (
+          core.map((c) => (
             <li>
-              <a href={`${DRAFT_PATH}#${t.id}`}>
-                <span class="top">
-                  <span class="n">{/^[A-Z]/.test(t.num) ? `Appendix ${t.num}` : `§${t.num}`}</span>
-                  <span class={`tag ${tagClass(t.tag)}`}>{t.tag}</span>
-                </span>
-                <span class="title">{sentence(t.title)}</span>
-                <span class="gist">{t.gist}</span>
-              </a>
+              <span class="kw">MUST</span>{' '}
+              {c}
             </li>
           ))
         }
       </ul>
-      <p class="note">
-        Tags follow <a href={`${DRAFT_PATH}#conformance`}>the conformance section</a>: core is what a conformant server
-        must implement, optional is what it may implement and advertise.
-      </p>
     </div>
   </section>
 
-  <section class="container block split" id="feature-tokens">
+  <section class="container sect" id="read" aria-labelledby="read-h">
+    <h2 id="read-h">The draft, section by section</h2>
+    <table class="sections">
+      <thead>
+        <tr><th scope="col" class="c-n">§</th><th scope="col">Section</th><th scope="col">Tag</th><th scope="col">Summary</th></tr>
+      </thead>
+      <tbody>
+        {
+          sections.map((t) => (
+            <tr>
+              <td class="c-n">{sectionNo(t.num)}</td>
+              <th scope="row" class="c-title"><a href={`${DRAFT_PATH}#${t.id}`}>{sentence(t.title)}</a></th>
+              <td class={`c-tag ${tagClass(t.tag)}`}>{t.tag}</td>
+              <td class="c-gist">{t.gist}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+    <p class="note">
+      Tags follow <a href={`${DRAFT_PATH}#conformance`}>the conformance section</a>: core is what a conformant server
+      must implement, optional is what it may implement and advertise.
+    </p>
+  </section>
+
+  <section class="container sect split" id="feature-tokens" aria-labelledby="tokens-h">
     <div class="intro">
-      <span class="eyebrow">Registry</span>
-      <h2 class="h2">Feature tokens</h2>
+      <h2 id="tokens-h">Feature tokens</h2>
       <p>
         A server lists the optional features it supports in <span class="code-inline">service.features</span>. A client
         may rely on a behavior only when its token is advertised. Token names are permanent; a feature whose contract
@@ -211,52 +202,48 @@ const registries = [
         </label>
       </div>
       <div class="tokens-scroll" tabindex="0" role="region" aria-label="Feature tokens">
-      <ul class="tokens" id="token-list">
-        {
-          tokens.map((t) => (
-            <li data-q={`${t.token} ${t.plain} ${t.status}`.toLowerCase()}>
-              <span class="name">{t.token}</span>
-              <span class="desc" set:html={t.html} />
-              <span class={`status ${t.status}`}>{t.status}</span>
-            </li>
-          ))
-        }
-      </ul>
+        <ul class="tokens" id="token-list">
+          {
+            tokens.map((t) => (
+              <li data-q={`${t.token} ${t.plain} ${t.status}`.toLowerCase()}>
+                <span class="name">{t.token}</span>
+                <span class="desc" set:html={t.html} />
+                <span class={`status ${t.status}`}>{t.status}</span>
+              </li>
+            ))
+          }
+        </ul>
       </div>
-      <p class="count mono" id="token-count" role="status" aria-live="polite">{tokens.length} tokens</p>
+      <p class="count" id="token-count" role="status" aria-live="polite">{tokens.length} tokens</p>
     </div>
   </section>
 
-  <section class="band" id="wit">
-    <div class="container block">
-      <div class="head">
-        <h2 class="h2">The guest contract</h2>
-        <span class="note">
-          <a href={`${DRAFT_PATH}#appendix-wit`}>{doc.sections.find((s) => s.id === 'appendix-wit')?.label}</a>{' '}
-          of the draft, package rest-act:plugin@0.1.0
-        </span>
+  <section class="container sect" id="wit" aria-labelledby="wit-h">
+    <h2 id="wit-h">The guest contract</h2>
+    <p class="note">
+      <a href={`${DRAFT_PATH}#appendix-wit`}>{doc.sections.find((s) => s.id === 'appendix-wit')?.label}</a>{' '}
+      of the draft, package rest-act:plugin@0.1.0
+    </p>
+    <div class="witgrid">
+      <div class="witcol">
+        <h3>Interfaces</h3>
+        <dl>
+          {wit.interfaces.map((i) => (<div><dt class="mono">{i.name}</dt><dd set:html={i.html} /></div>))}
+        </dl>
       </div>
-      <div class="witgrid">
-        <div class="card witcol">
-          <h3>Interfaces</h3>
-          <dl>
-            {wit.interfaces.map((i) => (<><dt class="mono">{i.name}</dt><dd set:html={i.html} /></>))}
-          </dl>
-        </div>
-        <div class="card witcol">
-          <h3>Worlds</h3>
-          <dl>
-            {wit.worlds.map((i) => (<><dt class="mono">{i.name}</dt><dd set:html={i.html} /></>))}
-          </dl>
-        </div>
+      <div class="witcol">
+        <h3>Worlds</h3>
+        <dl>
+          {wit.worlds.map((i) => (<div><dt class="mono">{i.name}</dt><dd set:html={i.html} /></div>))}
+        </dl>
       </div>
     </div>
   </section>
 
-  <section class="container block" id="documents">
-    <h2 class="h2">Every document</h2>
-    <div class="tablebox">
-      <table>
+  <section class="container sect last" id="documents" aria-labelledby="documents-h">
+    <h2 id="documents-h">Every document</h2>
+    <div class="tablewrap">
+      <table class="docs">
         <thead>
           <tr><th scope="col">Document</th><th scope="col">Status</th><th scope="col">Covers</th></tr>
         </thead>
@@ -277,20 +264,24 @@ const registries = [
 </Base>
 
 <style>
-  .hero {
-    padding-block: clamp(48px, 7vw, 88px) 48px;
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .opening {
+    padding-block: 64px 32px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
   h1 {
-    font-size: clamp(40px, 5.4vw, 64px);
-    line-height: 1;
-    letter-spacing: -0.04em;
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
   }
-  .hero .lede {
-    max-width: 620px;
-    font-size: 18px;
+  .opening .lede {
+    max-width: 62ch;
   }
   .kw {
     font-family: var(--font-mono);
@@ -298,236 +289,223 @@ const registries = [
     font-weight: 500;
     color: var(--ink);
   }
-
-  .draft {
-    padding-bottom: 56px;
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 14px;
   }
-  .draftcard {
-    display: flex;
-    flex-wrap: wrap;
-    overflow: hidden;
-    border-color: var(--line-strong);
-    border-radius: 20px;
+  .note {
+    font-size: 15px;
+    color: var(--ink-3);
+  }
+  h3 {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 17px;
+    letter-spacing: 0;
+  }
+
+  /* The draft: its metadata beside the mandatory core, both plain text on the page ground. */
+  .draft {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 32px 72px;
+  }
+  .draft::before {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
   }
   .info {
-    flex: 1.4 1 460px;
-    min-width: 0;
-    padding: clamp(24px, 4vw, 40px);
     display: flex;
     flex-direction: column;
-    gap: 18px;
-  }
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-  .chips li {
-    padding: 4px 9px;
-    border-radius: 7px;
-    border: 1px solid var(--line-strong);
-    color: var(--ink-2);
-  }
-  .chips li.on {
-    border-color: var(--signal);
-    color: var(--signal);
+    gap: 20px;
   }
   .info h2 {
-    font-size: clamp(24px, 2.6vw, 32px);
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+    margin-bottom: 0;
   }
   .rows {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
-    gap: 6px 22px;
     margin: 0;
     font-size: 15px;
+    border-top: 1px solid var(--hair);
+  }
+  .rows dt,
+  .rows dd {
+    padding-block: 9px;
+    border-bottom: 1px solid var(--hair);
   }
   .rows dt {
+    padding-right: 24px;
     color: var(--ink-3);
   }
   .rows dd {
     margin: 0;
     overflow-wrap: anywhere;
   }
-  .mono {
-    font-family: var(--font-mono);
-    font-size: 14px;
-  }
   .actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    padding-top: 6px;
+    padding-top: 4px;
   }
   .mandatory {
-    flex: 1 1 340px;
-    min-width: 0;
-    padding: clamp(24px, 4vw, 40px);
-    border-left: 1px solid var(--line);
-    background: var(--raised);
     display: flex;
     flex-direction: column;
     gap: 14px;
   }
   .mandatory p {
-    font-size: 15px;
-    line-height: 1.55;
+    font-size: 16px;
     color: var(--ink-2);
-  }
-  .mandatory ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    font-size: 15px;
   }
   .mandatory li {
     display: flex;
     gap: 12px;
     align-items: baseline;
+    padding-block: 11px;
+    border-bottom: 1px solid var(--hair);
+    font-size: 16px;
+  }
+  .mandatory li:first-child {
+    border-top: 1px solid var(--hair);
   }
   .mandatory .kw {
     width: 40px;
     flex: none;
-    font-size: 11.5px;
+    font-size: 12px;
   }
-  @media (max-width: 700px) {
-    .mandatory {
-      border-left: 0;
+
+  /* Section table: hairline rows, the title links to that section of the draft. */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  th,
+  td {
+    padding: 13px 24px 13px 0;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--hair);
+    color: var(--ink-2);
+  }
+  th:last-child,
+  td:last-child {
+    padding-right: 0;
+  }
+  thead th {
+    padding-block: 0 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  tbody th {
+    font-weight: 400;
+  }
+  .sections {
+    margin-block: 24px 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  .c-n {
+    width: 7.5em;
+    white-space: nowrap;
+    color: var(--ink-3);
+  }
+  .c-title {
+    width: 30%;
+  }
+  .c-title a {
+    font-weight: 600;
+  }
+  .c-tag {
+    width: 9em;
+    white-space: nowrap;
+    color: var(--ink-3);
+  }
+  .c-tag.t-core {
+    color: var(--signal);
+  }
+  .c-tag.t-mixed {
+    color: var(--ink-2);
+  }
+  @media (max-width: 720px) {
+    .sections thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .sections tbody {
+      display: block;
       border-top: 1px solid var(--line);
+    }
+    .sections tr {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 2px 16px;
+      padding-block: 14px;
+      border-bottom: 1px solid var(--hair);
+    }
+    .sections th,
+    .sections td {
+      display: block;
+      width: auto;
+      padding: 0;
+      border: 0;
+    }
+    .sections .c-tag {
+      justify-self: end;
+    }
+    .sections .c-title,
+    .sections .c-gist {
+      grid-column: 1 / -1;
+    }
+    .sections .c-n {
+      grid-row: 1;
+      grid-column: 1;
+    }
+    .sections .c-tag {
+      grid-row: 1;
+      grid-column: 2;
     }
   }
 
-  .block {
-    padding-block: 64px;
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-  }
-  .head {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 8px 16px;
-  }
-  .note {
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    color: var(--ink-3);
-  }
-  p.note {
-    margin: 0;
-  }
-
-  .tiles {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 12px;
-  }
-  .tiles a {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    height: 100%;
-    min-height: 108px;
-    padding: 18px 18px 16px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: var(--surface);
-    color: var(--ink);
-    transition: border-color 120ms ease;
-  }
-  .tiles a:hover {
-    border-color: var(--line-strong);
-    color: var(--ink);
-  }
-  .top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-  .n {
-    color: var(--ink-3);
-  }
-  .tag {
-    font-size: 11px;
-    color: var(--ink-3);
-  }
-  .tag.t-core {
-    color: var(--signal);
-  }
-  .tag.t-mixed {
-    color: var(--ink-2);
-  }
-  .title {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    line-height: 1.25;
-  }
-  .gist {
-    font-size: 13.5px;
-    line-height: 1.45;
-    color: var(--ink-2);
-  }
-
+  /* Feature tokens: the list sits on the page ground between hairlines. */
   .split {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 40px;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    gap: 32px 56px;
+    align-items: start;
+  }
+  .split::before {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
   }
   .intro {
-    flex: 1 1 340px;
-    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+  .intro h2 {
+    margin-bottom: 0;
   }
   .intro p {
     color: var(--ink-2);
   }
   .links {
-    margin: 0;
-    padding: 0;
-    list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 2px;
   }
   .links a {
-    display: inline-block;
-    padding: 6px 0;
-  }
-  .browser {
-    flex: 1.6 1 560px;
-    min-width: 0;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--sunk);
-    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
   }
   .bar {
     display: none;
-    padding: 12px;
-    border-bottom: 1px solid var(--hair);
-    background: var(--raised);
+    padding-bottom: 14px;
   }
   :global(.js) .bar {
     display: block;
@@ -538,9 +516,9 @@ const registries = [
     gap: 8px;
     height: 44px;
     padding: 0 12px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--sunk);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--surface);
     color: var(--ink-3);
   }
   .search:focus-within {
@@ -553,28 +531,28 @@ const registries = [
     outline: 0;
     background: transparent;
     font: inherit;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--ink);
     width: 100%;
   }
   .search input::placeholder {
     color: var(--ink-3);
   }
-  .tokens {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
   .tokens-scroll {
     max-height: 640px;
     overflow-y: auto;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
   }
   .tokens li {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 18px;
-    padding: 13px 18px;
+    padding: 13px 0;
     border-bottom: 1px solid var(--hair);
+  }
+  .tokens li:last-child {
+    border-bottom: 0;
   }
   .tokens li[hidden] {
     display: none;
@@ -589,15 +567,14 @@ const registries = [
   .tokens .desc {
     flex: 1 1 260px;
     min-width: 0;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
     color: var(--ink-2);
   }
   .tokens .status {
     flex: 0 0 auto;
     align-self: flex-start;
-    font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 13px;
     color: var(--ink-3);
   }
   .tokens .status.reserved {
@@ -605,8 +582,8 @@ const registries = [
   }
   .count {
     margin: 0;
-    padding: 12px 18px;
-    font-size: 12px;
+    padding-top: 12px;
+    font-size: 14px;
     color: var(--ink-3);
   }
   @media (max-width: 560px) {
@@ -615,26 +592,22 @@ const registries = [
     }
   }
 
+  /* Guest contract: two plain columns of definitions. */
   .witgrid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
-    gap: 16px;
+    gap: 32px 56px;
+    margin-top: 28px;
   }
   .witcol {
-    padding: 22px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
     min-width: 0;
-  }
-  .witcol h3 {
-    font-size: 17px;
-    letter-spacing: -0.015em;
   }
   .witcol dl {
     margin: 0;
-    display: grid;
-    gap: 14px;
+  }
+  .witcol dl > div {
+    padding-block: 14px;
+    border-bottom: 1px solid var(--hair);
   }
   .witcol dt {
     font-size: 13.5px;
@@ -642,52 +615,39 @@ const registries = [
     overflow-wrap: anywhere;
   }
   .witcol dd {
-    margin: 2px 0 0;
-    font-size: 14.5px;
+    margin: 4px 0 0;
+    font-size: 15px;
     line-height: 1.5;
     color: var(--ink-2);
   }
 
-  .tablebox {
-    border: 1px solid var(--line);
-    border-radius: 16px;
+  /* Every document: the same hairline table, scrolling inside itself on narrow screens. */
+  .tablewrap {
+    margin-top: 24px;
     overflow-x: auto;
-    background: var(--surface);
   }
-  table {
-    width: 100%;
-    min-width: 640px;
-    border-collapse: collapse;
-    font-size: 15px;
-  }
-  th,
-  td {
-    padding: 14px 20px;
-    text-align: left;
-    vertical-align: top;
-    border-bottom: 1px solid var(--hair);
-    color: var(--ink-2);
-  }
-  thead th {
-    background: var(--surface);
-    border-bottom: 1px solid var(--line);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-  tbody th {
-    font-weight: 400;
-  }
-  tbody tr:last-child th,
-  tbody tr:last-child td {
-    border-bottom: 0;
+  .docs {
+    min-width: 600px;
   }
   .mono-cell {
     font-family: var(--font-mono);
     font-size: 13px;
+  }
+
+  @media (max-width: 939px) {
+    .draft,
+    .split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 720px) {
+    .opening {
+      padding-block: 40px 28px;
+    }
+    .draft::before,
+    .split::before {
+      margin-bottom: 0;
+    }
   }
 </style>
 

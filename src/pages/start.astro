@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import Tabs from '../components/Tabs.astro';
 import Callout from '../components/Callout.astro';
+import ReaderGroups from '../components/ReaderGroups.astro';
 import { term } from '../lib/term';
 import { RESTACTD_DOCS } from '../site.config';
 
@@ -81,22 +82,31 @@ const endpoints = [
   { route: '/v1', note: 'the objects you can read' },
 ];
 
+// The home page's hairline link lists, in two untitled columns.
 const next = [
   {
-    title: 'Authoring reference',
-    body: 'JavaScript, Python, Rust with restact-sdk, and any toolchain that emits WASI 0.2 components.',
-    href: RESTACTD_DOCS.authoringVerbs,
+    links: [
+      {
+        label: 'Authoring reference',
+        body: 'JavaScript, Python, Rust with restact-sdk, and any toolchain that emits WASI 0.2 components.',
+        href: RESTACTD_DOCS.authoringVerbs,
+      },
+      { label: 'HTTP API', body: 'Every route, header and status code restactd serves.', href: RESTACTD_DOCS.httpApi },
+    ],
   },
-  { title: 'HTTP API', body: 'Every route, header and status code restactd serves.', href: RESTACTD_DOCS.httpApi },
   {
-    title: 'Configuration',
-    body: 'Authentication, storage, process isolation and the production checklist.',
-    href: RESTACTD_DOCS.configuration,
-  },
-  {
-    title: 'Agents and MCP',
-    body: 'Plugins that teach a coding agent REST:ACT, and verbsmith, which serves verbs as MCP tools.',
-    href: RESTACTD_DOCS.aiAgents,
+    links: [
+      {
+        label: 'Configuration',
+        body: 'Authentication, storage, process isolation and the production checklist.',
+        href: RESTACTD_DOCS.configuration,
+      },
+      {
+        label: 'Agents and MCP',
+        body: 'Plugins that teach a coding agent REST:ACT, and verbsmith, which serves verbs as MCP tools.',
+        href: RESTACTD_DOCS.aiAgents,
+      },
+    ],
   },
 ];
 ---
@@ -107,7 +117,6 @@ const next = [
 >
   <div class="container page">
     <header class="head">
-      <span class="eyebrow">Get started</span>
       <h1>Run a server and deploy your first verb</h1>
       <p class="lede">
         This walk-through uses restactd, the reference server, on your own machine. The first build compiles Wasmtime and
@@ -195,21 +204,21 @@ const next = [
         <div class="rail"><span class="num">5</span></div>
         <div class="body">
           <h2>Ask the server what it serves</h2>
-          <div class="endpoints">
+          <ul class="endpoints">
             {
               endpoints.map((e) => (
-                <div class="ep">
+                <li>
                   <span class="mono route">{e.route}</span>
                   <span class="note">{e.note}</span>
-                </div>
+                </li>
               ))
             }
-          </div>
+          </ul>
         </div>
       </li>
     </ol>
 
-    <aside class="langs card" aria-labelledby="langs-h">
+    <section class="sect langs" aria-labelledby="langs-h">
       <h2 id="langs-h">Write it in Python or Rust</h2>
       <p>
         A Python verb is uploaded the same way as the JavaScript one, with <span class="code-inline">lang=text/x-python</span> and a Python runner (<span class="code-inline">make build-py-runner</span>, or the Docker image). A Rust verb written
@@ -222,20 +231,11 @@ const next = [
         <a href={`${RESTACTD_DOCS.authoringVerbs}#language-agnostic-uploads`}>Other languages</a>
         <a href={RESTACTD_DOCS.authoringVerbs}>Authoring reference</a>
       </p>
-    </aside>
+    </section>
 
-    <section class="next" aria-labelledby="next-h">
+    <section class="sect last" aria-labelledby="next-h">
       <h2 id="next-h">Where to go next</h2>
-      <div class="next-grid">
-        {
-          next.map((n) => (
-            <a class="next-card" href={n.href}>
-              <span class="t">{n.title}</span>
-              <span class="b">{n.body}</span>
-            </a>
-          ))
-        }
-      </div>
+      <ReaderGroups groups={next} columns={2} />
       <p class="more">
         To see how objects, verbs and resolution fit together, read <a href="/how-it-works/">How it works</a>. The shared budget and limits are on <a href="/security/">Security</a>.
       </p>
@@ -245,26 +245,24 @@ const next = [
 
 <style>
   .page {
-    padding-block: clamp(40px, 7vw, 80px) 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
+    padding-block: clamp(40px, 7vw, 64px) 0;
   }
   .head {
     display: flex;
     flex-direction: column;
     gap: 18px;
     max-width: 720px;
+    padding-bottom: 32px;
   }
   h1 {
-    font-size: clamp(36px, 5.4vw, 64px);
-    line-height: 1;
-    letter-spacing: -0.04em;
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
   }
   .steps {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0 0 48px;
     display: flex;
     flex-direction: column;
   }
@@ -286,7 +284,7 @@ const next = [
     margin: 8px 0;
     background: var(--line);
   }
-  li:last-child .rail::after {
+  .steps > li:last-child .rail::after {
     display: none;
   }
   .num {
@@ -295,7 +293,7 @@ const next = [
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 6px;
     border: 1px solid var(--line-strong);
     background: var(--surface);
     font-family: var(--font-mono);
@@ -303,9 +301,9 @@ const next = [
     font-weight: 600;
   }
   .num.primary {
-    background: var(--signal);
-    border-color: var(--signal);
-    color: var(--on-signal);
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
   }
   .body {
     flex: 1;
@@ -315,13 +313,13 @@ const next = [
     flex-direction: column;
     gap: 14px;
   }
-  li:last-child .body {
+  .steps > li:last-child .body {
     padding-bottom: 0;
   }
-  h2 {
+  .body h2 {
     margin-top: 2px;
     font-size: 24px;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.008em;
   }
   .body > p,
   .note-text {
@@ -347,89 +345,58 @@ const next = [
     flex: 2 1 420px;
     min-width: 0;
   }
+
+  /* Ask the server: a ruled list, the route beside what it returns. */
   .endpoints {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 760px;
+    border-top: 1px solid var(--hair);
   }
-  .ep {
-    padding: 16px 18px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  .endpoints li {
+    display: grid;
+    grid-template-columns: 15em minmax(0, 1fr);
+    align-items: baseline;
+    gap: 4px 24px;
+    padding-block: 13px;
+    border-bottom: 1px solid var(--hair);
   }
   .route {
-    font-size: 13.5px;
+    font-size: 14px;
+    color: var(--ink);
     overflow-wrap: anywhere;
   }
   .note {
-    font-size: 14px;
+    font-size: 16px;
     color: var(--ink-2);
   }
-  .langs {
-    padding: clamp(20px, 3vw, 28px);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  @media (max-width: 560px) {
+    .endpoints li {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
-  .langs h2 {
-    font-size: 22px;
-  }
+
+  /* Other languages: a plain section. */
   .langs p {
+    max-width: 68ch;
     color: var(--ink-2);
     line-height: 1.6;
-    max-width: 760px;
   }
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 22px;
-    font-weight: 500;
+    gap: 0 24px;
+    margin-top: 8px;
+    font-weight: 600;
   }
-  .next {
-    border-top: 1px solid var(--hair);
-    padding-top: 44px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .next h2 {
-    font-size: 28px;
-    letter-spacing: -0.03em;
-  }
-  .next-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-    gap: 14px;
-  }
-  .next-card {
-    padding: 22px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--surface);
-    color: var(--ink);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: border-color 120ms ease;
-  }
-  .next-card:hover {
-    border-color: var(--line-strong);
-    color: var(--ink);
-  }
-  .next-card .t {
-    font-size: 18px;
-    font-weight: 700;
-  }
-  .next-card .b {
-    font-size: 14.5px;
-    line-height: 1.5;
-    color: var(--ink-2);
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
   .more {
+    margin-top: 24px;
     color: var(--ink-2);
   }
 </style>

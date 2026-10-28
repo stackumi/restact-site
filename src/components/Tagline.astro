@@ -1,0 +1,52 @@
+---
+/**
+ * The pale-petrol bar under the masthead on every page: why the protocol exists on the left, what
+ * the project is on the right in quieter ink. Below 860px the second line wraps under the first and
+ * starts at the same left edge. It scrolls away with the page; only the masthead is sticky.
+ *
+ * Props
+ *   wide  use the 1360px docs width instead of the 1168px page measure
+ */
+interface Props {
+  wide?: boolean;
+}
+const { wide = false } = Astro.props;
+---
+
+<div class="tagline">
+  <p class:list={['row', { wide }]}>
+    <span>Let users and their agents add the functions an API doesn’t have.</span>
+    <span class="scope">An open-source protocol and reference server.</span>
+  </p>
+</div>
+
+<style>
+  .tagline {
+    background: var(--brand-tint);
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .row {
+    max-width: calc(var(--measure) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 10px var(--gutter);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+  }
+  .row.wide {
+    max-width: calc(1360px + 2 * var(--gutter));
+  }
+  .scope {
+    margin-left: auto;
+    color: var(--ink-3);
+  }
+  @media (max-width: 860px) {
+    .scope {
+      margin-left: 0;
+    }
+  }
+</style>

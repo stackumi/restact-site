@@ -1,16 +1,22 @@
-/** Theme toggle. The first paint is handled by the inline script in Base.astro; this only reacts to clicks. */
+/**
+ * Theme toggle. Light is the default and dark is opt-in: the first paint is handled by the inline
+ * script in Base.astro (stored choice, else light); this only reacts to clicks and keeps the
+ * color-scheme and theme-color metas in step with the chosen theme.
+ */
 import { THEME_KEY as KEY } from '../site.config';
 
 const root = document.documentElement;
-const current = () => root.getAttribute('data-theme') ?? 'dark';
+const current = () => root.getAttribute('data-theme') ?? 'light';
 
 function sync() {
   const next = current() === 'dark' ? 'light' : 'dark';
   document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((b) => {
     b.setAttribute('aria-label', `Switch to the ${next} theme`);
   });
-  const ground = getComputedStyle(document.body).backgroundColor;
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', ground));
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', current());
+  // The browser chrome matches the masthead band, which is the brand colour in either theme.
+  const brand = getComputedStyle(root).getPropertyValue('--brand').trim();
+  if (brand) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', brand));
 }
 
 document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((b) => {

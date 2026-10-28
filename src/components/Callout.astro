@@ -1,9 +1,9 @@
 ---
 /**
- * A tone callout with the 4px left rule (the only place that rule is used).
+ * A tone callout: a 1px border and a faint ground, both tinted from the tone.
  *
  * Props
- *   tone   "note" (signal rule, the default) | "warn" | "danger"
+ *   tone   "note" (petrol, the default) | "warn" | "danger"
  *   title  bold first line
  * Slot: the body, as inline content or paragraphs.
  */
@@ -24,23 +24,22 @@ const { tone = 'note', title } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 14px 18px 14px 22px;
-    border: 1px solid var(--line);
-    border-left: 4px solid var(--rule);
-    border-radius: 12px;
-    background: var(--surface);
+    padding: 14px 18px;
+    border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--line));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--tone) 6%, var(--ground));
     font-size: 15.5px;
     line-height: 1.6;
     color: var(--ink-2);
   }
   .note {
-    --rule: var(--signal);
+    --tone: var(--signal);
   }
   .warn {
-    --rule: var(--warn);
+    --tone: var(--warn);
   }
   .danger {
-    --rule: var(--danger);
+    --tone: var(--danger);
   }
   .title {
     font-weight: 700;

@@ -1,7 +1,8 @@
 ---
 /**
- * The light/dark toggle (44x44). The label always names the theme a press switches to; the click
- * handler and the stored choice live in src/scripts/theme.ts, loaded once by Base.astro.
+ * The light/dark toggle (44x44), drawn for the masthead band. The label always names the theme a
+ * press switches to; the click handler and the stored choice live in src/scripts/theme.ts, loaded
+ * once by Base.astro.
  */
 ---
 
@@ -21,14 +22,13 @@
     width: 44px;
     height: 44px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 4px;
     background: transparent;
-    color: var(--ink-2);
+    color: var(--on-brand);
     cursor: pointer;
-    transition: color 120ms ease, background-color 120ms ease;
+    transition: background-color 120ms ease;
   }
   .theme-toggle:hover {
-    color: var(--ink);
-    background: var(--surface-2);
+    background: rgb(255 255 255 / 0.1);
   }
 </style>

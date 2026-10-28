@@ -1,126 +1,106 @@
-/* Design tokens. Dark is the default look; light is fully supported.
+/* Design tokens. Light is the site's look; dark is opt-in.
 
-   The theme lives on <html data-theme="dark|light">, set before first paint by the inline script in
-   Base.astro. Without JavaScript there is no attribute, and the prefers-color-scheme block below
-   picks the scheme instead. Both light blocks must stay identical.
+   The theme lives on <html data-theme="light|dark">, set before first paint by the inline script in
+   Base.astro: the visitor's stored choice from the toggle, else light. The OS preference is not
+   consulted. Without JavaScript there is no attribute and the site is light.
 
-   The one-light rule: --signal marks the verb and whatever is primary, focused or live. Do not use
-   it for decoration. --action is for POST tags only. */
+   One hue: petrol. --brand is the masthead band, --brand-tint the tagline bar under it, --on-brand
+   the text on the band. --signal is petrol for links, focus rings, GET and verbs. --action (rust)
+   is for POST only. Everything else is ink, white and hairlines. */
 
 :root,
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --ground: #0d1418;
-  --band: #0f171c;
-  --surface: #141c21;
-  --surface-2: #1a242a;
-  --raised: #111a1f; /* hero panel, closing card */
-  --sunk: #0b1114; /* code blocks */
-  --sunk-head: #111a1f; /* strip above a code block, tab bars */
-  --hair: #1d282f;
-  --line: #26323a;
-  --line-strong: #36444d;
-  --ink: #e7edf0;
-  --ink-2: #a3b0b8;
-  --ink-3: #8794a0;
-  --signal: #56d5c9;
-  --signal-hover: #8ee6dc;
-  --on-signal: #062320;
-  --action: #f2906f;
-  --good: #63cc9a;
-  --warn: #eaa24e;
-  --danger: #ec7373;
-  --header-bg: rgb(13 20 24 / 0.86);
-  --venn: rgb(86 213 201 / 0.07);
-  --bar-1: #a3b0b8;
-  --bar-2: #8794a0;
-  --bar-3: #57646f;
-  --bar-4: #45525e;
-  /* The mark. */
-  --mark-tile: #1a242a;
-  --mark-edge: #36444d;
-  --mark-dash: #4a5963;
-  --mark-top: #56d5c9;
-  --mark-wall-l: #2a9e93;
-  --mark-wall-r: #1f7a72;
-}
-
 :root[data-theme='light'] {
   color-scheme: light;
-  --ground: #f4f6f8;
-  --band: #eef1f4;
+  --brand: #0b5560;
+  --brand-tint: #e8f1f1;
+  --on-brand: #ffffff;
+  --ground: #ffffff;
+  --band: #f2f4f4; /* the footer band */
   --surface: #ffffff;
-  --surface-2: #e9edf1;
+  --surface-2: #e8f1f1;
   --raised: #ffffff;
-  --sunk: #ffffff;
-  --sunk-head: #f8fafb;
-  --hair: #e2e7ec;
-  --line: #d5dce2;
-  --line-strong: #b3bfc8;
-  --ink: #14212a;
-  --ink-2: #45525e;
-  --ink-3: #57646f;
-  --signal: #0d7a70;
-  --signal-hover: #095c55;
+  --sunk: #f5f7f7; /* code blocks */
+  --sunk-head: #eef2f2; /* strip above a code block, tab bars */
+  --hair: #e4e8e8;
+  --line: #d6dcdc;
+  --line-strong: #a8b2b3;
+  --ink: #172022;
+  --ink-2: #3d494c;
+  --ink-3: #5a6669;
+  --signal: #0b5560;
+  --signal-hover: #073f47;
   --on-signal: #ffffff;
-  --action: #b8461f;
-  --good: #177a4e;
-  --warn: #9a5b0b;
-  --danger: #b93a3a;
-  --header-bg: rgb(244 246 248 / 0.9);
-  --venn: rgb(13 122 112 / 0.07);
-  --bar-1: #45525e;
-  --bar-2: #57646f;
-  --bar-3: #8a97a1;
-  --bar-4: #b3bfc8;
+  --selection: #c9e0e0;
+  --action: #9c3f16;
+  --good: #1b6e45;
+  --warn: #855400;
+  --danger: #b02a24;
+  --header-bg: #0b5560;
+  --venn: rgb(11 85 96 / 0.06);
+  --bar-1: #3d494c;
+  --bar-2: #5a6669;
+  --bar-3: #8b9799;
+  --bar-4: #a8b2b3;
+  /* The mark. */
   --mark-tile: #ffffff;
-  --mark-edge: #b3bfc8;
-  --mark-dash: #8a97a1;
-  --mark-top: #2fb3a6;
-  --mark-wall-l: #138a7f;
-  --mark-wall-r: #0c6d64;
+  --mark-edge: #a8b2b3;
+  --mark-dash: #8b9799;
+  --mark-top: #3a8a94;
+  --mark-wall-l: #0b5560;
+  --mark-wall-r: #073f47;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    color-scheme: light;
-    --ground: #f4f6f8;
-    --band: #eef1f4;
-    --surface: #ffffff;
-    --surface-2: #e9edf1;
-    --raised: #ffffff;
-    --sunk: #ffffff;
-    --sunk-head: #f8fafb;
-    --hair: #e2e7ec;
-    --line: #d5dce2;
-    --line-strong: #b3bfc8;
-    --ink: #14212a;
-    --ink-2: #45525e;
-    --ink-3: #57646f;
-    --signal: #0d7a70;
-    --signal-hover: #095c55;
-    --on-signal: #ffffff;
-    --action: #b8461f;
-    --good: #177a4e;
-    --warn: #9a5b0b;
-    --danger: #b93a3a;
-    --header-bg: rgb(244 246 248 / 0.9);
-    --venn: rgb(13 122 112 / 0.07);
-    --bar-1: #45525e;
-    --bar-2: #57646f;
-    --bar-3: #8a97a1;
-    --bar-4: #b3bfc8;
-    --mark-tile: #ffffff;
-    --mark-edge: #b3bfc8;
-    --mark-dash: #8a97a1;
-    --mark-top: #2fb3a6;
-    --mark-wall-l: #138a7f;
-    --mark-wall-r: #0c6d64;
-  }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --brand: #0a4952;
+  --brand-tint: #112b2f;
+  --on-brand: #ffffff;
+  --ground: #0e1b1e;
+  --band: #0b1618;
+  --surface: #122326;
+  --surface-2: #183034;
+  --raised: #102023;
+  --sunk: #0a1517;
+  --sunk-head: #0f1e21;
+  --hair: #1c3034;
+  --line: #263d41;
+  --line-strong: #3d5a5e;
+  --ink: #e2ebeb;
+  --ink-2: #b0c0c1;
+  --ink-3: #8fa1a3;
+  --signal: #6cc3cb;
+  --signal-hover: #9dd8dd;
+  --on-signal: #062226;
+  --selection: #1f4a50;
+  --action: #ea9067;
+  --good: #6fcf9d;
+  --warn: #e6ad5c;
+  --danger: #ef8a83;
+  --header-bg: #0a4952;
+  --venn: rgb(108 195 203 / 0.07);
+  --bar-1: #b0c0c1;
+  --bar-2: #8fa1a3;
+  --bar-3: #5b7174;
+  --bar-4: #3d5a5e;
+  --mark-tile: #183034;
+  --mark-edge: #3d5a5e;
+  --mark-dash: #5b7174;
+  --mark-top: #6cc3cb;
+  --mark-wall-l: #2e8e98;
+  --mark-wall-r: #1d6b74;
 }
 
 :root {
-  --font-sans: 'Space Grotesk Variable', 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Public Sans Variable', 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --gutter: clamp(16px, 4vw, 40px);
+  /* Page gutter and content measure: 1168px of content, 32px either side on wide screens. */
+  --gutter: clamp(20px, 3vw, 32px);
+  --measure: 1168px;
+  /* Height of the sticky masthead row; sticky columns and anchor jumps sit below it. */
+  --header-h: 64px;
+}
+@media (max-width: 939px) {
+  :root {
+    --header-h: 68px;
+  }
 }

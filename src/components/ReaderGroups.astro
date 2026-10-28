@@ -1,0 +1,90 @@
+---
+/**
+ * Hairline link lists in columns: each group is a list of links with a one-line note under each.
+ * A group with a reader heads its list with that heading; one without starts on a rule. Used by
+ * the home page (three reader groups) and Get started (two untitled columns).
+ */
+interface Link {
+  label: string;
+  href: string;
+  body: string;
+}
+interface Props {
+  groups: { reader?: string; links: Link[] }[];
+  columns?: 2 | 3;
+}
+const { groups, columns = 3 } = Astro.props;
+---
+
+<div class:list={['groups', `cols-${columns}`]}>
+  {
+    groups.map((g) => (
+      <div class="group">
+        {g.reader && <h3>{g.reader}</h3>}
+        <ul class:list={{ ruled: !g.reader }}>
+          {g.links.map((l) => (
+            <li>
+              <a href={l.href}>{l.label}</a>
+              <p>{l.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px 56px;
+    margin-top: 32px;
+  }
+  .groups.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 56px;
+    margin-top: 24px;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  h3 {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 17px;
+    letter-spacing: 0;
+  }
+  ul.ruled {
+    border-top: 1px solid var(--line);
+  }
+  li {
+    padding-block: 18px;
+    border-bottom: 1px solid var(--hair);
+  }
+  a {
+    font-weight: 600;
+  }
+  p {
+    margin-top: 4px;
+    font-size: 16px;
+    color: var(--ink-2);
+  }
+  @media (max-width: 1080px) {
+    .groups {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .groups,
+    .groups.cols-2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    /* Stacked untitled columns read as one list: only the first keeps its top rule. */
+    .cols-2 .group + .group ul.ruled {
+      border-top: 0;
+    }
+  }
+</style>

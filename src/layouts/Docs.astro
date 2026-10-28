@@ -158,9 +158,9 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
           <>
             <div class="rule" />
             {asideLinks.map((l) => (
-              <a href={l.href}>{l.label} →</a>
+              <a href={l.href}>{l.label}</a>
             ))}
-            {editUrl && <a href={editUrl}>Edit on GitHub →</a>}
+            {editUrl && <a href={editUrl}>Edit on GitHub</a>}
           </>
         )
       }
@@ -184,8 +184,8 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   .side,
   .toc {
     position: sticky;
-    top: 69px;
-    max-height: calc(100vh - 69px);
+    top: var(--header-h);
+    max-height: calc(100vh - var(--header-h));
     overflow-y: auto;
   }
   .side {
@@ -202,19 +202,19 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
   .group-title,
   .toc-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
   }
   .group-title {
     padding: 0 10px 8px;
   }
   .group a {
     padding: 7px 10px;
-    border-radius: 8px;
+    border-radius: 4px;
     color: var(--ink-2);
+    text-decoration: none;
   }
   .group a:hover {
     color: var(--ink);
@@ -222,8 +222,8 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
   .group a[aria-current='page'] {
     background: var(--surface-2);
-    color: var(--ink);
-    font-weight: 500;
+    color: var(--signal);
+    font-weight: 600;
   }
 
   .article {
@@ -239,21 +239,20 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     gap: 22px;
   }
   .crumb {
-    font-family: var(--font-mono);
-    font-size: 12.5px;
+    font-size: 14px;
     color: var(--ink-3);
   }
   .sep {
     color: var(--line-strong);
   }
   h1 {
-    font-size: clamp(36px, 4.6vw, 54px);
-    line-height: 1.02;
-    letter-spacing: -0.04em;
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
   }
   .lead {
-    font-size: 20px;
-    line-height: 1.55;
+    font-size: 19px;
+    line-height: 1.6;
     color: var(--ink-2);
   }
   .chips {
@@ -263,12 +262,11 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     margin: 0;
     padding: 0;
     list-style: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13.5px;
   }
   .chips li {
-    padding: 4px 9px;
-    border-radius: 7px;
+    padding: 2px 9px;
+    border-radius: 4px;
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink-2);
@@ -284,15 +282,16 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 18px 20px;
+    padding: 16px 20px;
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 8px;
     background: var(--surface);
     color: var(--ink);
+    text-decoration: none;
     transition: border-color 120ms ease;
   }
   .pager a:hover {
-    border-color: var(--line-strong);
+    border-color: var(--signal);
     color: var(--ink);
   }
   .pager .next {
@@ -304,7 +303,8 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     color: var(--ink-3);
   }
   .name {
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--signal);
   }
 
   .toc {
@@ -319,6 +319,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
   .toc a {
     color: var(--ink-2);
+    text-decoration: none;
   }
   .toc a:hover {
     color: var(--ink);
@@ -328,7 +329,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
   .toc a[aria-current='location'] {
     color: var(--signal);
-    font-weight: 500;
+    font-weight: 600;
   }
   .rule {
     height: 1px;
@@ -363,17 +364,17 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     .sections {
       display: block;
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 8px;
       background: var(--surface);
     }
     .sections summary {
       display: flex;
       align-items: center;
-      min-height: 44px;
+      min-height: 48px;
       padding: 0 16px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--ink-2);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
       cursor: pointer;
       list-style: none;
     }
@@ -381,12 +382,17 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
       display: none;
     }
     .sections summary::after {
-      content: '+';
-      margin-left: auto;
-      color: var(--ink-3);
+      content: '';
+      width: 8px;
+      height: 8px;
+      margin: -4px 4px 0 auto;
+      border-right: 1.5px solid var(--ink-3);
+      border-bottom: 1.5px solid var(--ink-3);
+      transform: rotate(45deg);
     }
     .sections[open] summary::after {
-      content: '–';
+      margin-top: 4px;
+      transform: rotate(-135deg);
     }
     .sections nav {
       display: flex;
@@ -437,7 +443,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
         const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
         if (hit && byId.has(hit.target.id)) show(hit.target.id);
       },
-      { rootMargin: '-80px 0px -65% 0px' },
+      { rootMargin: '-88px 0px -65% 0px' },
     );
     targets.forEach((t) => io.observe(t));
   }
@@ -455,7 +461,7 @@ const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
     min-height: 32px;
     padding: 0 10px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 4px;
     background: var(--surface);
     font-family: var(--font-mono);
     font-size: 12px;

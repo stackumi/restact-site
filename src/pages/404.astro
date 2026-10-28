@@ -2,15 +2,14 @@
 import Base from '../layouts/Base.astro';
 /* Served by Cloudflare, with status 404, for any unknown path: wrangler.jsonc sets
    assets.not_found_handling to "404-page", which serves this build output (dist/404.html). The
-   mono line shows the requested path, filled in by the script (the page itself is static), and
-   reads as a failed request. */
+   mono line shows the requested path, filled in by the script (the page itself is static), and its
+   status, so it reads as a failed request. */
 ---
 
 <Base title="Not found" description="This page does not exist.">
   <section class="nf container">
-    <p class="status mono">404 Not Found</p>
     <h1>No object at this path.</h1>
-    <p class="req mono"><span class="m">GET</span> <span data-path>/</span></p>
+    <p class="req mono"><span class="m">GET</span> <span data-path>/</span> <span class="status">404 Not Found</span></p>
     <p class="lede">The page you asked for does not exist or has moved. Start from the home page or read the specification.</p>
     <div class="actions">
       <a class="btn btn--primary" href="/">Home</a>
@@ -28,21 +27,19 @@ import Base from '../layouts/Base.astro';
     gap: 22px;
   }
   .status {
-    font-size: 13px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    margin-left: 1ch;
     color: var(--ink-3);
   }
   h1 {
-    font-size: clamp(36px, 6vw, 64px);
-    line-height: 1;
-    letter-spacing: -0.04em;
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
   }
   .req {
     max-width: 100%;
     padding: 10px 14px;
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 6px;
     background: var(--sunk);
     font-size: 15px;
     color: var(--ink);
