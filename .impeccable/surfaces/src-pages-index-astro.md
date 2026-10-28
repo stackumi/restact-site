@@ -29,12 +29,13 @@ mandatory core, see a verb built, uploaded and called, and close on three reader
 the comment channel is not chosen yet.
 
 FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 1000px, the narrowest width at which that row fits on one line). No tagline bar on
-this page. One left-aligned column: the H1 is the draft title at about 46px over three lines; then the tagline as a
+this page. One left-aligned column: the H1 is the protocol title, "The REST:ACT Protocol: APIs Their Clients Can Build On", at about 46px
+over two lines (three on phones); then the tagline as a
 23px dek, "Let users and their agents add the functions an API doesn't have." with "An open-source protocol and
 reference server." in quieter ink; then the abstract at 19px in a 62ch measure; then one plain link per reader:
 Review the protocol (the draft), Implement a server (/spec/), Write and call verbs (/start/), named as the
 closing reader groups name them. Nothing sits beside the opening; it is the single entry point.
-A hairline with 32px either side, then "One object, four requests" and the top of the AnatomyDemo at 1440×900.
+A hairline with 32px either side, then "How the server reads a request" and the top of the AnatomyDemo at 1440×900.
 The primary actions are the three reader links in the opening and the reader groups that close the page.
 
 FORM: Docs portal, #3 on the grounded list (IETF document, W3C TR, docs portal, standards sheet, HTTP exchange,
@@ -63,8 +64,15 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   order; not the reviewer's two-column opening, which the owner had already rejected): the reader links are
   renamed after the groups and "Implement a server" goes to /spec/; terminal blocks wrap at every width with a
   hanging indent and scrolling blocks shade their hidden edge; the reader groups move to the close with the
-  comments note under them. The example stays `text:wordCount` through `POST /v1/modules`, the draft's
-  reference deployment profile, and its intro now says so and that restactd must be running.
+  comments note under them. The example uploads through `POST /v1/modules`, the draft's reference deployment
+  profile, and its intro now says so and that restactd must be running.
+- Creating a verb stays out of the request demo (owner, 2026-10-28): its URL is the deployment endpoint, not the
+  object's own address, and showing it for both verbs made the panel long. The demo is headed "How the server
+  reads a request", and the end-to-end example creates and calls `notes/42:wordCount`, the verb the demo calls.
+- Owner copy edits (2026-10-28): the title becomes "The REST:ACT Protocol: APIs Their Clients Can Build On" (the
+  draft in restact-specs still carries the old title until it is changed there and re-synced); the abstract's first
+  sentence says clients add their own code within the permissions the server grants; "What it is for" opens with
+  "A few examples of what client-extensible APIs make possible:".
 
 ## Unresolved
 

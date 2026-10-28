@@ -20,7 +20,7 @@ const dek = {
 };
 
 const abstract = [
-  'REST:ACT is an HTTP protocol that lets the clients of an API add code to the server. A client uploads a small program, called a verb, to a path in the server’s object tree, and anyone the server allows can call it with GET or POST.',
+  'REST:ACT is an HTTP protocol that lets the clients of an API add their own code to the server, within the permissions the server grants them. A client uploads a small program, called a verb, to a path in the server’s object tree, and anyone the server allows can call it with GET or POST.',
   'A verb is a WebAssembly component. It runs with the caller’s permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit.',
 ];
 
@@ -32,8 +32,8 @@ const next = [
 ];
 
 const demo = {
-  heading: 'One object, four requests',
-  lead: 'Four requests to the same object, notes/42. Select one to see how the server reads the URL.',
+  heading: 'How the server reads a request',
+  lead: 'Four requests to the same note, notes/42. Select one to see how the server reads it.',
 };
 
 const paths = {
@@ -68,7 +68,7 @@ const paths = {
 
 const uses = {
   heading: 'What it is for',
-  lead: 'The draft’s introduction names four kinds of application that need clients to supply behaviour, not only data:',
+  lead: 'A few examples of what client-extensible APIs make possible:',
   items: [
     'A user uploads a function that transforms rows in a database.',
     'A bot contributes a tool to a remote service.',
@@ -94,7 +94,7 @@ const core = {
 
 const example = {
   heading: 'A verb, end to end',
-  lead: 'A Rust verb that counts words, built with plain cargo, uploaded with the draft’s reference deployment request, POST /v1/modules, and called with GET. The route id text:wordCount binds the verb to the object path /v1/text. A local restactd without authentication lets a verb bind to an object that does not exist yet.',
+  lead: 'A Rust verb that counts words, built with plain cargo, uploaded with the draft’s reference deployment request, POST /v1/modules, and called with GET. The upload names notes/42:wordCount, so it creates the wordCount verb that the demo above calls. A local restactd without authentication lets a verb bind to an object that does not exist yet.',
   needs: { before: 'The commands need restactd running on localhost:8080.', link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },
   rustLabel: 'src/lib.rs',
   rust: `use restact_sdk::{export_verb, Error, ErrorExt, Payload, Verb};
@@ -113,8 +113,8 @@ export_verb!(WordCount);`,
   shell: term(`
 $ cargo build --release --target wasm32-wasip2
 $ curl -X POST --data-binary @target/wasm32-wasip2/release/word_count.wasm \\
-    'localhost:8080/v1/modules?verb=text¦wordCount&kind=function'
-$ curl 'localhost:8080/v1/text¦wordCount?input=one%20two%20three'
+    'localhost:8080/v1/modules?verb=notes/42¦wordCount&kind=function'
+$ curl 'localhost:8080/v1/notes/42¦wordCount?input=one%20two%20three'
 «3»
 `),
   more: { label: 'The same verb in JavaScript and Python', href: '/start/' },
@@ -124,7 +124,7 @@ $ curl 'localhost:8080/v1/text¦wordCount?input=one%20two%20three'
 const feedback = 'The draft is open for review. A channel for comments has not been chosen yet.';
 
 /** Split a sentence so paths and identifiers render in monospace; the words are unchanged. */
-const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42|text:wordCount|restact_code)/g;
+const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42:wordCount|notes\/42|restact_code)/g;
 const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 1 }));
 ---
 

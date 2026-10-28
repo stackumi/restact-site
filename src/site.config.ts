@@ -14,10 +14,13 @@ export const SITE = {
     'REST:ACT is an HTTP protocol that lets users, and the agents acting for them, add code to the servers they use: a sandboxed WebAssembly verb on a path, called with an ordinary GET or POST.',
 };
 
-/** The draft the protocol is specified in, written in Internet-Draft format and not yet submitted. */
+/**
+ * The draft the protocol is specified in, written in Internet-Draft format and not yet submitted.
+ * `title` is the one the home page shows; the draft in restact-specs still carries its old title.
+ */
 export const DRAFT = {
   docname: 'draft-byrd-restact-protocol-00',
-  title: 'The REST:ACT Protocol: Invoking Sandboxed Functionality over REST',
+  title: 'The REST:ACT Protocol: APIs Their Clients Can Build On',
   status: 'Written as an Internet-Draft, not yet submitted',
 };
 
