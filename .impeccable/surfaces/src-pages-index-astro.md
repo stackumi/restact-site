@@ -24,17 +24,18 @@ sections. Petrol is the only hue: it marks links, focus rings, GET and verbs in 
 only on POST. Public Sans for headings, UI and body; JetBrains Mono only for code, paths and identifiers.
 
 STORY: The visitor reads the draft's title and a two-paragraph abstract that says what REST:ACT is. They watch one
-object answer four requests, which shows how the URL carries the verb. They pick their next step from three
-reader-grouped link lists, learn the four uses and the six-item mandatory core, and see a verb built, uploaded and
-called.
+object answer four requests, which shows how the URL carries the verb. They learn the four uses and the six-item
+mandatory core, see a verb built, uploaded and called, and close on three reader-grouped link lists and a note that
+the comment channel is not chosen yet.
 
 FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 1000px, the narrowest width at which that row fits on one line). No tagline bar on
 this page. One left-aligned column: the H1 is the draft title at about 46px over three lines; then the tagline as a
 23px dek, "Let users and their agents add the functions an API doesn't have." with "An open-source protocol and
 reference server." in quieter ink; then the abstract at 19px in a 62ch measure; then one plain link per reader:
-Read the draft, Implement a server, Run restactd. Nothing sits beside the opening; it is the single entry point.
+Review the protocol (the draft), Implement a server (/spec/), Write and call verbs (/start/), named as the
+closing reader groups name them. Nothing sits beside the opening; it is the single entry point.
 A hairline with 32px either side, then "One object, four requests" and the top of the AnatomyDemo at 1440×900.
-The primary actions are the reader-grouped links that follow the demo.
+The primary actions are the three reader links in the opening and the reader groups that close the page.
 
 FORM: Docs portal, #3 on the grounded list (IETF document, W3C TR, docs portal, standards sheet, HTTP exchange,
 preprint, plain page). The roll's assigned lead was #5 (HTTP exchange, built as option B); the owner chose the
@@ -58,6 +59,12 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   opening gains the tagline as a dek and three reader links, the tagline bar is off on the home page, "Get
   started" joins NAV (so the Menu breakpoint moves to 1000px), and the request demo is flattened onto the
   4/6/8px corner scale. Draft status stays off the home page by owner choice.
+- After the second 2026-10-28 critique (owner chose link labels and targets, phone code wrapping and section
+  order; not the reviewer's two-column opening, which the owner had already rejected): the reader links are
+  renamed after the groups and "Implement a server" goes to /spec/; terminal blocks wrap at every width with a
+  hanging indent and scrolling blocks shade their hidden edge; the reader groups move to the close with the
+  comments note under them. The example stays `text:wordCount` through `POST /v1/modules`, the draft's
+  reference deployment profile, and its intro now says so and that restactd must be running.
 
 ## Unresolved
 

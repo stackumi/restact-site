@@ -7,10 +7,10 @@ import { term } from '../lib/term';
 import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
 
 /* The home page: a documentation hub. The draft's title, the one-line reason for the protocol and
-   the abstract open it, with one next step per reader. Then one object answers four requests,
-   reader-grouped links, what the protocol is for, the mandatory core, and one verb built, uploaded
-   and called. The page sets the tagline in its opening, so the tagline bar is off here. Copy sits
-   up here, markup below. */
+   the abstract open it, with one next step per reader. Then one object answers four requests, what
+   the protocol is for, the mandatory core, and one verb built, uploaded and called. It closes on the
+   reader-grouped links and a note on comments. The page sets the tagline in its opening, so the
+   tagline bar is off here. Copy sits up here, markup below. */
 
 const DRAFT_URL = '/spec/draft/';
 
@@ -24,11 +24,11 @@ const abstract = [
   'A verb is a WebAssembly component. It runs with the caller’s permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit.',
 ];
 
-/* One next step for each of the three readers; the full lists follow the demo. */
+/* One next step for each of the three readers, named as the reader groups at the close name them. */
 const next = [
-  { label: 'Read the draft', href: DRAFT_URL },
-  { label: 'Implement a server', href: '/how-it-works/' },
-  { label: 'Run restactd', href: '/start/' },
+  { label: 'Review the protocol', href: DRAFT_URL },
+  { label: 'Implement a server', href: '/spec/' },
+  { label: 'Write and call verbs', href: '/start/' },
 ];
 
 const demo = {
@@ -94,7 +94,8 @@ const core = {
 
 const example = {
   heading: 'A verb, end to end',
-  lead: 'A Rust verb that counts words, built with plain cargo, uploaded with one request and called with GET.',
+  lead: 'A Rust verb that counts words, built with plain cargo, uploaded with the draft’s reference deployment request, POST /v1/modules, and called with GET. The route id text:wordCount binds the verb to the object path /v1/text. A local restactd without authentication lets a verb bind to an object that does not exist yet.',
+  needs: { before: 'The commands need restactd running on localhost:8080.', link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },
   rustLabel: 'src/lib.rs',
   rust: `use restact_sdk::{export_verb, Error, ErrorExt, Payload, Verb};
 
@@ -119,15 +120,11 @@ $ curl 'localhost:8080/v1/text¦wordCount?input=one%20two%20three'
   more: { label: 'The same verb in JavaScript and Python', href: '/start/' },
 };
 
-/* The feedback channel is an open decision, so this stays visibly unlinked. */
-const feedback = {
-  heading: 'Comments on the draft',
-  body: 'The draft is open for review. A channel for comments has not been chosen yet.',
-  placeholder: 'Feedback link: to be decided',
-};
+/* The feedback channel is an open decision, so this note stays unlinked. */
+const feedback = 'The draft is open for review. A channel for comments has not been chosen yet.';
 
 /** Split a sentence so paths and identifiers render in monospace; the words are unchanged. */
-const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42|restact_code)/g;
+const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42|text:wordCount|restact_code)/g;
 const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 1 }));
 ---
 
@@ -147,11 +144,6 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
       {split(demo.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}
     </p>
     <AnatomyDemo />
-  </section>
-
-  <section class="container sect" aria-labelledby="paths">
-    <h2 id="paths">{paths.heading}</h2>
-    <ReaderGroups groups={paths.groups} />
   </section>
 
   <section class="container sect" aria-labelledby="uses">
@@ -185,7 +177,8 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
   <section class="container sect" aria-labelledby="example">
     <div class="measure">
       <h2 id="example">{example.heading}</h2>
-      <p class="lead">{example.lead}</p>
+      <p class="lead">{split(example.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}</p>
+      <p>{example.needs.before} <a href={example.needs.link.href}>{example.needs.link.label}</a> {example.needs.after}</p>
     </div>
     <div class="codes">
       <CodeBlock lang="rust" code={example.rust} label={example.rustLabel} />
@@ -194,12 +187,10 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
     <p class="more"><a href={example.more.href}>{example.more.label}</a></p>
   </section>
 
-  <section class="container sect last" aria-labelledby="feedback">
-    <div class="measure">
-      <h2 id="feedback">{feedback.heading}</h2>
-      <p>{feedback.body}</p>
-      <p class="placeholder">{feedback.placeholder}</p>
-    </div>
+  <section class="container sect last" aria-labelledby="paths">
+    <h2 id="paths">{paths.heading}</h2>
+    <ReaderGroups groups={paths.groups} />
+    <p class="feedback" id="feedback">{feedback}</p>
   </section>
 </Base>
 
@@ -321,12 +312,13 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
     margin-top: 24px;
   }
 
-  /* Feedback: the channel is undecided, so the placeholder is plain text. */
   .measure > p + p {
     margin-top: 12px;
   }
-  .placeholder {
-    font-style: italic;
+  /* The comments note: the channel is undecided, so it is plain text under the reader groups. */
+  .feedback {
+    max-width: 68ch;
+    margin-top: 32px;
     color: var(--ink-3);
   }
 

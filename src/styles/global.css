@@ -281,7 +281,7 @@ pre {
 
 /* Shiki blocks inside prose and CodeBlock: no own background, the frame provides it. */
 pre.astro-code {
-  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Inline `code`: the mono face at a slightly smaller size, no box. Docs prose adds a faint ground. */

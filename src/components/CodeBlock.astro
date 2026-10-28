@@ -13,7 +13,8 @@ import { restactTheme } from '../lib/shiki-theme.mjs';
  *   label    text on the left of the strip, e.g. a filename or "http"
  *   variant  "plain" (default) or "terminal" (the strip labelled "shell")
  *   copy     show the copy button (default true)
- *   wrap     wrap long lines at the box edge on wide screens (terminal blocks always do)
+ *   wrap     wrap long lines at the box edge on wide screens (terminal blocks always wrap, at
+ *            every width, with a hanging indent)
  * The button and its live region are wired by the script below. Without JavaScript the block is
  * still fully readable; the button is hidden until the script runs.
  */
@@ -116,9 +117,32 @@ const showStrip = copy || stripLabel;
     line-height: 1.6;
     color: var(--ink-2);
   }
-  /* A terminal line is a command: wrap it at the box edge (a quoted URL has no break point). */
+  /* A block that scrolls sideways shades the edge that hides more code: the covers scroll with
+     the text and uncover a shadow fixed to the box edge. */
+  .plain:not(.wrap) .body :global(pre) {
+    background-image:
+      linear-gradient(to right, var(--sunk) 40%, transparent),
+      linear-gradient(to left, var(--sunk) 40%, transparent),
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 14%, transparent), transparent),
+      linear-gradient(to left, color-mix(in srgb, var(--ink) 14%, transparent), transparent);
+    background-position: left, right, left, right;
+    background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+  }
+  /* A terminal line is a command: wrap it at the box edge at every width (a quoted URL has no break
+     point), indenting the continuation so each command still starts at the margin. */
+  .terminal .body :global(pre) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .terminal .body :global(.ln) {
+    display: block;
+    padding-left: 2ch;
+    text-indent: -2ch;
+  }
   @media (min-width: 640px) {
-    :is(.terminal, .wrap) .body :global(pre) {
+    .wrap .body :global(pre) {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }

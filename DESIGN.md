@@ -250,6 +250,7 @@ The home page's reader groups and /start/'s columns: an optional 17px H3 over a 
 - **Frame:** `rule` border, 8px radius, `code-ground`, no shadow, no window controls.
 - **Strip:** 40px `code-strip` bar with a mono 12px label (filename, or "shell" for terminals) and a text "Copy" button that appears only with JavaScript.
 - **Highlighting:** keywords in signal; strings, functions and constants in ink; everything else `ink-2`; comments `ink-3`. Terminal transcripts mark prompts (not copied), signal colons and bright output.
+- **Long lines:** terminal blocks wrap at the box edge at every width, continuation lines indented 2ch so each command starts at the margin. Other blocks scroll sideways, with a soft shadow on the edge that hides more code; `wrap` makes one wrap from 640px up.
 
 ### Callouts
 `note` (petrol), `warn` and `danger` tones: 1px border at 35% tone, ground at 6% tone, 8px radius, bold ink title, 15.5px body.
