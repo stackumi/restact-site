@@ -3,8 +3,10 @@
  * "One object, four requests": the home page hero panel. Four requests against the object
  * notes/42; selecting one re-labels the parts of its URL and explains what the server does with it.
  *
- * All four views are in the HTML. The first shows by default and the script swaps which one is
- * visible, so without JavaScript the first request still reads correctly. The request list is a
+ * All four views are in the HTML and share one grid cell, so the panel keeps the height of the
+ * tallest view and nothing below it moves when the selection changes. The default view shows
+ * without JavaScript. On narrow screens a long URL wraps at its parts, each part keeping its
+ * caption. The request list is a
  * group of toggle buttons (aria-pressed), native keyboard operation (Tab, Enter, Space) plus the
  * arrow keys.
  *
@@ -37,7 +39,7 @@ const reqs: Req[] = [
       { text: 'PUT', caption: 'method', tone: 'soft', rule: 'line', gap: true },
       { text: '/v1/notes/42', caption: 'object path: the noun', tone: 'ink', rule: 'line' },
     ],
-    kind: 'DATA', kindTone: 'soft', gist: 'The object’s data, a JSON document',
+    kind: 'data', kindTone: 'soft', gist: 'The object’s data, a JSON document',
     desc: 'Plain HTTP on the object path reads and writes its data. No verb runs, and a client that only does CRUD sees an ordinary REST API.',
   },
   {
@@ -47,7 +49,7 @@ const reqs: Req[] = [
       { text: '/v1/notes/42', caption: 'object path', tone: 'ink', rule: 'line' },
       { text: 'wordCount', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
     ],
-    kind: 'FUNCTION', kindTone: 'sig', gist: 'Safe and cacheable',
+    kind: 'function', kindTone: 'sig', gist: 'Safe and cacheable',
     desc: 'A function is called with GET. The host refuses any write it attempts, and a function may not call an action, so the response can be cached.',
   },
   {
@@ -57,7 +59,7 @@ const reqs: Req[] = [
       { text: '/v1/notes/42', caption: 'object path', tone: 'ink', rule: 'line' },
       { text: 'archive', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
     ],
-    kind: 'ACTION', kindTone: 'act', gist: 'May change state',
+    kind: 'action', kindTone: 'act', gist: 'May change state',
     desc: 'An action is called with POST. It can write the data of the object it is bound to, with the caller’s permissions, and its compute is charged to the caller.',
   },
   {
@@ -68,7 +70,7 @@ const reqs: Req[] = [
       { text: 'archive', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
       { text: '/meta', caption: 'property', tone: 'soft', rule: 'line' },
     ],
-    kind: 'VERB PROPERTY', kindTone: 'soft', gist: 'The verb’s own metadata',
+    kind: 'verb property', kindTone: 'soft', gist: 'The verb’s own metadata',
     desc: 'A verb is itself an object. Its meta property reports kind, capabilities and limits, and code and policy sit beside it.',
   },
 ];
@@ -77,11 +79,6 @@ const first = 1;
 ---
 
 <div class="anatomy" data-anatomy>
-  <div class="top">
-    <span class="title">One object, four requests</span>
-    <span class="obj">notes/42</span>
-  </div>
-
   <div class="views" aria-live="polite">
     {
       reqs.map((r, i) => (
@@ -112,7 +109,12 @@ const first = 1;
   <div class="reqs" role="group" aria-label="Requests">
     {
       reqs.map((r, i) => (
-        <button type="button" data-req={i} aria-pressed={i === first ? 'true' : 'false'}>
+        <button
+          type="button"
+          data-req={i}
+          aria-pressed={i === first ? 'true' : 'false'}
+          aria-label={`${r.method} ${r.path}, ${r.short}`}
+        >
           <span class="dot" aria-hidden="true" />
           <span class={`m t-${r.methodTone}`}>{r.method}</span>
           <span class="p">{r.path}</span>
@@ -127,42 +129,31 @@ const first = 1;
   .anatomy {
     min-width: 0;
     border: 1px solid var(--line);
-    border-radius: 20px;
+    border-radius: 8px;
     background: var(--raised);
     overflow: hidden;
   }
-  .top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 14px clamp(16px, 2vw, 22px);
-    border-bottom: 1px solid var(--hair);
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: var(--ink-3);
-  }
-  .title {
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
   .views {
+    display: grid;
     padding: clamp(22px, 3vw, 34px) clamp(16px, 3vw, 34px) 26px;
   }
-  .view[hidden] {
-    display: none;
-  }
   .view {
+    grid-area: 1 / 1;
     display: flex;
     flex-direction: column;
     gap: 22px;
   }
+  /* Hidden views still take part in sizing the shared cell. */
+  .view[hidden] {
+    display: flex;
+    visibility: hidden;
+  }
   .parts {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
+    row-gap: 16px;
     font-family: var(--font-mono);
-    overflow-x: auto;
-    padding-bottom: 2px;
   }
   .part {
     display: flex;
@@ -185,7 +176,7 @@ const first = 1;
   .cap {
     border-top: 2px solid var(--line-strong);
     padding-top: 7px;
-    font-size: 11.5px;
+    font-size: 13px;
     color: var(--ink-3);
     white-space: nowrap;
   }
@@ -200,10 +191,8 @@ const first = 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 16px 18px;
-    border: 1px solid var(--hair);
-    border-radius: 12px;
-    background: var(--sunk);
+    padding-top: 18px;
+    border-top: 1px solid var(--hair);
   }
   .kindrow {
     display: flex;
@@ -214,21 +203,23 @@ const first = 1;
   .kind {
     padding: 2px 8px;
     border: 1px solid var(--line-strong);
-    border-radius: 6px;
+    border-radius: 4px;
     font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--ink-2);
   }
   .k-sig { border-color: var(--signal); color: var(--signal); }
   .k-act { border-color: var(--action); color: var(--action); }
   .gist {
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--ink);
   }
   .explain p {
-    font-size: 14.5px;
-    line-height: 1.55;
+    max-width: 68ch;
+    font-size: 16px;
+    line-height: 1.6;
     color: var(--ink-2);
   }
 
@@ -246,7 +237,7 @@ const first = 1;
     min-height: 46px;
     padding: 0 14px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 6px;
     background: transparent;
     color: var(--ink);
     font-family: var(--font-mono);
@@ -304,7 +295,7 @@ const first = 1;
     .reqs button {
       gap: 10px;
       padding: 0 10px;
-      font-size: 12.5px;
+      font-size: 13px;
     }
     .m {
       width: 36px;

@@ -6,15 +6,29 @@ import ReaderGroups from '../components/ReaderGroups.astro';
 import { term } from '../lib/term';
 import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
 
-/* The home page: a documentation hub. The draft's title and abstract open it, one object answers
-   four requests, then reader-grouped links, what the protocol is for, the mandatory core, and one
-   verb built, uploaded and called. Copy sits up here, markup below. */
+/* The home page: a documentation hub. The draft's title, the one-line reason for the protocol and
+   the abstract open it, with one next step per reader. Then one object answers four requests,
+   reader-grouped links, what the protocol is for, the mandatory core, and one verb built, uploaded
+   and called. The page sets the tagline in its opening, so the tagline bar is off here. Copy sits
+   up here, markup below. */
 
 const DRAFT_URL = '/spec/draft/';
+
+const dek = {
+  why: 'Let users and their agents add the functions an API doesn’t have.',
+  scope: 'An open-source protocol and reference server.',
+};
 
 const abstract = [
   'REST:ACT is an HTTP protocol that lets the clients of an API add code to the server. A client uploads a small program, called a verb, to a path in the server’s object tree, and anyone the server allows can call it with GET or POST.',
   'A verb is a WebAssembly component. It runs with the caller’s permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit.',
+];
+
+/* One next step for each of the three readers; the full lists follow the demo. */
+const next = [
+  { label: 'Read the draft', href: DRAFT_URL },
+  { label: 'Implement a server', href: '/how-it-works/' },
+  { label: 'Run restactd', href: '/start/' },
 ];
 
 const demo = {
@@ -117,10 +131,14 @@ const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42|restact_code)/g;
 const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 1 }));
 ---
 
-<Base>
+<Base tagline={false}>
   <section class="container opening" aria-labelledby="title">
     <h1 id="title">{DRAFT.title}</h1>
+    <p class="dek">{dek.why} <span class="scope">{dek.scope}</span></p>
     {abstract.map((p) => <p>{p}</p>)}
+    <ul class="next" aria-label="Start here">
+      {next.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+    </ul>
   </section>
 
   <section class="container sect demo" aria-labelledby="demo">
@@ -212,6 +230,35 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
   .opening p + p {
     margin-top: 16px;
   }
+  /* The plain reason sits between the formal title and the abstract, a step above body size. */
+  .opening .dek {
+    max-width: 34em;
+    margin-bottom: 28px;
+    font-size: 23px;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+  /* The scope sentence takes its own line, so the reason never wraps around it. */
+  .dek .scope {
+    display: block;
+    color: var(--ink-3);
+  }
+  .opening .dek + p {
+    margin-top: 0;
+  }
+  .next {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 32px;
+    margin-top: 24px;
+  }
+  .next a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 17px;
+    font-weight: 600;
+  }
 
   /* Sections (.sect, .measure) come from global.css: a hairline with 32px either side, no boxes. */
   .lead {
@@ -228,15 +275,6 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
   }
   .demo :global(.anatomy p) {
     margin: 0;
-  }
-  /* The demo's own label repeats the section heading directly above it. */
-  .demo :global([data-anatomy] .title) {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   .core li a {
@@ -304,6 +342,13 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
     .opening p,
     .lead {
       font-size: 17px;
+    }
+    .opening .dek {
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+    .next {
+      margin-top: 16px;
     }
     .core {
       grid-template-columns: minmax(0, 1fr);

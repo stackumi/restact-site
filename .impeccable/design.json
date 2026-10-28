@@ -565,7 +565,7 @@
       },
       {
         "name": "masthead-menu",
-        "value": "940px"
+        "value": "1000px"
       },
       {
         "name": "three-to-two-columns",
@@ -651,7 +651,7 @@
     "northStar": "The Standards Sheet Under a Petrol Masthead",
     "overview": "The site reads as the documentation hub for a protocol proposal, not a product launch. One committed brand colour, a deep petrol, fills the sticky masthead; a pale petrol tagline bar sits under it; then the page is white reading space in near-black ink, divided by hairline rules. Sections carry no boxes, bands or tiles: a 1px hairline with equal space above and below is the only section device. The register follows a2a-protocol.org and W3C/IETF documents: a left-aligned column, the draft title as the H1, plain paragraphs, ruled link lists.\n\nDensity is moderate and textual. Petrol is the only hue in the interface; it marks the masthead, links, focus rings, GET and verbs in examples. Rust appears only where a request writes (POST). Everything else is ink at three weights, white, and grey-green hairlines. Code is set in JetBrains Mono on a faintly tinted ground; prose, headings and UI share one face, Public Sans.\n\nLight is the site's look and the default for every visitor; dark is an opt-in through the masthead toggle and never follows the OS preference. The old dark, teal, Space Grotesk landing-page look (status pill, two-tone slogan H1, stat strip, eyebrows, numbered feature cards, closing CTA card) is the confirmed anti-reference.",
     "keyCharacteristics": [
-      "A petrol masthead band and pale-petrol tagline bar frame every page; below them, only white, ink and hairlines.",
+      "A petrol masthead band and pale-petrol tagline bar frame every page except the home page, which sets the tagline in its opening; below them, only white, ink and hairlines.",
       "Sections are separated by a single hairline with 32px either side (28px on phones), never by boxes or grey bands.",
       "One sans family for everything readable; mono only for code, paths, identifiers and the docname.",
       "Link lists are ruled rows (title link plus a one-line note), not cards.",

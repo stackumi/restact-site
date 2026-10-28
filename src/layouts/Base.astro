@@ -19,14 +19,16 @@ import { INDEXABLE, SITE, THEME_KEY } from '../site.config';
  *                which is "REST:ACT · A web users and their agents can program".
  *   description  meta description (default: the site description)
  *   wide         use the 1360px docs width in the frame (the Docs layout sets this)
+ *   tagline      show the tagline bar (default true; the home page sets its sentence in the opening)
  * Robots: <meta name="robots"> and /robots.txt both follow INDEXABLE in site.config.ts.
  */
 interface Props {
   title?: string;
   description?: string;
   wide?: boolean;
+  tagline?: boolean;
 }
-const { title, description = SITE.description, wide = false } = Astro.props;
+const { title, description = SITE.description, wide = false, tagline = true } = Astro.props;
 const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.tagline}`;
 ---
 
@@ -64,7 +66,7 @@ const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.t
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <Header wide={wide} />
-    <Tagline wide={wide} />
+    {tagline && <Tagline wide={wide} />}
     <main id="main">
       <slot />
     </main>

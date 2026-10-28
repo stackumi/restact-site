@@ -99,7 +99,7 @@
   /* Height of the sticky masthead row; sticky columns and anchor jumps sit below it. */
   --header-h: 64px;
 }
-@media (max-width: 939px) {
+@media (max-width: 999px) {
   :root {
     --header-h: 68px;
   }

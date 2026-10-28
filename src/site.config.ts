@@ -59,6 +59,7 @@ export interface NavLink {
 export const NAV: NavLink[] = [
   { label: 'How it works', href: '/how-it-works/' },
   { label: 'Specification', href: '/spec/' },
+  { label: 'Get started', href: '/start/' },
   { label: 'Presentation verbs', href: '/presentation-verbs/' },
   { label: 'Security', href: '/security/' },
   { label: 'Compare', href: '/compare/' },

@@ -2,7 +2,7 @@
 version: 1
 slug: "src-pages-index-astro"
 primary_target: "src/pages/index.astro"
-related_targets: ["src/layouts/Base.astro","src/components/Header.astro","src/components/Footer.astro","src/styles/tokens.css","src/pages/spec/index.astro","src/pages/start.astro"]
+related_targets: ["src/layouts/Base.astro","src/components/Header.astro","src/components/Footer.astro","src/styles/tokens.css","src/styles/global.css"]
 ---
 
 ## Scope
@@ -28,10 +28,11 @@ object answer four requests, which shows how the URL carries the verb. They pick
 reader-grouped link lists, learn the four uses and the six-item mandatory core, and see a verb built, uploaded and
 called.
 
-FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 940px, the narrowest width at which that row fits on one line). Tagline bar: "Let users
-and their agents add the functions an API doesn't have." on the left, "An open-source protocol and reference
-server." on the right in quieter ink. One left-aligned column: the H1 is the draft title at about 46px over three
-lines, then the abstract at 19px in a 62ch measure. Nothing sits beside the opening; it is the single entry point.
+FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 1000px, the narrowest width at which that row fits on one line). No tagline bar on
+this page. One left-aligned column: the H1 is the draft title at about 46px over three lines; then the tagline as a
+23px dek, "Let users and their agents add the functions an API doesn't have." with "An open-source protocol and
+reference server." in quieter ink; then the abstract at 19px in a 62ch measure; then one plain link per reader:
+Read the draft, Implement a server, Run restactd. Nothing sits beside the opening; it is the single entry point.
 A hairline with 32px either side, then "One object, four requests" and the top of the AnatomyDemo at 1440×900.
 The primary actions are the reader-grouped links that follow the demo.
 
@@ -53,6 +54,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 - The footer is one quiet row: restact-specs, restactd, restactd documentation, and the docname (owner, after
   review). The sitemap columns duplicated the header nav.
 - /spec/ and /start/ follow the same hairline register as the home page: no boxed sections or tile walls.
+- After the 2026-10-28 critique (owner chose all five issues except restoring the status line): the home page
+  opening gains the tagline as a dek and three reader links, the tagline bar is off on the home page, "Get
+  started" joins NAV (so the Menu breakpoint moves to 1000px), and the request demo is flattened onto the
+  4/6/8px corner scale. Draft status stays off the home page by owner choice.
 
 ## Unresolved
 

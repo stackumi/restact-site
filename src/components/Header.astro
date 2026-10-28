@@ -7,7 +7,7 @@ import { NAV, GITHUB } from '../site.config';
  * the nav so an open menu is the next Tab stop. The nav marks the current section with aria-current
  * (a link is current when the page path starts with its href).
  *
- * Below 940px the nav folds behind the Menu button and opens inside the band as full-width rows.
+ * Below 1000px the nav folds behind the Menu button and opens inside the band as full-width rows.
  * Without JavaScript (no `.js` on <html>) the button stays hidden and the nav wraps under the
  * wordmark instead.
  *
@@ -118,7 +118,8 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
     align-items: center;
     margin-right: -10px;
   }
-  .site-header :focus-visible {
+  /* :global so the ring also reaches the ThemeToggle component inside the band. */
+  .site-header :global(:focus-visible) {
     outline-color: var(--on-brand);
   }
 
@@ -177,7 +178,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
 
   /* Narrow screens: wordmark, theme toggle and Menu on one row; the nav opens below them. Without
      JavaScript the nav wraps as a row under the wordmark. */
-  @media (max-width: 939px) {
+  @media (max-width: 999px) {
     .bar {
       gap: 0;
       padding-block: 12px;

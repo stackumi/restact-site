@@ -140,7 +140,7 @@ Density is moderate and textual. Petrol is the only hue in the interface; it mar
 Light is the site's look and the default for every visitor; dark is an opt-in through the masthead toggle and never follows the OS preference. The old dark, teal, Space Grotesk landing-page look (status pill, two-tone slogan H1, stat strip, eyebrows, numbered feature cards, closing CTA card) is the confirmed anti-reference.
 
 **Key Characteristics:**
-- A petrol masthead band and pale-petrol tagline bar frame every page; below them, only white, ink and hairlines.
+- A petrol masthead band and pale-petrol tagline bar frame every page except the home page, which sets the tagline in its opening; below them, only white, ink and hairlines.
 - Sections are separated by a single hairline with 32px either side (28px on phones), never by boxes or grey bands.
 - One sans family for everything readable; mono only for code, paths, identifiers and the docname.
 - Link lists are ruled rows (title link plus a one-line note), not cards.
@@ -206,7 +206,7 @@ A single left-aligned column inside a 1168px measure plus a `clamp(20px, 3vw, 32
 
 Every full-width page is a stack of sections, each opened by a 1px `hairline` with 32px above and below (28px under 720px); the last section leaves 72px (56px on phones) before the footer. The opening section has 64px above it (40px on phones). Grouped links run in three columns with a 56px column gap, falling to two at 1080px and one at 720px. Ruled list rows take 13–18px vertical padding.
 
-The masthead is sticky at 64px (68px under 940px) and anchors scroll with that clearance. Below 940px the nav folds behind a Menu button and opens inside the band as 48px rows; without JavaScript it wraps under the wordmark. The tagline bar scrolls away; its second line wraps under the first below 860px. The footer is one row: source and documentation links left, docname right.
+The masthead is sticky at 64px (68px under 1000px) and anchors scroll with that clearance. Below 1000px the nav folds behind a Menu button and opens inside the band as 48px rows; without JavaScript it wraps under the wordmark. The tagline bar scrolls away; its second line wraps under the first below 860px. The footer is one row: source and documentation links left, docname right.
 
 ### Named Rules
 **The Hairline Section Rule.** A section begins with one hairline and 32px either side. No background bands, no boxed sections, no alternating fills.
@@ -229,10 +229,10 @@ Corners are small and functional: 4px for small controls (toggle, copy button, s
 ### Masthead
 - **Style:** petrol band, white wordmark "REST:ACT" (700, 20px, +0.02em), nav at 500 / 15px with 26px gaps, GitHub as the last nav item, theme toggle at the right.
 - **States:** hover adds a 1px underline; the current section has a 2px underline (`aria-current`). Focus outlines turn white inside the band. Menu and toggle hover is a 10% white wash.
-- **Mobile:** below 940px, wordmark, toggle and a "Menu" button (three bars that cross into a close mark) share one row; the open nav is full-width 48px rows split by translucent white rules.
+- **Mobile:** below 1000px, wordmark, toggle and a "Menu" button (three bars that cross into a close mark) share one row; the open nav is full-width 48px rows split by translucent white rules.
 
 ### Tagline Bar
-Pale petrol strip with a `rule` bottom border, 14.5px: the protocol's purpose left in `ink-2`, the project scope right in `ink-3`.
+Pale petrol strip with a `rule` bottom border, 14.5px: the protocol's purpose left in `ink-2`, the project scope right in `ink-3`. The home page turns it off (`<Base tagline={false}>`) and sets the same two sentences as a 23px dek (20px on phones) between the H1 and the abstract, the scope sentence in `ink-3`, followed by one plain link per reader.
 
 ### Links
 Petrol with a 1px underline at 35% opacity, offset 0.22em, firming to full and darkening on hover (120ms). Navigation lists drop the underline.
