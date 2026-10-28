@@ -14,6 +14,10 @@ import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
 
 const DRAFT_URL = '/spec/draft/';
 
+/* The title sets its name and subtitle on two lines, so the line break stands in for the colon after
+   "Protocol" (screen readers still hear it); REST:ACT's own colon is the only one shown. */
+const [titleName, titleSub] = DRAFT.title.split(': ');
+
 const dek = {
   why: 'Let users and their agents add the functions an API doesn’t have.',
   scope: 'An open-source protocol and reference server.',
@@ -130,7 +134,7 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
 
 <Base tagline={false}>
   <section class="container opening" aria-labelledby="title">
-    <h1 id="title">{DRAFT.title}</h1>
+    <h1 id="title"><span class="name">{titleName}</span><span class="sr-only">: </span>{titleSub}</h1>
     <p class="dek">{dek.why} <span class="scope">{dek.scope}</span></p>
     {abstract.map((p) => <p>{p}</p>)}
     <ul class="next" aria-label="Start here">
@@ -206,11 +210,14 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
     padding-block: 64px 32px;
   }
   .opening h1 {
-    max-width: 22ch;
+    max-width: 32ch;
     margin-bottom: 28px;
     font-size: clamp(32px, 3.4vw, 46px);
     line-height: 1.12;
     letter-spacing: -0.015em;
+  }
+  .opening h1 .name {
+    display: block;
   }
   .opening p {
     max-width: 62ch;

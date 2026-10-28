@@ -29,8 +29,8 @@ mandatory core, see a verb built, uploaded and called, and close on three reader
 the comment channel is not chosen yet.
 
 FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 1000px, the narrowest width at which that row fits on one line). No tagline bar on
-this page. One left-aligned column: the H1 is the protocol title, "The REST:ACT Protocol: APIs Their Clients Can Build On", at about 46px
-over two lines (three on phones); then the tagline as a
+this page. One left-aligned column: the H1 is the protocol title, "The REST:ACT Protocol: APIs Their Clients Can Build On", at about 46px,
+name and subtitle on their own lines with no visible colon between them (three lines on phones); then the tagline as a
 23px dek, "Let users and their agents add the functions an API doesn't have." with "An open-source protocol and
 reference server." in quieter ink; then the abstract at 19px in a 62ch measure; then one plain link per reader:
 Review the protocol (the draft), Implement a server (/spec/), Write and call verbs (/start/), named as the
