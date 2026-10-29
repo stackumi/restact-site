@@ -18,7 +18,9 @@ export const SITE = {
 
 /**
  * The draft the protocol is specified in, written in Internet-Draft format and not yet submitted.
- * `title` is the one the home page shows; the draft in restact-specs still carries its old title.
+ * `title` is the home page's title. The draft in restact-specs keeps its own descriptive title
+ * ("The REST:ACT Protocol: Invoking Sandboxed Functionality over REST") on purpose, and the draft's
+ * page uses that one.
  */
 export const DRAFT = {
   docname: 'draft-byrd-restact-protocol-00',
