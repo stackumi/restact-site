@@ -4,7 +4,7 @@ import AnatomyDemo from '../components/AnatomyDemo.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import ReaderGroups from '../components/ReaderGroups.astro';
 import { term } from '../lib/term';
-import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
+import { DRAFT, GITHUB, RESTACTD_DOCS, SITE } from '../site.config';
 
 /* The home page: a documentation hub. The draft's title, the one-line reason for the protocol and
    the abstract open it, with one next step per reader. Then one object answers four requests, what
@@ -138,9 +138,20 @@ const feedback = 'The draft is open for review. A channel for comments has not b
 /** Split a sentence so paths and identifiers render in monospace; the words are unchanged. */
 const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42:wordCount|notes\/42|restact_code)/g;
 const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 1 }));
+
+/* Structured data: the site, under both spellings of its name. */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.name,
+  alternateName: ['restact', 'The REST:ACT Protocol'],
+  url: new URL('/', Astro.site).href,
+  description: SITE.description,
+  inLanguage: 'en',
+};
 ---
 
-<Base tagline={false}>
+<Base fullTitle={DRAFT.title} jsonLd={jsonLd} tagline={false}>
   <section class="container opening" aria-labelledby="title">
     <h1 id="title"><span class="name">{titleName}</span><span class="sr-only">: </span>{titleSub}</h1>
     <p class="dek">

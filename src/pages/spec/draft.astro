@@ -10,6 +10,21 @@ const f = doc.front;
 if (f.docname !== DRAFT.docname) throw new Error(`site.config DRAFT.docname (${DRAFT.docname}) differs from the draft's front matter (${f.docname})`);
 const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
 const sourceUrl = `${SPECS_REPO}/blob/main/${DRAFT_FILE}`;
+const summary = 'The REST:ACT draft: addressing, methods, capabilities, resource limits, composition and discovery. An Internet-Draft, not yet submitted; not a standard.';
+/* Structured data: the draft as a technical article, dated by the restact-specs commit it is rendered from. */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: f.title,
+  alternateName: f.docname,
+  description: summary,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  author: { '@type': 'Person', name: f.author },
+  dateModified: source.date,
+  inLanguage: 'en',
+  isBasedOn: sourceUrl,
+  isPartOf: { '@type': 'WebSite', name: 'REST:ACT', url: new URL('/', Astro.site).href },
+};
 const top = doc.sections.filter((s) => s.depth === 1);
 const sideItems = [
   ...top.map((s) => ({ href: `#${s.id}`, label: s.title, num: s.num })),
@@ -20,6 +35,9 @@ const sideItems = [
 <Docs
   title={f.title}
   description={`${DRAFT.status}. It is not a standard. This is the normative text of the protocol, rendered from the Markdown source.`}
+  summary={summary}
+  type="article"
+  jsonLd={jsonLd}
   headings={doc.headings}
   verbatimToc
   chips={['Normative', f.category, f.stream]}

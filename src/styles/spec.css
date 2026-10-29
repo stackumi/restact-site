@@ -28,6 +28,11 @@
   opacity: 0;
   transition: opacity 120ms ease;
 }
+/* The glyph is drawn by CSS, so a heading's text (for search, answer engines and copy) is only its
+   title; the link's name is its aria-label. */
+.prose .anchor::before {
+  content: '#';
+}
 /* The glyph is small; its hit area reaches 44px without changing the look. */
 .prose .anchor::after {
   content: '';

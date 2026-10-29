@@ -12,12 +12,18 @@
 //   - no duplicate id on a page, and no kramdown or template leftovers ({{ref}}, {:ial}, {::ext},
 //     "--- middle") in the rendered specification pages under /spec/
 //   - internal links and same-site anchors resolve (every href="#x" needs a matching id="x")
+//   - every page but the 404 has a canonical link on `site` (astro.config.mjs) naming its own path,
+//     a link-preview image that exists, a meta description of at most 160 characters, and
+//     structured data (if any) that parses
+//   - /sitemap.xml lists exactly the pages, /llms.txt's links on the site resolve, and robots.txt
+//     names the sitemap once INDEXABLE is true
 //   - no email address in src/content/spec/** (the vendored specification sources)
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const CONFIG = new URL('../src/site.config.ts', import.meta.url).pathname;
+const ASTRO_CONFIG = new URL('../astro.config.mjs', import.meta.url).pathname;
 
 const BANNED_WORDS = [
   /\bseamless(?:ly)?\b/i, /\brobust(?:ness)?\b/i, /\bleverag(?:e|es|ed|ing)\b/i, /\bpowerful\b/i,
@@ -47,6 +53,11 @@ if (!existsSync(DIST)) {
 }
 
 const indexable = /INDEXABLE\s*=\s*true/.test(readFileSync(CONFIG, 'utf8'));
+const SITE_URL = (readFileSync(ASTRO_CONFIG, 'utf8').match(/\bsite:\s*'([^']+)'/) ?? [])[1];
+if (!SITE_URL) {
+  console.error('astro.config.mjs has no `site`.');
+  process.exit(2);
+}
 
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
@@ -127,6 +138,24 @@ for (const file of pages) {
       if (re.test(body)) err(page, `unrendered markup "${label}"`);
     }
   }
+  // (e4) canonical, link preview, description length, structured data
+  const canonical = (html.match(/<link rel="canonical" href="([^"]*)"/) ?? [])[1];
+  if (page === '/404') {
+    if (canonical) err(page, 'the 404 page has a canonical link');
+  } else if (canonical !== new URL(page, SITE_URL).href) {
+    err(page, `canonical link ${canonical ?? '(missing)'}, want ${new URL(page, SITE_URL).href}`);
+  }
+  const og = (html.match(/<meta property="og:image" content="([^"]*)"/) ?? [])[1];
+  if (!og) err(page, 'no og:image');
+  else if (!og.startsWith(SITE_URL) || !existsSync(join(DIST, new URL(og).pathname))) err(page, `og:image ${og} is not a file on the site`);
+  if (desc.length > 160) err(page, `meta description is ${desc.length} characters (at most 160)`);
+  for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    try {
+      JSON.parse(m[1]);
+    } catch (e) {
+      err(page, `structured data does not parse: ${e.message}`);
+    }
+  }
   // (f) links
   for (const m of noScripts.matchAll(/<a\b[^>]*?\shref="([^"]*)"/g)) {
     const href = decode(m[1]);
@@ -147,6 +176,24 @@ for (const file of pages) {
 const robots = existsSync(join(DIST, 'robots.txt')) ? readFileSync(join(DIST, 'robots.txt'), 'utf8') : '';
 if (!indexable && !/^Disallow:\s*\/\s*$/m.test(robots)) err('/robots.txt', 'does not disallow everything while INDEXABLE is false');
 if (indexable && /^Disallow:\s*\/\s*$/m.test(robots)) err('/robots.txt', 'disallows everything while INDEXABLE is true');
+
+if (indexable && !/^Sitemap:\s*\S+\/sitemap\.xml\s*$/m.test(robots)) err('/robots.txt', 'does not name the sitemap while INDEXABLE is true');
+
+// sitemap.xml lists every page but the 404, and nothing else
+const sitemap = existsSync(join(DIST, 'sitemap.xml')) ? readFileSync(join(DIST, 'sitemap.xml'), 'utf8') : '';
+const listed = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+const want = new Set(pages.map(route).filter((r) => r !== '/404').map((r) => new URL(r, SITE_URL).href));
+for (const u of want) if (!listed.has(u)) err('/sitemap.xml', `missing ${u}`);
+for (const u of listed) if (!want.has(u)) err('/sitemap.xml', `lists ${u}, which is not a page`);
+
+// llms.txt: its links on the site resolve
+const llms = existsSync(join(DIST, 'llms.txt')) ? readFileSync(join(DIST, 'llms.txt'), 'utf8') : '';
+if (!llms.startsWith('# ')) err('/llms.txt', 'missing, or does not start with an H1');
+for (const m of llms.matchAll(/\]\((https?:[^)\s]+)\)/g)) {
+  if (!m[1].startsWith(SITE_URL)) continue;
+  const p = new URL(m[1]).pathname;
+  if (!fileFor(p)) err('/llms.txt', `link to ${p} (no such route)`);
+}
 
 const unique = (a) => [...new Set(a)];
 for (const e of unique(errors)) console.error(`error    ${e}`);

@@ -96,6 +96,19 @@ stored value the site is light, whatever the OS prefers: dark applies only after
 Search engines are kept out by one constant: `INDEXABLE` in `src/site.config.ts` (currently
 `false`). It drives the `noindex` meta tag and the generated `/robots.txt` (`src/pages/robots.txt.ts`).
 To go public, set it to `true`, run `corepack pnpm verify`, and deploy. There is no `public/robots.txt`.
+Once `INDEXABLE` is true, robots.txt allows every crawler and names the sitemap.
+
+Search and answer engines read these, all built from `site` in `astro.config.mjs` (`https://restact.org`):
+
+- a canonical link and Open Graph tags on every page but the 404, with the preview image
+  `public/og.png` (edit `scripts/og/og-image.html` and re-render it; the file says how);
+- `/sitemap.xml`, listing every page from the page files;
+- `/llms.txt`, a reading list for language models (`src/pages/llms.txt.ts`);
+- schema.org JSON-LD on the home page, the draft and /restactd/ (the license joins it at launch).
+
+`pnpm verify` checks them all. Two things outside this repo must be done before launch, tracked
+with the `pre-release` label: restact.dev and the www hosts redirect to restact.org (#7), and
+Cloudflare lets search and AI crawlers through (#8).
 
 ## Deploy (Cloudflare Workers, static assets)
 

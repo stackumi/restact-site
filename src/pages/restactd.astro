@@ -51,6 +51,19 @@ const facts: { term: string; html: string }[] = [
   },
 ];
 
+/* Structured data: restactd as source code, with its repository. The license joins it at launch. */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'restactd',
+  description: 'The reference server for REST:ACT, written in Rust on Wasmtime.',
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  codeRepository: GITHUB.restactd,
+  programmingLanguage: 'Rust',
+  runtimePlatform: 'Wasmtime',
+  isPartOf: { '@type': 'WebSite', name: 'REST:ACT', url: new URL('/', Astro.site).href },
+};
+
 const conformanceShell = term(`
 $ ./scripts/conformance-test.sh     ⟨# both executor backends⟩
 `);
@@ -131,19 +144,20 @@ const repo = [
 ---
 
 <Base
-  title="restactd"
-  description="restactd is the reference server for REST:ACT, written in Rust on Wasmtime. What it implements, how far along it is, how to test a server against the draft with it, and where its documentation is."
+  fullTitle="restactd, the REST:ACT reference server"
+  description="restactd is the reference server for REST:ACT, in Rust on Wasmtime: what it implements, its documentation, and how to test a server against the draft."
+  jsonLd={jsonLd}
 >
   <section class="container opening" aria-labelledby="title">
     <h1 id="title">restactd, the reference server</h1>
+    <p class="lede">
+      restactd is the reference server for REST:ACT, written in Rust on Wasmtime. Run it to try the protocol, build on it,
+      or test a client against a known server. The conformance suite is developed against it.
+    </p>
     <p class="say">
       Pronounced <span class="spell">rest-act-d</span>, the protocol plus the d for a daemon, or{' '}
       <span class="spell">re-stacked</span>, which is what an API becomes once its clients start adding verbs. Both are
       right.
-    </p>
-    <p class="lede">
-      restactd implements REST:ACT in Rust on Wasmtime. Run it to try the protocol, build on it, or test a client against a
-      known server. The conformance suite is developed against it.
     </p>
     <div class="actions">
       <a class="btn btn--primary" href="/start/">Get started</a>
@@ -215,9 +229,10 @@ const repo = [
     font-size: 19px;
     line-height: 1.65;
   }
+  /* The lede comes first, so search and answer engines take it as the page's summary. */
   .say {
     max-width: 62ch;
-    margin-top: -6px;
+    margin-top: -4px;
     font-size: 16px;
     color: var(--ink-3);
   }

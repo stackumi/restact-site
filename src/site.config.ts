@@ -9,9 +9,11 @@ export const INDEXABLE = false;
 
 export const SITE = {
   name: 'REST:ACT',
-  tagline: 'A web users and their agents can program',
+  /** The default meta description: under 160 characters, so search results show it whole. */
   description:
-    'REST:ACT is an HTTP protocol that lets users, and the agents acting for them, add code to the servers they use: a sandboxed WebAssembly verb on a path, called with an ordinary GET or POST.',
+    'REST:ACT is an HTTP protocol that lets an API’s clients add their own code to the server: a sandboxed WebAssembly verb on a path, called with GET or POST.',
+  /** The link-preview image (public/og.png, made from scripts/og/og-image.html). */
+  image: { path: '/og.png', width: 1200, height: 630, alt: 'REST:ACT: APIs their clients can build on. An open-source protocol and reference server.' },
 };
 
 /**

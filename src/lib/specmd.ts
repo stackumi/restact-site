@@ -457,7 +457,7 @@ function engine(opts: EngineOpts) {
         headings.push({ depth, slug: id, text: `${num ? num + ' ' : ''}${plain(token.text)}` });
         const n = num ? `<span class="num">${num}</span> ` : '';
         const aria = label ? `Link to ${label}` : `Link to this section`;
-        return `<h${depth} id="${id}">${n}${inner}<a class="anchor" href="#${id}" aria-label="${esc(aria)}">#</a></h${depth}>\n`;
+        return `<h${depth} id="${id}">${n}${inner}<a class="anchor" href="#${id}" aria-label="${esc(aria)}"></a></h${depth}>\n`;
       },
       code(token: Tokens.Code) {
         const lang = (token.lang ?? '').trim().split(/\s+/)[0] || undefined;
@@ -545,9 +545,9 @@ export function renderDraft(): DraftDoc {
       )
       .join('');
   const refsHtml =
-    `<h2 id="references">References<a class="anchor" href="#references" aria-label="Link to References">#</a></h2>\n` +
-    `<h3 id="normative-references">Normative references<a class="anchor" href="#normative-references" aria-label="Link to Normative references">#</a></h3>\n<dl class="refs">${refList('normative')}</dl>\n` +
-    `<h3 id="informative-references">Informative references<a class="anchor" href="#informative-references" aria-label="Link to Informative references">#</a></h3>\n<dl class="refs">${refList('informative')}</dl>\n`;
+    `<h2 id="references">References<a class="anchor" href="#references" aria-label="Link to References"></a></h2>\n` +
+    `<h3 id="normative-references">Normative references<a class="anchor" href="#normative-references" aria-label="Link to Normative references"></a></h3>\n<dl class="refs">${refList('normative')}</dl>\n` +
+    `<h3 id="informative-references">Informative references<a class="anchor" href="#informative-references" aria-label="Link to Informative references"></a></h3>\n<dl class="refs">${refList('informative')}</dl>\n`;
   r.headings.push(
     { depth: 2, slug: 'references', text: 'References' },
     { depth: 3, slug: 'normative-references', text: 'Normative references' },

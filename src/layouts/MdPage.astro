@@ -4,7 +4,8 @@ import Docs from './Docs.astro';
  * Adapter for Markdown/MDX pages: set `layout: ../layouts/MdPage.astro` in the frontmatter and
  * these fields map onto Docs.astro's props.
  *
- * Frontmatter: title, description, chips (list), section, editUrl, prev/next ({ label, href }),
+ * Frontmatter: title, description (the lead), summary (the meta description, when the lead runs
+ * past 160 characters), chips (list), section, editUrl, prev/next ({ label, href }),
  * asideLinks (list of { label, href }). `headings` comes from Astro.
  */
 const { frontmatter, headings } = Astro.props;
@@ -13,6 +14,7 @@ const { frontmatter, headings } = Astro.props;
 <Docs
   title={frontmatter.title}
   description={frontmatter.description}
+  summary={frontmatter.summary}
   chips={frontmatter.chips}
   section={frontmatter.section}
   editUrl={frontmatter.editUrl}

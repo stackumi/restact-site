@@ -7,7 +7,9 @@ import { DOCS_NAV } from '../site.config';
  *
  * Props
  *   title        the h1 and the document title
- *   description  the lead paragraph under the h1 and the meta description
+ *   description  the lead paragraph under the h1, and the meta description unless `summary` is set
+ *   summary      the meta description when the lead runs past 160 characters
+ *   fullTitle, type, jsonLd   passed to Base
  *   headings     Astro's `headings` array ({ depth, slug, text }[]); h2 and h3 build "On this page"
  *   section      breadcrumb group; default: the DOCS_NAV group that contains this page
  *   chips        small meta chips under the lead, e.g. ["Explanatory", "Normative text: draft §5"]
@@ -35,6 +37,10 @@ interface Link {
 interface Props {
   title: string;
   description?: string;
+  summary?: string;
+  fullTitle?: string;
+  type?: 'website' | 'article';
+  jsonLd?: object | object[];
   headings?: Heading[];
   verbatimToc?: boolean;
   section?: string;
@@ -44,7 +50,8 @@ interface Props {
   next?: Link | null;
   asideLinks?: Link[];
 }
-const { title, description, headings = [], chips = [], editUrl, asideLinks = [], verbatimToc = false } = Astro.props;
+const { title, description, summary, fullTitle, type, jsonLd, headings = [], chips = [], editUrl, asideLinks = [], verbatimToc = false } =
+  Astro.props;
 const path = Astro.url.pathname;
 
 const flat = DOCS_NAV.flatMap((g) => g.items);
@@ -57,7 +64,7 @@ const next = Astro.props.next !== undefined ? Astro.props.next : at >= 0 ? (flat
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
-<Base title={title} description={description} wide>
+<Base title={title} fullTitle={fullTitle} description={summary ?? description} type={type} jsonLd={jsonLd} wide>
   <div class="docs">
     <nav class="side" aria-label="Documentation">
       {

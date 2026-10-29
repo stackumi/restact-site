@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  The link-preview image (Open Graph, Twitter cards): public/og.png, 1200×630. It repeats the site's
+  frame, the petrol masthead over white reading space, with the home page's title and the request
+  the home page's demo and example are built around. To change it, edit this file and render it at
+  1200×630, device scale 1, with any headless Chromium, e.g. Playwright:
+    page.setViewportSize({ width: 1200, height: 630 }); page.goto('file://…/og-image.html');
+    page.screenshot({ path: 'public/og.png' })
+  The fonts load from node_modules, so run `pnpm install` first.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>REST:ACT preview image</title>
+    <style>
+      @font-face {
+        font-family: 'Public Sans';
+        src: url('../../node_modules/@fontsource-variable/public-sans/files/public-sans-latin-wght-normal.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2') format('woff2');
+        font-weight: 100 800;
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #ffffff;
+        color: #172022;
+        font-family: 'Public Sans', sans-serif;
+      }
+      .band {
+        height: 104px;
+        padding: 0 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0b5560;
+        color: #ffffff;
+      }
+      .mark {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+      .host {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 24px;
+        opacity: 0.85;
+      }
+      .tint {
+        height: 12px;
+        background: #e8f1f1;
+        border-bottom: 1px solid #d6dcdc;
+      }
+      main {
+        padding: 56px 72px 0;
+      }
+      .name {
+        font-size: 30px;
+        font-weight: 600;
+        color: #5a6669;
+      }
+      h1 {
+        margin-top: 10px;
+        font-size: 74px;
+        font-weight: 700;
+        line-height: 1.06;
+        letter-spacing: -0.02em;
+      }
+      .req {
+        display: inline-block;
+        margin-top: 44px;
+        padding: 18px 26px;
+        border: 1px solid #d6dcdc;
+        border-radius: 8px;
+        background: #f5f7f7;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 30px;
+        font-weight: 500;
+      }
+      .sig {
+        color: #0b5560;
+        font-weight: 700;
+      }
+      .scope {
+        position: absolute;
+        left: 72px;
+        bottom: 60px;
+        font-size: 26px;
+        color: #3d494c;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="band"><span class="mark">REST:ACT</span><span class="host">restact.org</span></div>
+    <div class="tint"></div>
+    <main>
+      <p class="name">The REST:ACT Protocol</p>
+      <h1>APIs Their Clients Can Build On</h1>
+      <p class="req"><span class="sig">GET</span>&nbsp;&nbsp;/v1/notes/42<span class="sig">:</span>wordCount</p>
+    </main>
+    <p class="scope">An open-source protocol and reference server</p>
+  </body>
+</html>
