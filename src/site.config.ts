@@ -27,8 +27,10 @@ export const DRAFT = {
 export const GITHUB = {
   specs: 'https://github.com/stackumi/restact-specs',
   restactd: 'https://github.com/stackumi/restactd',
-  verbsmith: 'https://github.com/stackumi/restactd/blob/main/mcp/README.md',
+  /** `restact mcp`, the MCP bridge in the restact command line (formerly verbsmith). */
+  mcp: 'https://github.com/stackumi/restactd/blob/main/cli/docs/mcp/README.md',
   sdk: 'https://github.com/stackumi/restactd/tree/main/sdk/rust',
+  plugins: 'https://github.com/stackumi/restactd/blob/main/plugins/README.md',
 };
 
 /** The restactd documentation site. A custom domain later is a change to this one line. */
@@ -36,21 +38,38 @@ export const DOCS_SITE_URL = 'https://stackumi.github.io/restactd';
 const DOCS = DOCS_SITE_URL;
 export const RESTACTD_DOCS = {
   home: `${DOCS}/`,
+  introduction: `${DOCS}/start/introduction/`,
   install: `${DOCS}/start/install/`,
   quickstart: `${DOCS}/start/quickstart/`,
+  tutorial: `${DOCS}/start/tutorial/`,
   concepts: `${DOCS}/concepts/overview/`,
+  verbsAndObjects: `${DOCS}/concepts/verbs-and-objects/`,
+  capabilities: `${DOCS}/concepts/capabilities-and-budgets/`,
+  identity: `${DOCS}/concepts/identity-and-authority/`,
+  discovery: `${DOCS}/concepts/discovery/`,
   authoringVerbs: `${DOCS}/guides/authoring-verbs/`,
   javascript: `${DOCS}/guides/javascript/`,
   python: `${DOCS}/guides/python/`,
   rust: `${DOCS}/guides/rust/`,
-  conformance: `${DOCS}/reference/conformance/`,
+  composition: `${DOCS}/guides/composition/`,
+  authentication: `${DOCS}/guides/authentication/`,
   aiAgents: `${DOCS}/guides/ai-agents/`,
-  httpApi: `${DOCS}/reference/http-api/`,
-  configuration: `${DOCS}/reference/configuration/`,
   buildingApplications: `${DOCS}/guides/embedding/`,
+  docker: `${DOCS}/operate/docker/`,
+  storage: `${DOCS}/operate/storage/`,
+  production: `${DOCS}/operate/production/`,
+  httpApi: `${DOCS}/reference/http-api/`,
+  cli: `${DOCS}/reference/cli/`,
+  configuration: `${DOCS}/reference/configuration/`,
+  features: `${DOCS}/reference/features/`,
+  errors: `${DOCS}/reference/errors/`,
+  wit: `${DOCS}/reference/wit/`,
+  conformance: `${DOCS}/reference/conformance/`,
   architecture: `${DOCS}/architecture/overview/`,
   securityModel: `${DOCS}/architecture/security-model/`,
-  production: `${DOCS}/operate/production/`,
+  requestLifecycle: `${DOCS}/architecture/request-lifecycle/`,
+  status: `${DOCS}/project/status/`,
+  limits: `${DOCS}/project/limits/`,
 };
 
 export interface NavLink {
@@ -63,6 +82,7 @@ export const NAV: NavLink[] = [
   { label: 'How it works', href: '/how-it-works/' },
   { label: 'Specification', href: '/spec/' },
   { label: 'Get started', href: '/start/' },
+  { label: 'restactd', href: '/restactd/' },
   { label: 'Presentation verbs', href: '/presentation-verbs/' },
   { label: 'Security', href: '/security/' },
   { label: 'Compare', href: '/compare/' },
@@ -88,7 +108,10 @@ export const DOCS_NAV: NavGroup[] = [
   },
   {
     title: 'Build',
-    items: [{ label: 'Get started', href: '/start/' }],
+    items: [
+      { label: 'Get started', href: '/start/' },
+      { label: 'restactd, the reference server', href: '/restactd/' },
+    ],
   },
   {
     title: 'Reference',

@@ -28,13 +28,13 @@ object answer four requests, which shows how the URL carries the verb. They lear
 mandatory core, see a verb built, uploaded and called, and close on three reader-grouped link lists and a note that
 the comment channel is not chosen yet.
 
-FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 1000px, the narrowest width at which that row fits on one line). No tagline bar on
+FIRST VIEWPORT: Masthead (wordmark left, NAV + GitHub + theme toggle right; a Menu button below 1080px, the narrowest width at which that row fits on one line). No tagline bar on
 this page. One left-aligned column: the H1 is the protocol title, "The REST:ACT Protocol: APIs Their Clients Can Build On", at about 46px,
 name and subtitle on their own lines with no visible colon between them (three lines on phones); then the tagline as a
 23px dek, "Let users and their agents add the functions an API doesn't have." with "An open-source protocol and
 reference server." in quieter ink; then the abstract at 19px in a 62ch measure; then one plain link per reader:
 Review the protocol (the draft), Implement a server (/spec/), Write and call verbs (/start/), named as the
-closing reader groups name them. Nothing sits beside the opening; it is the single entry point.
+closing reader groups name them, then Run the reference server (/restactd/). Nothing sits beside the opening; it is the single entry point.
 A hairline with 32px either side, then "How the server reads a request" and the top of the AnatomyDemo at 1440×900.
 The primary actions are the three reader links in the opening and the reader groups that close the page.
 
@@ -73,6 +73,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   draft in restact-specs still carries the old title until it is changed there and re-synced); the abstract's first
   sentence says clients add their own code within the permissions the server grants; "What it is for" opens with
   "A few examples of what client-extensible APIs make possible:".
+- restactd integration (owner, 2026-10-28): a fourth opening link, "Run the reference server", goes to /restactd/;
+  the "Implementing a server" group links /restactd/ instead of the GitHub repo; verbsmith becomes `restact mcp`.
+  `restactd` joins NAV and the Menu breakpoint moves to 1080px. See `src-pages-restactd-astro.md`.
+- "What it is for" is a bulleted list and the reader groups take no row rules (owner, 2026-10-28; DESIGN.md,
+  the Records Rule).
 
 ## Unresolved
 

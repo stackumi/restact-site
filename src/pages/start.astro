@@ -8,7 +8,8 @@ import { term } from '../lib/term';
 import { RESTACTD_DOCS } from '../site.config';
 
 /* Get started: a guided walk-through of restactd. Every command here is checked against the
-   restactd README and docs/getting-started.md; those documents win over the design canvas. */
+   restactd README and its docs/start/install.md and docs/start/quickstart.md; those documents win
+   over the design canvas. */
 
 const modes = [
   { id: 'docker', label: 'Docker' },
@@ -87,6 +88,11 @@ const next = [
   {
     links: [
       {
+        label: 'Tutorial: build a small app',
+        body: 'The restactd tutorial picks up from here and builds a small multi-user app.',
+        href: RESTACTD_DOCS.tutorial,
+      },
+      {
         label: 'Authoring reference',
         body: 'JavaScript, Python, Rust with restact-sdk, and any toolchain that emits WASI 0.2 components.',
         href: RESTACTD_DOCS.authoringVerbs,
@@ -103,8 +109,13 @@ const next = [
       },
       {
         label: 'Agents and MCP',
-        body: 'Plugins that teach a coding agent REST:ACT, and verbsmith, which serves verbs as MCP tools.',
+        body: 'Plugins that teach a coding agent REST:ACT, and restact mcp, which serves verbs as MCP tools.',
         href: RESTACTD_DOCS.aiAgents,
+      },
+      {
+        label: 'All of the restactd documentation',
+        body: 'Concepts, guides, operating a server, the reference and the architecture.',
+        href: '/restactd/#docs',
       },
     ],
   },
@@ -117,9 +128,9 @@ const next = [
 >
   <div class="container page">
     <header class="head">
-      <h1>Run a server and deploy your first verb</h1>
+      <h1>Run restactd and deploy your first verb</h1>
       <p class="lede">
-        This walk-through uses restactd, the reference server, on your own machine. The first build compiles Wasmtime and
+        This walk-through runs <a href="/restactd/">restactd</a>, the reference server, on your own machine. The first build compiles Wasmtime and
         takes a few minutes. After that, every step is a curl command.
       </p>
     </header>
@@ -139,7 +150,7 @@ const next = [
             </Fragment>
             <Fragment slot="source">
               <p class="note-text">
-                You need rustup 1.28 or later, git, make, curl and a C toolchain. The checkout pins Rust 1.99.0 and the <span class="code-inline">wasm32-wasip2</span> target, and installing <span class="code-inline">cargo-component</span> compiles it from source.
+                You need rustup 1.28 or later, git, make, curl and a C toolchain. The checkout pins Rust 1.99.1 and the <span class="code-inline">wasm32-wasip2</span> target, and installing <span class="code-inline">cargo-component</span> compiles it from source.
               </p>
               <CodeBlock variant="terminal" html={sourceShell} />
             </Fragment>

@@ -20,7 +20,10 @@ const [titleName, titleSub] = DRAFT.title.split(': ');
 
 const dek = {
   why: 'Let users and their agents add the functions an API doesn’t have.',
-  scope: 'An open-source protocol and reference server.',
+  scope: {
+    protocol: { label: 'open-source protocol', href: '/spec/' },
+    server: { label: 'reference server', href: '/restactd/' },
+  },
 };
 
 const abstract = [
@@ -28,11 +31,13 @@ const abstract = [
   'A verb is a WebAssembly component. It runs with the caller’s permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit.',
 ];
 
-/* One next step for each of the three readers, named as the reader groups at the close name them. */
+/* One next step for each of the three readers, named as the reader groups at the close name them,
+   then the reference server, which all three can use. */
 const next = [
   { label: 'Review the protocol', href: DRAFT_URL },
   { label: 'Implement a server', href: '/spec/' },
   { label: 'Write and call verbs', href: '/start/' },
+  { label: 'Run the reference server', href: '/restactd/' },
 ];
 
 const demo = {
@@ -56,14 +61,14 @@ const paths = {
       links: [
         { label: 'How it works', href: '/how-it-works/', body: 'Addressing and verb resolution, step by step.' },
         { label: 'restact-conformance', href: RESTACTD_DOCS.conformance, body: 'Black-box tests for any server, run against the features it advertises.' },
-        { label: 'restactd source', href: GITHUB.restactd, body: 'The reference server, in Rust on Wasmtime.' },
+        { label: 'restactd', href: '/restactd/', body: 'The reference server, in Rust on Wasmtime: what it implements, its documentation and its source.' },
       ],
     },
     {
       reader: 'Writing and calling verbs',
       links: [
         { label: 'Get started', href: '/start/', body: 'Run restactd locally and deploy a first verb in JavaScript, Python or Rust.' },
-        { label: 'verbsmith', href: GITHUB.verbsmith, body: 'Serves a REST:ACT host’s verbs as MCP tools.' },
+        { label: 'restact mcp', href: GITHUB.mcp, body: 'Serves a REST:ACT host’s verbs as MCP tools.' },
         { label: 'restact-sdk', href: GITHUB.sdk, body: 'A Rust crate for writing verbs.' },
       ],
     },
@@ -99,7 +104,10 @@ const core = {
 const example = {
   heading: 'A verb, end to end',
   lead: 'A Rust verb that counts words, built with plain cargo, uploaded with the draft’s reference deployment request, POST /v1/modules, and called with GET. The upload names notes/42:wordCount, so it creates the wordCount verb that the demo above calls. A local restactd without authentication lets a verb bind to an object that does not exist yet.',
-  needs: { before: 'The commands need restactd running on localhost:8080.', link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },
+  needs: {
+    server: { before: 'The commands need', link: { label: 'restactd', href: '/restactd/' }, after: 'running on localhost:8080.' },
+    how: { link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },
+  },
   rustLabel: 'src/lib.rs',
   rust: `use restact_sdk::{export_verb, Error, ErrorExt, Payload, Verb};
 
@@ -135,7 +143,13 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
 <Base tagline={false}>
   <section class="container opening" aria-labelledby="title">
     <h1 id="title"><span class="name">{titleName}</span><span class="sr-only">: </span>{titleSub}</h1>
-    <p class="dek">{dek.why} <span class="scope">{dek.scope}</span></p>
+    <p class="dek">
+      {dek.why}{' '}
+      <span class="scope">
+        An <a href={dek.scope.protocol.href}>{dek.scope.protocol.label}</a> and{' '}
+        <a href={dek.scope.server.href}>{dek.scope.server.label}</a>.
+      </span>
+    </p>
     {abstract.map((p) => <p>{p}</p>)}
     <ul class="next" aria-label="Start here">
       {next.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
@@ -182,7 +196,11 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
     <div class="measure">
       <h2 id="example">{example.heading}</h2>
       <p class="lead">{split(example.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}</p>
-      <p>{example.needs.before} <a href={example.needs.link.href}>{example.needs.link.label}</a> {example.needs.after}</p>
+      <p>
+        {example.needs.server.before} <a href={example.needs.server.link.href}>{example.needs.server.link.label}</a>{' '}
+        {example.needs.server.after} <a href={example.needs.how.link.href}>{example.needs.how.link.label}</a>{' '}
+        {example.needs.how.after}
+      </p>
     </div>
     <div class="codes">
       <CodeBlock lang="rust" code={example.rust} label={example.rustLabel} />
@@ -284,14 +302,17 @@ const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 
     color: var(--ink-2);
   }
 
-  /* Uses. */
+  /* Uses: examples, so an ordinary bulleted list; rules would make them read as records. */
   .uses {
-    margin-block: 24px;
-    border-top: 1px solid var(--hair);
+    margin-block: 20px 24px;
+    padding-left: 1.25em;
+    list-style: disc;
   }
   .uses li {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--hair);
+    padding-block: 4px;
+  }
+  .uses li::marker {
+    color: var(--ink-3);
   }
 
   /* Core: a compact three-column list. */

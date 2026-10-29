@@ -16,6 +16,8 @@ import UiDocumentDemo from '../components/UiDocumentDemo.astro';
 import NodeFamilies from '../components/NodeFamilies.astro';
 import { term } from '../lib/term';
 import { nodeCount } from '../lib/ui-catalog';
+import InRestactd from '../components/InRestactd.astro';
+import { RESTACTD_DOCS } from '../site.config';
 
 export const deploy = term(`
 $ curl -g -X POST --data-binary @detail-view.js \\
@@ -84,8 +86,17 @@ Some nodes depend on other optional features. The `upload` node needs `binary-va
 
 ## Where it sits
 
-The earlier technique for a verb to show something is restactd's `render-html` example verb, a function that reads object data and returns a finished HTML page for a browser. A presentation verb returns a structured tree instead. That moves the trust boundary from sanitizing the verb's HTML to the verb never emitting HTML.
+The earlier technique for a verb to show something is [restactd](/restactd/)'s `render-html` example verb, a function that reads object data and returns a finished HTML page for a browser. A presentation verb returns a structured tree instead. That moves the trust boundary from sanitizing the verb's HTML to the verb never emitting HTML.
 
 A view can also take the name of a reserved accessor, `:get` or `:list`, so that a plain `GET` of the object serves the UI document.
 
 Presentation verbs are aimed at clients that know the catalog. They cannot restructure a fixed third-party client that has no extension point for them.
+
+## In restactd
+
+<InRestactd
+  links={[
+    { label: 'Discovery, in the HTTP API', href: `${RESTACTD_DOCS.httpApi}#discovery`, body: 'Deploying a function with `produces=application/vnd.restact.ui+json`, and how the `presentation-verbs` token is advertised.' },
+    { label: 'Feature flags in discovery', href: `${RESTACTD_DOCS.features}#verb-deployment-and-management`, body: '`presentation-verbs` beside the other deployment features, and which are on by default.' },
+  ]}
+/>

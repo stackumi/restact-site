@@ -1,8 +1,13 @@
 ---
 /**
- * Hairline link lists in columns: each group is a list of links with a one-line note under each.
- * A group with a reader heads its list with that heading; one without starts on a rule. Used by
- * the home page (three reader groups) and Get started (two untitled columns).
+ * Headed link groups in columns: each group is a list of links with a one-line note under each,
+ * the rows separated by space alone. A group with a reader heads its list with that heading over a
+ * rule; one without opens on a rule instead. Used by the home page (three reader groups), Get
+ * started (two untitled columns) and restactd (six groups, then two untitled columns).
+ *
+ * Props
+ *   groups   [{ reader?, links: [{ label, href, body }] }]
+ *   columns  2 or 3 (default 3)
  */
 interface Link {
   label: string;
@@ -51,18 +56,20 @@ const { groups, columns = 3 } = Astro.props;
     padding: 0;
     list-style: none;
   }
+  /* The heading's rule, or the untitled list's, holds the group; the rows take space, not rules. */
   h3 {
+    margin-bottom: 6px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--line);
     font-size: 17px;
     letter-spacing: 0;
   }
   ul.ruled {
+    padding-top: 6px;
     border-top: 1px solid var(--line);
   }
   li {
-    padding-block: 18px;
-    border-bottom: 1px solid var(--hair);
+    padding-block: 10px;
   }
   a {
     font-weight: 600;
@@ -84,6 +91,7 @@ const { groups, columns = 3 } = Astro.props;
     }
     /* Stacked untitled columns read as one list: only the first keeps its top rule. */
     .cols-2 .group + .group ul.ruled {
+      padding-top: 0;
       border-top: 0;
     }
   }

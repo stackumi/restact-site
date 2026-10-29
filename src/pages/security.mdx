@@ -12,6 +12,8 @@ import Callout from '../components/Callout.astro';
 import Venn from '../components/Venn.astro';
 import BudgetFigure from '../components/BudgetFigure.astro';
 import { term } from '../lib/term';
+import InRestactd from '../components/InRestactd.astro';
+import { RESTACTD_DOCS } from '../site.config';
 
 export const spin = term(`
 $ echo 'function invoke(input) { while (true) {} }' > spin.js
@@ -30,7 +32,7 @@ Four rules apply to every verb, and a server that skips one is not conformant.
 
 ## The four rules
 
-1. A verb is a WebAssembly component. Every verb runs as a WASI 0.2 component. A server may compile JavaScript or Python to a component at upload or run it through an interpreter component, under the same confinement and limits either way. restactd interprets, so nothing is compiled per upload.
+1. A verb is a WebAssembly component. Every verb runs as a WASI 0.2 component. A server may compile JavaScript or Python to a component at upload or run it through an interpreter component, under the same confinement and limits either way. [restactd](/restactd/) interprets, so nothing is compiled per upload.
 2. A verb reaches only what it imports. The imports of the component are its capability manifest, and there is no ambient authority beyond them. A server answers `403` at upload for an interface it does not grant, and none of the standard interfaces opens a socket or a file.
 3. A verb runs as the caller. A call can do what the caller could do directly and the verb declared, within the policy of the target. Its compute is charged to the caller.
 4. A verb is metered. Wall-clock, compute and memory limits apply to every call, and a verb that calls other verbs shares one budget with them.
@@ -123,4 +125,15 @@ The specification is a `-00` draft with one implementation.
   A default restactd is open and anonymous, on localhost. The restactd production checklist lists authentication on (<code>RESTACT_JWT_SECRET</code> or an OIDC issuer), a durable data directory, <code>RESTACT_ISOLATION=process</code>, tenant quotas with a window, object-binding left at its authenticated default, a deliberate bind address behind TLS, and a review of who can reach the management plane.
 </Callout>
 
-The full list is in the restactd [production checklist](https://stackumi.github.io/restactd/operate/production/), and the host's layers (sandbox, capability confinement, metering, process isolation) are described in its [security model](https://stackumi.github.io/restactd/architecture/security-model/). The normative text is the [Security Considerations section of the draft](/spec/draft/#security).
+The normative text is the [Security Considerations section of the draft](/spec/draft/#security).
+
+## In restactd
+
+<InRestactd
+  links={[
+    { label: 'Security model', href: RESTACTD_DOCS.securityModel, body: 'The host’s layers: the sandbox, capability confinement, metering and process isolation.' },
+    { label: 'Production checklist', href: RESTACTD_DOCS.production, body: 'What to turn on before a server leaves localhost.' },
+    { label: 'Identity and authority', href: RESTACTD_DOCS.identity, body: 'Runs as the caller, `runs_as=owner`, and the policies a call is checked against.' },
+    { label: 'Add authentication', href: RESTACTD_DOCS.authentication, body: 'A shared JWT secret or an OIDC issuer.' },
+  ]}
+/>

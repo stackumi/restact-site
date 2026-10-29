@@ -1,0 +1,280 @@
+---
+import Base from '../layouts/Base.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import ReaderGroups from '../components/ReaderGroups.astro';
+import { term } from '../lib/term';
+import { GITHUB, RESTACTD_DOCS as D } from '../site.config';
+
+/* restactd: the reference server's page on this site, the counterpart of the specification hub.
+   It says what restactd is and how far along it is, then routes into its own documentation site,
+   which stays in the restactd repository beside the code it documents. Every fact here comes from
+   the restactd README and docs (docs/start/introduction.md, docs/project/status.md,
+   docs/reference/conformance.md); those documents win. */
+
+const facts: { term: string; html: string }[] = [
+  { term: 'Written in', html: 'Rust. Each call runs in its own Wasmtime store.' },
+  {
+    term: 'Runs on',
+    html: 'Linux, where CI builds and tests it. It is not built or tested on macOS yet, and Windows is not supported.',
+  },
+  {
+    term: 'Verb languages',
+    html: 'JavaScript and Python, interpreted by runner components inside the same sandbox; Rust with restact-sdk; any toolchain that emits a WASI 0.2 component.',
+  },
+  {
+    term: 'Limits per call',
+    html: '200,000,000 fuel, 2 s and 32 MiB by default, answered with <span class="code-inline">429</span>, <span class="code-inline">408</span> and <span class="code-inline">507</span>. An operator sets the ceilings.',
+  },
+  {
+    term: 'Storage',
+    html: 'In memory by default; a data directory, or PostgreSQL, which several nodes can share.',
+  },
+  {
+    term: 'Authentication',
+    html: 'None by default, for use on loopback. A shared JWT secret or an OIDC issuer turns it on.',
+  },
+  {
+    term: 'Isolation',
+    html: 'In-process by default, or a worker process per request with <span class="code-inline">RESTACT_ISOLATION=process</span>.',
+  },
+  {
+    term: 'Discovery',
+    html: '<span class="code-inline">/.well-known/restact</span> lists the optional features it advertises, its languages, default limits and verbs. <span class="code-inline">/openapi.json</span> describes the live surface.',
+  },
+  {
+    term: 'Agents',
+    html: 'An MCP endpoint at <span class="code-inline">/mcp</span> when turned on, <span class="code-inline">restact mcp</span> for any REST:ACT server, and plugins for Claude Code, Codex CLI and Cursor.',
+  },
+  {
+    term: 'Releases',
+    html: 'None tagged yet, and the HTTP surface outside the core may still change. Build it from source, or build a Docker image from a checkout.',
+  },
+];
+
+const conformanceShell = term(`
+$ ./scripts/conformance-test.sh     ⟨# both executor backends⟩
+`);
+
+const docs = [
+  {
+    reader: 'Get started',
+    links: [
+      { label: 'Introduction', href: D.introduction, body: 'What restactd is, and what it is not.' },
+      { label: 'Install', href: D.install, body: 'From source or with Docker, and the optional pieces.' },
+      { label: 'Quickstart', href: D.quickstart, body: 'Deploy and call a function and an action with the restact command line.' },
+      { label: 'Tutorial: build a small app', href: D.tutorial, body: 'A small multi-user app, end to end.' },
+    ],
+  },
+  {
+    reader: 'Concepts',
+    links: [
+      { label: 'The model in one page', href: D.concepts, body: 'Objects, verbs, capabilities, budgets and identity.' },
+      { label: 'Verbs, objects and routes', href: D.verbsAndObjects, body: 'Route patterns, binding modes and accessor verbs.' },
+      { label: 'Capabilities and budgets', href: D.capabilities, body: 'What a verb may import, and what each call may spend.' },
+      { label: 'Identity and authority', href: D.identity, body: 'Runs as the caller, and the policies a call is checked against.' },
+    ],
+  },
+  {
+    reader: 'Write verbs',
+    links: [
+      { label: 'JavaScript', href: D.javascript, body: 'Upload source; the server needs no toolchain.' },
+      { label: 'Python', href: D.python, body: 'Upload source to the Python runner.' },
+      { label: 'Rust', href: D.rust, body: 'Build a component with restact-sdk and plain cargo.' },
+      { label: 'Authoring reference', href: D.authoringVerbs, body: 'Every language, including any that emits a WASI 0.2 component.' },
+    ],
+  },
+  {
+    reader: 'Operate',
+    links: [
+      { label: 'Production checklist', href: D.production, body: 'What to turn on before a server leaves localhost.' },
+      { label: 'Run with Docker', href: D.docker, body: 'The image, its defaults and the data volume.' },
+      { label: 'Storage and scaling', href: D.storage, body: 'Memory, a data directory or PostgreSQL, and several nodes.' },
+      { label: 'Add authentication', href: D.authentication, body: 'A shared JWT secret or an OIDC issuer.' },
+    ],
+  },
+  {
+    reader: 'Reference',
+    links: [
+      { label: 'HTTP API', href: D.httpApi, body: 'Every route, header and status code.' },
+      { label: 'Configuration', href: D.configuration, body: 'Every environment variable and its default.' },
+      { label: 'Feature flags in discovery', href: D.features, body: 'Each feature token, and whether it is on by default.' },
+      { label: 'Errors and status codes', href: D.errors, body: 'Every error code and what it means.' },
+    ],
+  },
+  {
+    reader: 'Architecture and project',
+    links: [
+      { label: 'Architecture overview', href: D.architecture, body: 'How the host, the executor and the capability layer fit together.' },
+      { label: 'Security model', href: D.securityModel, body: 'Why every upload is treated as hostile, and the layers that contain it.' },
+      { label: 'Limits, and when not to use restactd', href: D.limits, body: 'Where it stops being the right tool.' },
+      { label: 'Status and roadmap', href: D.status, body: 'What is checked, what freezes at release and what can still change.' },
+    ],
+  },
+];
+
+const repo = [
+  {
+    links: [
+      { label: 'The restact command line', href: D.cli, body: 'Deploy, call, inspect and discover from a terminal.' },
+      { label: 'restact mcp', href: GITHUB.mcp, body: 'Serves any REST:ACT server’s verbs as MCP tools and its objects as MCP resources.' },
+      { label: 'Agent plugins', href: GITHUB.plugins, body: 'Teach a coding agent to use a REST:ACT server, or to build on one.' },
+    ],
+  },
+  {
+    links: [
+      { label: 'restact-sdk', href: GITHUB.sdk, body: 'A Rust crate for writing verbs.' },
+      { label: 'Embed restactd in a Rust app', href: D.buildingApplications, body: 'Add native verbs and routes to your own server.' },
+      { label: 'Source on GitHub', href: GITHUB.restactd, body: 'The server, the examples, the WIT package and the conformance suite.' },
+    ],
+  },
+];
+---
+
+<Base
+  title="restactd"
+  description="restactd is the reference server for REST:ACT, written in Rust on Wasmtime. What it implements, how far along it is, how to test a server against the draft with it, and where its documentation is."
+>
+  <section class="container opening" aria-labelledby="title">
+    <h1 id="title">restactd, the reference server</h1>
+    <p class="say">
+      Pronounced <span class="spell">rest-act-d</span>, the protocol plus the d for a daemon, or{' '}
+      <span class="spell">re-stacked</span>, which is what an API becomes once its clients start adding verbs. Both are
+      right.
+    </p>
+    <p class="lede">
+      restactd implements REST:ACT in Rust on Wasmtime. Run it to try the protocol, build on it, or test a client against a
+      known server. The conformance suite is developed against it.
+    </p>
+    <div class="actions">
+      <a class="btn btn--primary" href="/start/">Get started</a>
+      <a class="btn" href={D.home}>Documentation</a>
+      <a class="btn" href={GITHUB.restactd}>Source on GitHub</a>
+    </div>
+  </section>
+
+  <section class="container sect" aria-labelledby="facts-h">
+    <h2 id="facts-h">At a glance</h2>
+    <dl class="facts">
+      {
+        facts.map((f) => (
+          <div>
+            <dt>{f.term}</dt>
+            <dd set:html={f.html} />
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="container sect" id="docs" aria-labelledby="docs-h">
+    <h2 id="docs-h">Documentation</h2>
+    <p class="measure body">
+      The restactd documentation is its own site, kept in the restactd repository beside the code it describes.
+    </p>
+    <ReaderGroups groups={docs} />
+  </section>
+
+  <section class="container sect" id="conformance" aria-labelledby="conformance-h">
+    <h2 id="conformance-h">Test a server against the draft</h2>
+    <div class="measure flow">
+      <p>
+        restact-conformance tests a server over HTTP. It reads the discovery document, checks the behavior every server
+        must have, then checks each optional feature the server advertises and skips the rest. In a restactd checkout, one
+        script runs it against restactd:
+      </p>
+      <CodeBlock variant="terminal" html={conformanceShell} />
+      <p>
+        To test another server, build the runner and set <span class="code-inline">RESTACT_BASE_URL</span>. The suite
+        deploys its fixture verbs through <span class="code-inline">POST /v1/modules</span> first, or uses the same verbs already
+        deployed. <a href={D.conformance}>The conformance suite</a> lists the variables and how checks are gated.
+      </p>
+    </div>
+  </section>
+
+  <section class="container sect last" aria-labelledby="repo-h">
+    <h2 id="repo-h">Also in the repository</h2>
+    <ReaderGroups groups={repo} columns={2} />
+  </section>
+</Base>
+
+<style>
+  .opening {
+    padding-block: 64px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  h1 {
+    max-width: 22ch;
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+  .opening .lede {
+    max-width: 62ch;
+    font-size: 19px;
+    line-height: 1.65;
+  }
+  .say {
+    max-width: 62ch;
+    margin-top: -6px;
+    font-size: 16px;
+    color: var(--ink-3);
+  }
+  .spell {
+    font-style: italic;
+    color: var(--ink-2);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .body,
+  .flow p {
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* At a glance: a fact list, the term beside its value. The term column holds the rows together, so
+     they need no rules between them (DESIGN.md, Fact Lists). */
+  .facts {
+    max-width: 880px;
+    margin: 8px 0 0;
+  }
+  .facts > div {
+    display: grid;
+    grid-template-columns: 9em minmax(0, 1fr);
+    gap: 4px 24px;
+    padding-block: 9px;
+  }
+  .facts dt {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .facts dd {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 720px) {
+    .opening {
+      padding-block: 40px 28px;
+    }
+    .opening .lede {
+      font-size: 17px;
+    }
+    .facts > div {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

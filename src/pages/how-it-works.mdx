@@ -13,6 +13,8 @@ asideLinks:
 import CodeBlock from '../components/CodeBlock.astro';
 import Callout from '../components/Callout.astro';
 import ResolutionWalk from '../components/ResolutionWalk.astro';
+import InRestactd from '../components/InRestactd.astro';
+import { RESTACTD_DOCS } from '../site.config';
 
 ## Objects, data and verbs
 
@@ -74,3 +76,14 @@ A verb is a WebAssembly component, and the interfaces it imports are its capabil
 | `event` | publish an event on a topic | gated |
 
 All five live in the WIT package `rest-act:plugin@0.1.0`, which only grows, so compiled verbs keep linking.
+
+## In restactd
+
+<InRestactd
+  links={[
+    { label: 'Verbs, objects and routes', href: RESTACTD_DOCS.verbsAndObjects, body: 'Paths, functions and actions, route patterns such as `pages/{id}`, and binding modes.' },
+    { label: 'Capabilities and budgets', href: RESTACTD_DOCS.capabilities, body: 'What a verb may import, and the fuel, time and memory each call gets.' },
+    { label: 'Discovery and optional features', href: RESTACTD_DOCS.discovery, body: 'The `/.well-known/restact` document and the feature tokens restactd advertises.' },
+    { label: 'WIT interfaces', href: RESTACTD_DOCS.wit, body: 'The worlds and interfaces of `rest-act:plugin@0.1.0` that a verb can target.' },
+  ]}
+/>

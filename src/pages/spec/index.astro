@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { plain, DRAFT_PATH, REGISTRIES_PATH, SPECS_REPO, DRAFT_FILE, featureTokens, renderDraft, readSpec, sectionText, witSummary } from '../../lib/specmd';
 import { SECTION_MAP, UNMAPPED, type Tag } from '../../lib/spec-map';
-import { GITHUB } from '../../site.config';
+import { GITHUB, RESTACTD_DOCS } from '../../site.config';
 
 /* The specification hub. Copy and structure follow the approved canvas (Spec.dc.html). The section
    map, the mandatory core check, the feature-token list and the WIT summary are all read from the
@@ -81,6 +81,15 @@ const documents = [
   { name: 'WIT package', href: `${DRAFT_PATH}#appendix-wit`, status: 'Normative, draft appendix', covers: 'The host interfaces a verb may import' },
   { name: 'x-restact OpenAPI extension', href: `${GITHUB.restactd}/tree/main/openapi`, status: 'Companion schema', covers: 'The schema of the x-restact extension in an OpenAPI document' },
   { name: 'How it works', href: '/how-it-works/', status: 'Explanatory', covers: 'The model in prose, with diagrams' },
+];
+const implementations = [
+  { name: 'restactd', href: '/restactd/', status: 'Reference server, pre-1.0', covers: 'Rust on Wasmtime. Lists the optional features it supports in its discovery document.' },
+  {
+    name: 'restact-conformance',
+    href: RESTACTD_DOCS.conformance,
+    status: 'Test suite',
+    covers: 'Black-box checks over HTTP: the behavior every server must have, then each feature the server advertises.',
+  },
 ];
 const registries = [
   ['feature-tokens', 'Feature tokens'],
@@ -237,6 +246,32 @@ const registries = [
           {wit.worlds.map((i) => (<div><dt class="mono">{i.name}</dt><dd set:html={i.html} /></div>))}
         </dl>
       </div>
+    </div>
+  </section>
+
+  <section class="container sect" id="implementations" aria-labelledby="implementations-h">
+    <h2 id="implementations-h">Implementation and tests</h2>
+    <p class="measure body">
+      restact-conformance is the executable form of the draft’s requirements, and restactd is the server it is developed
+      against. Point the suite at any server to see which checks it passes.
+    </p>
+    <div class="tablewrap">
+      <table class="docs">
+        <thead>
+          <tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">What it is</th></tr>
+        </thead>
+        <tbody>
+          {
+            implementations.map((d) => (
+              <tr>
+                <th scope="row"><a href={d.href}>{d.name}</a></th>
+                <td>{d.status}</td>
+                <td>{d.covers}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -619,6 +654,11 @@ const registries = [
     font-size: 15px;
     line-height: 1.5;
     color: var(--ink-2);
+  }
+
+  .body {
+    color: var(--ink-2);
+    line-height: 1.6;
   }
 
   /* Every document: the same hairline table, scrolling inside itself on narrow screens. */

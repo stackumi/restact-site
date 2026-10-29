@@ -8,6 +8,8 @@ chips:
 ---
 
 import Callout from '../components/Callout.astro';
+import InRestactd from '../components/InRestactd.astro';
+import { RESTACTD_DOCS } from '../site.config';
 
 Each approach below solves a problem that REST:ACT does not try to solve, and the reverse holds too. The table gives the short form, and the sections under it give the differences in detail.
 
@@ -42,7 +44,7 @@ An ad hoc GraphQL read needs no deployment, while a REST:ACT function is a cache
 
 On AWS Lambda or Cloudflare Workers for Platforms the deploying account typically owns the function's credentials and bill. A REST:ACT verb is deployed by an API client, runs as each caller, is charged to that caller, and is addressed by the resource it works on.
 
-Workers for Platforms runs customers' code in a multi-tenant setting, and REST:ACT specifies an open HTTP surface and authority rules for that job. The draft allows such sandboxes as executors; restactd ships in-process and process isolation only.
+Workers for Platforms runs customers' code in a multi-tenant setting, and REST:ACT specifies an open HTTP surface and authority rules for that job. The draft allows such sandboxes as executors; [restactd](/restactd/) ships in-process and process isolation only.
 
 A function platform gives code outbound network access and any library. A verb gets no socket interface. With the optional `llm-connector` feature it can ask the server for one bounded model completion through an owner-governed connector, and its descriptor then reports `networkAccess: "outbound"`.
 
@@ -56,7 +58,7 @@ REST:ACT is a wire protocol for the clients of an API to upload components at ru
 
 The Model Context Protocol standardizes how an AI application discovers and calls the tools a server's author exposes. REST:ACT standardizes how a caller installs a new verb.
 
-The two compose. verbsmith serves a host's verbs as MCP tools and its objects as MCP resources, so an agent can deploy a verb and call it in one session. Prompts and a session model are part of MCP and outside REST:ACT.
+The two compose. `restact mcp`, the MCP bridge in the restact command line, serves a host's verbs as MCP tools and its objects as MCP resources, so an agent can deploy a verb and call it in one session. Prompts and a session model are part of MCP and outside REST:ACT.
 
 ## Google AIP and JSON:API
 
@@ -67,3 +69,13 @@ From JSON:API, REST:ACT borrows the optional relationship representation and the
 <Callout title="Where the ideas come from">
   The draft draws on OData, AIP-136, JSON:API and the WebAssembly Component Model.
 </Callout>
+
+## In restactd
+
+<InRestactd
+  links={[
+    { label: 'Introduction', href: RESTACTD_DOCS.introduction, body: 'What restactd is, and what it is not: a function-as-a-service platform, a container runtime or a database.' },
+    { label: 'Limits, and when not to use restactd', href: RESTACTD_DOCS.limits, body: 'Where it stops being the right tool, including what its sandbox does not protect against.' },
+    { label: 'Use restactd from AI agents', href: RESTACTD_DOCS.aiAgents, body: 'The agent plugins, `restact mcp` and the `/mcp` endpoint.' },
+  ]}
+/>
