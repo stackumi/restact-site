@@ -1,8 +1,8 @@
 ---
 layout: ../layouts/MdPage.astro
 title: Compared with other approaches
-description: REST:ACT adds one thing to HTTP APIs, a way for a client to install new behavior at runtime under the caller's authority. This page sets it beside REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, and MCP.
-summary: 'REST:ACT beside REST, RPC, GraphQL, serverless and Wasm platforms, and MCP. It adds one thing: clients install code at runtime, under their own authority.'
+description: REST:ACT adds one thing to HTTP APIs, a way for a client to install new behavior at runtime under the caller's authority. This page sets it beside REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, plugin systems, database-backed HTTP APIs and MCP.
+summary: 'REST:ACT beside REST, RPC, GraphQL, serverless, Wasm platforms, Extism, PostgREST, Hasura, PocketBase and MCP. It adds one thing: runtime code from clients.'
 chips:
   - Explanatory
   - 'Normative text: draft, Relationship to Google AIP and JSON:API'
@@ -21,6 +21,11 @@ Each approach below solves a problem that REST:ACT does not try to solve, and th
 | GraphQL | The developers write resolvers; the client picks the shape of each read | Ad hoc reads with no deployment |
 | Serverless platforms | The account that deploys the function | Outbound network access and any library |
 | Wasm platforms | The application's developers or platform team | Packaging, workload placement, multi-host distribution |
+| Extism, XTP | The host's developers define extension points; users write plug-ins | Host SDKs for several environments |
+| Workers for Platforms | The platform, which deploys customers' code for them | Bindings to KV, D1 and R2 |
+| PostgREST, Supabase | The database's developers, in SQL functions and policies | The database as the data model |
+| Hasura | The developers write a handler behind a GraphQL field | Handlers in any language, anywhere |
+| PocketBase | The application's developer, in files beside the server | A backend in one executable |
 | MCP | The tool author, who exposes tools to an AI application | Prompts and a session model |
 
 ## Plain REST and OpenAPI
@@ -43,9 +48,7 @@ An ad hoc GraphQL read needs no deployment, while a REST:ACT function is a cache
 
 ## Serverless platforms
 
-On AWS Lambda or Cloudflare Workers for Platforms the deploying account typically owns the function's credentials and bill. A REST:ACT verb is deployed by an API client, runs as each caller, is charged to that caller, and is addressed by the resource it works on.
-
-Workers for Platforms runs customers' code in a multi-tenant setting, and REST:ACT specifies an open HTTP surface and authority rules for that job. The draft allows such sandboxes as executors; [restactd](/restactd/) ships in-process and process isolation only.
+On AWS Lambda or Cloudflare Workers the deploying account typically owns the function's credentials and bill. A REST:ACT verb is deployed by an API client, runs as each caller, is charged to that caller, and is addressed by the resource it works on.
 
 A function platform gives code outbound network access and any library. A verb gets no socket interface. With the optional `llm-connector` feature it can ask the server for one bounded model completion through an owner-governed connector, and its descriptor then reports `networkAccess: "outbound"`.
 
@@ -54,6 +57,36 @@ A function platform gives code outbound network access and any library. A verb g
 Spin and wasmCloud also run components with only the interfaces they are granted. There, the application's developers or platform team build and deploy components with tools like `spin` and `wash`.
 
 REST:ACT is a wire protocol for the clients of an API to upload components at runtime, bound to objects and run under per-caller authority. Packaging, workload placement and multi-host distribution belong to those platforms, and their standard interface sets are larger.
+
+## Extism and XTP
+
+Extism is a plug-in system built on WebAssembly. The host application defines an interface, and users or customers add logic by writing plug-ins against it. Extism supplies host SDKs for embedding that runtime in an application. XTP is a managed service from Dylibso: the host defines extension points, each with a schema, and its users, called guests, write the plug-ins.
+
+Both share the idea of letting a product's users extend it with their own code. The difference is the layer. Extism and XTP are a library and a service that a product's developers embed, and they design the extension points. REST:ACT is a wire protocol, so any client of a compliant server can upload a verb over HTTP, and the server meters it, runs it as the calling user and describes it in discovery.
+
+## Cloudflare Workers for Platforms
+
+Workers for Platforms lets a platform run its customers' code, or code written by AI, in isolated Workers kept in a dispatch namespace. A dynamic dispatch Worker receives each request and routes it to the right customer Worker. The platform can set per-customer limits on CPU time and subrequests.
+
+It shares the multi-tenant goal and the idea that uploaded code is untrusted. In the documented flow the customer does not deploy directly: the platform receives the code and calls Cloudflare's API to deploy it as a user Worker, and the platform writes the routing. REST:ACT specifies that upload and routing as an open HTTP surface, with authority rules attached: the client deploys the verb, it is addressed by the object it works on and it runs as each caller. The draft allows a sandbox like Workers as an executor. [restactd](/restactd/) ships in-process and process isolation only.
+
+## PostgREST and Supabase
+
+PostgREST serves a Postgres database over HTTP. A function in the exposed schema is callable under `/rpc`. A function that does not modify the database also runs under `GET`, and a request with a valid JWT switches the database session to the role named in the token, so the database decides what the caller may do. Supabase's REST API is PostgREST, and `rpc()` calls its database functions. Supabase recommends `security invoker`, the default, so a function runs with the caller's privileges.
+
+This is the closest relative here. Read-only calls use `GET`, others use `POST`, and the code runs as the caller. PostgREST decides by function volatility: `GET` is always read-only, and `POST` is read-write only for volatile functions. REST:ACT separates a function from an action by declared kind, and a function is a cacheable `GET`. The functions there are SQL or other database code written by whoever administers the database, then exposed. A verb is uploaded at runtime by an API client, is not tied to a database, runs in a Wasm sandbox with fuel, time and memory limits, and works on the object it is bound to.
+
+## Hasura actions
+
+A Hasura action adds a field to the GraphQL schema, as a query or a mutation, and handles it by calling an HTTP webhook that the developer writes and hosts. The handler receives the action's name, its input and the session variables, and roles must be granted permission to execute the action.
+
+An action and a verb both put custom logic behind a typed, permissioned entry point. In Hasura the logic runs outside the engine, on infrastructure the developer chooses and in any language, and the handler is registered in Hasura's metadata. A REST:ACT verb runs inside the server, under the caller's authority, and its uploader is any client allowed to deploy it.
+
+## PocketBase hooks
+
+PocketBase is a backend that ships as one executable. Developers extend it with JavaScript files in a `pb_hooks` directory next to the executable. Hooks can register event handlers, such as one that runs when a record is created, and custom routes. The files are read by an embedded JavaScript engine, and in development the process reloads when they change.
+
+The common ground is server-side JavaScript that adds behavior and routes. PocketBase hooks are written by the person running the application and are loaded from its filesystem. The hooks documentation does not discuss running code from untrusted users. REST:ACT is for the case where the uploader is a client of the API, so a verb is confined to its declared capabilities and metered.
 
 ## MCP
 
