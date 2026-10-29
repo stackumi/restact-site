@@ -268,7 +268,7 @@ Each protocol page (How it works, Security, Compare, Presentation verbs) closes 
 44×44 transparent button in the masthead with a line-drawn half-filled circle (1.7 stroke). Its label names the theme a press switches to.
 
 ### Footer
-`footer-band` ground with a `rule` top border, one 22px-padded row: restact-specs, restactd and restactd documentation links (44px targets) left, the docname in 13.5px mono `ink-3` right.
+`footer-band` ground with a `rule` top border, one 22px-padded row: specification repository, restactd and restactd documentation links (44px targets) left, the docname in 13.5px mono `ink-3` right.
 
 ## Do's and Don'ts
 

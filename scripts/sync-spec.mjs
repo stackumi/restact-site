@@ -1,8 +1,9 @@
-// Copies the specification sources from a checkout of stackumi/restact-specs into
+// Copies the specification sources from a checkout of stackumi/restact (the specification
+// repository, named restact-specs until 2026-10-29; the local checkout keeps that name) into
 // src/content/spec/, so the Cloudflare build needs no sibling checkout. Run by a human when the
 // specification changes, then commit the result:
 //
-//   corepack pnpm sync:spec [path-to-restact-specs]      (default: ../restact-specs)
+//   corepack pnpm sync:spec [path-to-spec-checkout]      (default: ../restact-specs)
 //
 // The vendored copies are not edited, with one exception: the draft's front matter keeps only the
 // `ins:` line of its author list, so no address enters this repository (a scan of every copied .md
@@ -18,7 +19,7 @@ const out = join(root, 'src', 'content', 'spec');
 
 const DRAFT = 'draft-byrd-restact-protocol-00.md';
 if (!existsSync(join(src, DRAFT))) {
-  console.error(`sync-spec: ${join(src, DRAFT)} not found. Pass the path to a restact-specs checkout.`);
+  console.error(`sync-spec: ${join(src, DRAFT)} not found. Pass the path to a checkout of stackumi/restact.`);
   process.exit(2);
 }
 
@@ -86,6 +87,6 @@ scan(out);
 
 writeFileSync(
   join(out, 'SOURCE.json'),
-  JSON.stringify({ repository: 'stackumi/restact-specs', commit, date }, null, 2) + '\n',
+  JSON.stringify({ repository: 'stackumi/restact', commit, date }, null, 2) + '\n',
 );
 console.log(`sync-spec: copied from ${src} @ ${commit.slice(0, 7)} (${date})`);

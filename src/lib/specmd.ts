@@ -49,7 +49,7 @@ export const DRAFT_FILE = 'draft-byrd-restact-protocol-00.md';
 export const DRAFT_PATH = '/spec/draft/';
 export const PV_PATH = '/spec/presentation-verbs/';
 export const REGISTRIES_PATH = '/spec/registries/';
-export const SPECS_REPO = 'https://github.com/stackumi/restact-specs';
+export const SPECS_REPO = 'https://github.com/stackumi/restact';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -183,7 +183,7 @@ export function rewriteHref(href: string, opts: { file?: string; idPrefix?: stri
     if (/^https:\/\/github\.com\/stackumi\/restactd\/(?:blob|tree)\/main\/spec(?:\/|$)/.test(href)) return null;
     return href;
   }
-  // Resolve against the vendored file's own place in the restact-specs repository.
+  // Resolve against the vendored file's own place in the specification repository.
   const [rel, frag] = href.split('#');
   const from = opts.file ?? DRAFT_FILE;
   let abs: string;

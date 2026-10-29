@@ -11,7 +11,7 @@ if (f.docname !== DRAFT.docname) throw new Error(`site.config DRAFT.docname (${D
 const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
 const sourceUrl = `${SPECS_REPO}/blob/main/${DRAFT_FILE}`;
 const summary = 'The REST:ACT draft: addressing, methods, capabilities, resource limits, composition and discovery. An Internet-Draft, not yet submitted; not a standard.';
-/* Structured data: the draft as a technical article, dated by the restact-specs commit it is rendered from. */
+/* Structured data: the draft as a technical article, dated by the specification repository commit it is rendered from. */
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
@@ -59,7 +59,7 @@ const sideItems = [
       <dd>{f.keywords.join(', ')}</dd>
       <dt>Rendered from</dt>
       <dd>
-        <a class="mono" href={`${SPECS_REPO}/commit/${source.commit}`}>restact-specs @ {source.commit.slice(0, 7)}</a>
+        <a class="mono" href={`${SPECS_REPO}/commit/${source.commit}`}>stackumi/restact @ {source.commit.slice(0, 7)}</a>
       </dd>
     </dl>
     <p class="statement">

@@ -18,7 +18,7 @@ export const SITE = {
 
 /**
  * The draft the protocol is specified in, written in Internet-Draft format and not yet submitted.
- * `title` is the home page's title. The draft in restact-specs keeps its own descriptive title
+ * `title` is the home page's title. The draft in stackumi/restact keeps its own descriptive title
  * ("The REST:ACT Protocol: Invoking Sandboxed Functionality over REST") on purpose, and the draft's
  * page uses that one.
  */
@@ -29,7 +29,7 @@ export const DRAFT = {
 };
 
 export const GITHUB = {
-  specs: 'https://github.com/stackumi/restact-specs',
+  specs: 'https://github.com/stackumi/restact',
   restactd: 'https://github.com/stackumi/restactd',
   /** `restact mcp`, the MCP bridge in the restact command line (formerly verbsmith). */
   mcp: 'https://github.com/stackumi/restactd/blob/main/cli/docs/mcp/README.md',

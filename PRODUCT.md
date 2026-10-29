@@ -44,7 +44,7 @@ in REST:ACT the API's clients deploy it, it runs as each caller, and it is charg
 
 - Readers arrive mostly from links (GitHub, discussion threads) and move between the explanatory pages, the
   specification hub and the rendered draft.
-- The normative text lives in `stackumi/restact-specs` and is vendored into `src/content/spec/`; `SOURCE.json`
+- The normative text lives in `stackumi/restact` (the specification repository) and is vendored into `src/content/spec/`; `SOURCE.json`
   records the source commit. The site renders it; it does not author it.
 - The reference server is restactd (Rust, Wasmtime), in `stackumi/restactd`. Its own documentation is a separate
   site (`DOCS_SITE_URL` in `src/site.config.ts`); this site links to it rather than duplicating it.
@@ -60,7 +60,7 @@ in REST:ACT the API's clients deploy it, it runs as each caller, and it is charg
 - The specification text is verbatim and not ours to change; `SpecBody.astro` marks it so checks skip it.
 - Status must always be stated truthfully: written as an Internet-Draft, not yet submitted, one implementation.
 - **Open decisions:**
-  - where feedback on the proposal goes (restact-specs issues, Discussions, or something else);
+  - where feedback on the proposal goes (stackumi/restact issues, Discussions, or something else);
   - the public author identity (the draft card currently reads "N. Byrd");
   - whether the draft is offered as plain text or XML in addition to the rendered page.
 

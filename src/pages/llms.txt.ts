@@ -38,7 +38,7 @@ A verb is a WebAssembly component. It runs with the caller's permissions, can us
 
 ## Optional
 
-- [restact-specs on GitHub](${GITHUB.specs}): the draft, its companion documents and the registries
+- [The specification repository on GitHub](${GITHUB.specs}): the draft, its companion documents and the registries
 - [restactd on GitHub](${GITHUB.restactd}): the server, the SDK, the command line and the conformance suite
 `;
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
