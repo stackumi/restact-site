@@ -86,7 +86,7 @@ An action and a verb both put custom logic behind a typed, permissioned entry po
 
 PocketBase is a backend that ships as one executable. Developers extend it with JavaScript files in a `pb_hooks` directory next to the executable. Hooks can register event handlers, such as one that runs when a record is created, and custom routes. The files are read by an embedded JavaScript engine, and in development the process reloads when they change.
 
-The common ground is server-side JavaScript that adds behavior and routes. PocketBase hooks are written by the person running the application and are loaded from its filesystem. The hooks overview page does not mention running untrusted code. REST:ACT is for the case where the uploader is a client of the API, so a verb can use only the host interfaces it imports and runs under per-invocation limits.
+The common ground is server-side JavaScript that adds behavior and routes. PocketBase hooks are written by the person running the application and are loaded from its filesystem. REST:ACT is for the case where the uploader is a client of the API, so a verb can use only the host interfaces it imports and runs under per-invocation limits.
 
 ## MCP
 
