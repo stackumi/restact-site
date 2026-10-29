@@ -21,7 +21,7 @@ Each approach below solves a problem that REST:ACT does not try to solve, and th
 | GraphQL | The developers write resolvers; the client picks the shape of each read | Ad hoc reads with no deployment |
 | Serverless platforms | The account that deploys the function | Outbound network access and any library |
 | Wasm platforms | The application's developers or platform team | Packaging, workload placement, multi-host distribution |
-| Extism, XTP | The host's developers define extension points; users write plug-ins | Host SDKs for several environments |
+| Extism | The host's developers define extension points; users write plug-ins | Host SDKs for several environments |
 | Workers for Platforms | The platform, which deploys customers' code for them | Bindings to KV, D1 and R2 |
 | PostgREST, Supabase | The database's developers, in SQL functions and policies | The database as the data model |
 | Hasura | The developers write a handler behind a GraphQL field | Handlers in any language, anywhere |
@@ -58,11 +58,11 @@ Spin and wasmCloud also run components with only the interfaces they are granted
 
 REST:ACT is a wire protocol for the clients of an API to upload components at runtime, bound to objects and run under per-caller authority. Packaging, workload placement and multi-host distribution belong to those platforms, and their standard interface sets are larger.
 
-## Extism and XTP
+## Extism
 
-Extism is a plug-in system built on WebAssembly. The host application defines an interface, and users or customers add logic by writing plug-ins against it. Extism supplies host SDKs for embedding that runtime in an application. XTP is a managed service from Dylibso: the host defines extension points, each with a schema, and its users, called guests, write the plug-ins.
+Extism is a plug-in system built on WebAssembly. The host application defines an interface, and users or customers add logic by writing plug-ins against it. Extism supplies host SDKs for embedding that runtime in an application.
 
-Both share the idea of letting a product's users extend it with their own code. The difference is the layer. Extism and XTP are a library and a service that a product's developers embed, and they design the extension points. REST:ACT is a wire protocol, so any client of a compliant server can upload a verb over HTTP, and the server enforces time, compute and memory limits on it, runs it as the caller by default and lists it in its discovery document.
+Both share the idea of letting a product's users extend it with their own code. The difference is the layer. Extism is a library that a product's developers embed, and they design the extension points. REST:ACT is a wire protocol, so any client of a compliant server can upload a verb over HTTP, and the server enforces time, compute and memory limits on it, runs it as the caller by default and lists it in its discovery document.
 
 ## Cloudflare Workers for Platforms
 
