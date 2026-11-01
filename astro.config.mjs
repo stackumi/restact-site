@@ -4,7 +4,7 @@ import mdx from '@astrojs/mdx';
 import { restactTheme } from './src/lib/shiki-theme.mjs';
 
 // A static site: no server runtime and no adapter. Cloudflare serves `dist/` as static assets
-// (see wrangler.jsonc), on both restact.org and restact.dev.
+// (see wrangler.jsonc) on restact.org; restact.dev and the www hosts 301-redirect to restact.org.
 export default defineConfig({
   output: 'static',
   build: { inlineStylesheets: 'always' },
