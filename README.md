@@ -135,9 +135,9 @@ dashboard:
 failed with "Failed to get static paths from the Cloudflare prerender server … getAllWithMetadata
 is not a function", and a static page has no use for the adapter anyway.
 
-Add **both** `restact.org` and `restact.dev` as custom domains on the Worker (Settings → Domains &
-Routes); they serve the same page. When the site goes public, pick one as canonical and redirect
-the other to it (a Cloudflare redirect rule), so search engines see a single site.
+Add `restact.org` as the custom domain on the Worker (Settings → Domains & Routes). `restact.dev`,
+`www.restact.dev`, and `www.restact.org` `301`-redirect to `https://restact.org` via Cloudflare
+Redirect Rules so search engines and AI crawlers see a single canonical site.
 
 ## Identity
 
