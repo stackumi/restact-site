@@ -107,6 +107,9 @@ Search and answer engines read these, all built from `site` in `astro.config.mjs
 - `/llms.txt`, a reading list for language models (`src/pages/llms.txt.ts`);
 - schema.org JSON-LD on the home page, the draft and /restactd/ (the license joins it at launch).
 
+`/.well-known/security.txt` (RFC 9116, `src/pages/.well-known/security.txt.ts`) names where to report a
+vulnerability. Its `Expires` date must stay under a year away; renew it before it passes, or `pnpm verify` fails.
+
 `pnpm verify` checks them all. Two things outside this repo must be done before launch, tracked
 with the `pre-release` label: restact.dev and the www hosts redirect to restact.org (#7), and
 Cloudflare lets search and AI crawlers through (#8).

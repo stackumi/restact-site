@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/MdPage.astro
 title: Compared with other approaches
-description: REST:ACT adds one thing to HTTP APIs, a way for a client to install new behavior at runtime under the caller's authority. This page sets it beside REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, plugin systems, database-backed HTTP APIs and MCP.
+description: REST:ACT adds one thing to HTTP APIs, a way for a client to install new behavior at runtime under the caller's authority. This page sets it beside REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, plugin systems, database-backed HTTP APIs, Shopify Functions, MCP and Cloudflare's Code Mode.
 summary: 'REST:ACT beside REST, RPC, GraphQL, serverless, Wasm platforms, Extism, PostgREST, Hasura, PocketBase and MCP. It adds one thing: runtime code from clients.'
 chips:
   - Explanatory
@@ -26,7 +26,9 @@ Each approach below solves a problem that REST:ACT does not try to solve, and th
 | PostgREST, Supabase | The database's developers, in SQL functions and policies | The database as the data model |
 | Hasura | The developers write a handler behind a GraphQL field | Handlers in any language, anywhere |
 | PocketBase | The application's developer, in files beside the server | A backend in one executable |
+| Shopify Functions | App developers, at steps Shopify defines | Hooks into Shopify's discount, delivery and checkout logic |
 | MCP | The tool author, who exposes tools to an AI application | Prompts and a session model |
+| Cloudflare Code Mode | The model, for the task in front of it | One TypeScript API over the tools of several MCP servers |
 
 ## Plain REST and OpenAPI
 
@@ -88,11 +90,23 @@ PocketBase is a backend that ships as one executable. Developers extend it with 
 
 The common ground is server-side JavaScript that adds behavior and routes. PocketBase hooks are written by the person running the application and are loaded from its filesystem. REST:ACT is for the case where the uploader is a client of the API, so a verb can use only the host interfaces it imports and runs under per-invocation limits.
 
+## Shopify Functions
+
+A Shopify Function is a WebAssembly module, usually written in Rust or JavaScript, that changes one step of Shopify's own backend logic, such as a discount, a delivery option or a checkout validation. App developers ship functions inside an app, and a store gets them by installing the app. Shopify runs a function when a customer reaches its step. The input is the JSON result of a GraphQL query the developer writes, and the output is a JSON list of operations for Shopify to carry out. A function is never called by URL, and it runs under an instruction-count limit.
+
+Both run code the platform does not trust as WebAssembly under fixed limits. Shopify chooses the extension points and when they run, and the code arrives in an app that a store installs. A REST:ACT verb has no fixed extension point. Any client allowed to deploy can add one at runtime, it gets a URL on the object it works on, and callers invoke it directly with `GET` or `POST`.
+
 ## MCP
 
 The Model Context Protocol standardizes how an AI application discovers and calls the tools a server's author exposes. REST:ACT standardizes how a caller installs a new verb.
 
 The two compose. `restact mcp`, the MCP bridge in the restact command line, serves a host's verbs as MCP tools and its objects as MCP resources, so an agent can deploy a verb and call it in one session. Prompts and a session model are part of MCP and outside REST:ACT.
+
+## Cloudflare Code Mode and Dynamic Workers
+
+Code Mode turns the tools of the MCP servers an agent is connected to into a TypeScript API, and asks the model to write code against that API instead of calling the tools one at a time. Cloudflare runs the code in a Dynamic Worker, a Worker that another Worker creates at runtime from code it supplies. The parent Worker decides which bindings the Dynamic Worker receives and can block its network access, so the generated code reaches the tools only through those bindings and never sees their credentials. In Code Mode, each piece of generated code runs in a fresh sandbox that is thrown away afterward.
+
+Both let a model write code that a server runs in a sandbox, with only the access it is given. Code Mode's code is written for one task, runs once inside the application that asked for it, and is gone. A verb that an agent writes against a REST:ACT server stays deployed. It has a URL on the object it is bound to, and other callers can call it later. The verb's `policy` property decides who may call or change it, along with the object's `$policy` on a server that supports object policy. It is deployed through an open protocol rather than one platform's API.
 
 ## Google AIP and JSON:API
 

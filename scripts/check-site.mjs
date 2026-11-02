@@ -17,6 +17,7 @@
 //     structured data (if any) that parses
 //   - /sitemap.xml lists exactly the pages, /llms.txt's links on the site resolve, and robots.txt
 //     names the sitemap once INDEXABLE is true
+//   - /.well-known/security.txt has a Contact, an Expires date still ahead, and its own Canonical URL
 //   - no email address in src/content/spec/** (the vendored specification sources)
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -194,6 +195,13 @@ for (const m of llms.matchAll(/\]\((https?:[^)\s]+)\)/g)) {
   const p = new URL(m[1]).pathname;
   if (!fileFor(p)) err('/llms.txt', `link to ${p} (no such route)`);
 }
+
+// security.txt (RFC 9116): a contact, an Expires date that has not passed, and its own URL as Canonical
+const sectxt = existsSync(join(DIST, '.well-known/security.txt')) ? readFileSync(join(DIST, '.well-known/security.txt'), 'utf8') : '';
+if (!/^Contact: \S+$/m.test(sectxt)) err('/.well-known/security.txt', 'missing, or has no Contact');
+const expires = Date.parse((sectxt.match(/^Expires: (\S+)$/m) ?? [])[1]);
+if (!(expires > Date.now())) err('/.well-known/security.txt', 'Expires is missing or has passed; renew EXPIRES in src/pages/.well-known/security.txt.ts');
+if (!sectxt.includes(`Canonical: ${new URL('/.well-known/security.txt', SITE_URL)}\n`)) err('/.well-known/security.txt', 'Canonical does not name its own URL on `site`');
 
 const unique = (a) => [...new Set(a)];
 for (const e of unique(errors)) console.error(`error    ${e}`);
