@@ -7,7 +7,8 @@ import { GITHUB, RESTACTD_DOCS as D } from '../site.config';
 
 /* restactd: the reference server's page on this site, the counterpart of the specification hub.
    It says what restactd is and how far along it is, then routes into its own documentation site,
-   which stays in the restactd repository beside the code it documents. Every fact here comes from
+   which is written in the restactd repository beside the code it documents and vendored into
+   public/docs/ (scripts/sync-docs.mjs). Every fact here comes from
    the restactd README and docs (docs/start/introduction.md, docs/project/status.md,
    docs/reference/conformance.md); those documents win. */
 
@@ -183,7 +184,8 @@ const repo = [
   <section class="container sect" id="docs" aria-labelledby="docs-h">
     <h2 id="docs-h">Documentation</h2>
     <p class="measure body">
-      The restactd documentation is its own site, kept in the restactd repository beside the code it describes.
+      The restactd documentation is written in the restactd repository, beside the code it describes, and served
+      here under <a href={D.home}>/docs</a>.
     </p>
     <ReaderGroups groups={docs} />
   </section>

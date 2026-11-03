@@ -1,0 +1,334 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-bbavt7ux"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Observability | restactd</title><link rel="canonical" href="https://restact.org/docs/operate/observability/"/><link rel="sitemap" href="/docs/sitemap-index.xml"/><link rel="shortcut icon" href="/docs/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v7.4.3"/><meta name="generator" content="Starlight v0.42.7"/><meta property="og:title" content="Observability"/><meta property="og:type" content="article"/><meta property="og:url" content="https://restact.org/docs/operate/observability/"/><meta property="og:locale" content="en"/><meta property="og:description" content="restactd writes logs, serves two health endpoints, and can export traces, metrics and logs over OpenTelemetry. This page covers each and what to alert on."/><meta property="og:site_name" content="restactd"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="restactd writes logs, serves two health endpoints, and can export traces, metrics and logs over OpenTelemetry. This page covers each and what to alert on."/><meta name="robots" content="noindex, nofollow"/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/docs/_astro/print.ehPL0gv-.css" media="print"><link rel="stylesheet" href="/docs/_astro/common.8ehDrKCn.css"><style>@layer starlight.components{.card:where(.astro-noz2mrra){--sl-card-border:var(--sl-color-purple);--sl-card-bg:var(--sl-color-purple-low);border:1px solid var(--sl-color-gray-5);background-color:var(--sl-color-black);flex-direction:column;gap:clamp(.5rem,.125rem + 1vw,1rem);padding:clamp(1rem,.125rem + 3vw,2.5rem)}.card:where(.astro-noz2mrra):nth-child(4n+1){--sl-card-border:var(--sl-color-orange);--sl-card-bg:var(--sl-color-orange-low)}.card:where(.astro-noz2mrra):nth-child(4n+3){--sl-card-border:var(--sl-color-green);--sl-card-bg:var(--sl-color-green-low)}.card:where(.astro-noz2mrra):nth-child(4n+4){--sl-card-border:var(--sl-color-red);--sl-card-bg:var(--sl-color-red-low)}.card:where(.astro-noz2mrra):nth-child(4n+5){--sl-card-border:var(--sl-color-blue);--sl-card-bg:var(--sl-color-blue-low)}.title:where(.astro-noz2mrra){font-weight:600;font-size:var(--sl-text-h4);color:var(--sl-color-white);line-height:var(--sl-line-height-headings);align-items:center;gap:1rem}.card:where(.astro-noz2mrra) .icon:where(.astro-noz2mrra){border:1px solid var(--sl-card-border);background-color:var(--sl-card-bg);border-radius:.25rem;flex-shrink:0;padding:.2em}.card:where(.astro-noz2mrra) .body:where(.astro-noz2mrra){font-size:clamp(var(--sl-text-sm), calc(.5rem + 1vw), var(--sl-text-body));margin:0}.card-grid:where(.astro-7bippwma){grid-template-columns:100%;gap:1rem;display:grid}.card-grid:where(.astro-7bippwma)>*{margin-top:0!important}@media (width>=50rem){.card-grid:where(.astro-7bippwma){grid-template-columns:1fr 1fr;gap:1.5rem}.stagger:where(.astro-7bippwma){--stagger-height:5rem;padding-bottom:var(--stagger-height)}.stagger:where(.astro-7bippwma)>:nth-child(2n){transform:translateY(var(--stagger-height))}}}
+@layer starlight.components{svg:where(.astro-ivqccbcx){color:var(--sl-icon-color);font-size:var(--sl-icon-size,1em);width:1em;height:1em;overflow:visible}}
+</style><script type="module" src="/docs/_astro/page.cNngjUgL.js"></script></head><body class="astro-bbavt7ux"><a class="sl-skip-link astro-zqm5rwbq" href="#_top">Skip to content</a><div class="page sl-flex astro-sq27eg72"><header class="header astro-sq27eg72"><div class="header astro-lx564e2l"><div class="title-wrapper sl-flex astro-lx564e2l"><a href="/docs/" class="site-title sl-flex astro-hen6hmfb" aria-label="REST:ACT restactd"><img class="mark light:sl-hidden print:hidden astro-hen6hmfb" alt="" src="/docs/_astro/restact-mark.BAErAmgm.svg" width="64" height="64"><img class="mark dark:sl-hidden print:block astro-hen6hmfb" alt="" src="/docs/_astro/restact-mark-light.CSFiS8iq.svg" width="64" height="64"><span class="wordmark astro-hen6hmfb" translate="no" aria-hidden="true">REST:<span class="lit astro-hen6hmfb">ACT</span></span><span class="product astro-hen6hmfb" translate="no" aria-hidden="true">restactd</span></a></div><div class="sl-flex print:hidden astro-lx564e2l"><site-search class="astro-lx564e2l astro-i7atkdel" data-translations="{&quot;placeholder&quot;:&quot;Search&quot;}"><button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="astro-i7atkdel"><svg aria-hidden="true" class="astro-i7atkdel astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg><span class="sl-hidden md:sl-block astro-i7atkdel" aria-hidden="true">Search</span><kbd class="sl-hidden md:sl-flex astro-i7atkdel" style="display: none;"><kbd class="astro-i7atkdel">Ctrl</kbd><kbd class="astro-i7atkdel">K</kbd></kbd></button><dialog style="padding:0" aria-label="Search" class="astro-i7atkdel"><div class="dialog-frame sl-flex astro-i7atkdel"><button data-close-modal class="sl-flex md:sl-hidden astro-i7atkdel">Cancel</button><div class="search-container astro-i7atkdel"><div id="starlight__search" class="astro-i7atkdel"></div></div></div></dialog></site-search><script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script><script type="module" src="/docs/_astro/Search.astro_astro_type_script_index_0_lang.DrbjDjUC.js"></script></div><div class="sl-hidden md:sl-flex print:hidden right-group astro-lx564e2l"><div class="sl-flex social-icons astro-lx564e2l"><nav class="header-links astro-o2gh7vpa" aria-label="Project links"><a class="text-link astro-o2gh7vpa" href="https://restact.org">restact.org</a><a class="text-link astro-o2gh7vpa" href="https://github.com/stackumi/restact">Specification</a><a class="icon-link astro-o2gh7vpa" href="https://github.com/stackumi/restactd" aria-label="restactd on GitHub"><svg aria-hidden="true" class="astro-o2gh7vpa astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg></a></nav></div><starlight-theme-select><label style="--sl-select-width: 6.25em" class="astro-jr4snmog"><span class="sr-only astro-jr4snmog">Select theme</span><svg aria-hidden="true" class="icon label-icon astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg><select autocomplete="off" class="astro-jr4snmog"><option value="dark" class="astro-jr4snmog">Dark</option><option value="light" class="astro-jr4snmog">Light</option><option value="auto" selected class="astro-jr4snmog">Auto</option></select><svg aria-hidden="true" class="icon caret astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>
+	StarlightThemeProvider.updatePickers();
+</script><script type="module">var e=`starlight-theme`,t=e=>e===`auto`||e===`dark`||e===`light`?e:`auto`,n=()=>t(typeof localStorage<`u`&&localStorage.getItem(e));function r(t){typeof localStorage<`u`&&localStorage.setItem(e,t===`light`||t===`dark`?t:``)}var i=()=>matchMedia(`(prefers-color-scheme: light)`).matches?`light`:`dark`;function a(e){StarlightThemeProvider.updatePickers(e),document.documentElement.dataset.theme=e===`auto`?i():e,r(e)}matchMedia(`(prefers-color-scheme: light)`).addEventListener(`change`,()=>{n()===`auto`&&a(`auto`)});var o=class extends HTMLElement{constructor(){super(),a(n()),this.querySelector(`select`)?.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&a(t(e.currentTarget.value))})}};customElements.define(`starlight-theme-select`,o);</script><script type="module">var e=class extends HTMLElement{constructor(){super();let e=this.querySelector(`select`);e&&(e.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=e.currentTarget.value)}),window.addEventListener(`pageshow`,t=>{if(!t.persisted)return;let n=e.querySelector(`option[selected]`)?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}};customElements.define(`starlight-lang-select`,e);</script></div></div></header><nav class="sidebar print:hidden astro-sq27eg72" aria-label="Main"><button popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden astro-prik2mej"><svg aria-hidden="true" class="open-menu astro-prik2mej astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg><svg aria-hidden="true" class="close-menu astro-prik2mej astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg><span class="sr-only astro-prik2mej">Menu</span></button><script type="module">var e=class extends HTMLElement{constructor(){super();let e=matchMedia(`(min-width: 50em)`),t=()=>{this.popover=e.matches?null:`auto`};t(),e.addEventListener(`change`,()=>t()),this.addEventListener(`toggle`,({newState:e})=>this.trapFocus(e===`open`))}trapFocus(e){document.querySelectorAll(`.main-frame, .sl-skip-link`).forEach(t=>{t.toggleAttribute(`inert`,e)})}};customElements.define(`sl-sidebar-pane`,e);</script><sl-sidebar-pane popover id="starlight__sidebar" class="sidebar-pane astro-sq27eg72"><div class="sidebar-content sl-flex astro-sq27eg72"><sl-sidebar-state-persist data-hash="17hga88" class="astro-s2oiz2u2"><script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script><ul class="top-level astro-nul3d73h"><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Get started</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="0"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/start/introduction/" class="astro-nul3d73h"><span class="astro-nul3d73h">Introduction</span></a></li><li class="astro-nul3d73h"><a href="/docs/start/install/" class="astro-nul3d73h"><span class="astro-nul3d73h">Install</span></a></li><li class="astro-nul3d73h"><a href="/docs/start/quickstart/" class="astro-nul3d73h"><span class="astro-nul3d73h">Quickstart</span></a></li><li class="astro-nul3d73h"><a href="/docs/start/tutorial/" class="astro-nul3d73h"><span class="astro-nul3d73h">Tutorial: build a small app</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Concepts</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="1"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/concepts/overview/" class="astro-nul3d73h"><span class="astro-nul3d73h">The model in one page</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/verbs-and-objects/" class="astro-nul3d73h"><span class="astro-nul3d73h">Verbs, objects and routes</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/capabilities-and-budgets/" class="astro-nul3d73h"><span class="astro-nul3d73h">Capabilities and budgets</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/identity-and-authority/" class="astro-nul3d73h"><span class="astro-nul3d73h">Identity and authority</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/discovery/" class="astro-nul3d73h"><span class="astro-nul3d73h">Discovery and optional features</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/language-tiers/" class="astro-nul3d73h"><span class="astro-nul3d73h">Language tiers</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Guides</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="2"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/guides/javascript/" class="astro-nul3d73h"><span class="astro-nul3d73h">Write verbs in JavaScript</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/python/" class="astro-nul3d73h"><span class="astro-nul3d73h">Write verbs in Python</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/rust/" class="astro-nul3d73h"><span class="astro-nul3d73h">Write verbs in Rust</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/authoring-verbs/" class="astro-nul3d73h"><span class="astro-nul3d73h">Authoring reference</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/object-data/" class="astro-nul3d73h"><span class="astro-nul3d73h">Store and query object data</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/composition/" class="astro-nul3d73h"><span class="astro-nul3d73h">Compose verbs</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/lifecycle-hooks/" class="astro-nul3d73h"><span class="astro-nul3d73h">Lifecycle hooks</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/schedules/" class="astro-nul3d73h"><span class="astro-nul3d73h">Schedules and subscriptions</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/egress/" class="astro-nul3d73h"><span class="astro-nul3d73h">Outbound calls and secrets</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/authentication/" class="astro-nul3d73h"><span class="astro-nul3d73h">Add authentication</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/ai-agents/" class="astro-nul3d73h"><span class="astro-nul3d73h">Use restactd from AI agents</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/embedding/" class="astro-nul3d73h"><span class="astro-nul3d73h">Embed restactd in a Rust app</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Operate</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="3"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/operate/docker/" class="astro-nul3d73h"><span class="astro-nul3d73h">Run with Docker</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/storage/" class="astro-nul3d73h"><span class="astro-nul3d73h">Storage and scaling</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/observability/" aria-current="page" class="astro-nul3d73h"><span class="astro-nul3d73h">Observability</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/performance/" class="astro-nul3d73h"><span class="astro-nul3d73h">Performance</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/production/" class="astro-nul3d73h"><span class="astro-nul3d73h">Production checklist</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/troubleshooting/" class="astro-nul3d73h"><span class="astro-nul3d73h">Troubleshooting</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Reference</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="4"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/reference/http-api/" class="astro-nul3d73h"><span class="astro-nul3d73h">HTTP API</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/cli/" class="astro-nul3d73h"><span class="astro-nul3d73h">The restact command line</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/configuration/" class="astro-nul3d73h"><span class="astro-nul3d73h">Configuration</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/features/" class="astro-nul3d73h"><span class="astro-nul3d73h">Feature flags in discovery</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/wit/" class="astro-nul3d73h"><span class="astro-nul3d73h">WIT interfaces</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/errors/" class="astro-nul3d73h"><span class="astro-nul3d73h">Errors and status codes</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/conformance/" class="astro-nul3d73h"><span class="astro-nul3d73h">Conformance suite</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/glossary/" class="astro-nul3d73h"><span class="astro-nul3d73h">Glossary</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Architecture</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="5"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/architecture/overview/" class="astro-nul3d73h"><span class="astro-nul3d73h">Overview</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-context/" class="astro-nul3d73h"><span class="astro-nul3d73h">System context</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-containers/" class="astro-nul3d73h"><span class="astro-nul3d73h">Containers</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-components/" class="astro-nul3d73h"><span class="astro-nul3d73h">Host components</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-deployment/" class="astro-nul3d73h"><span class="astro-nul3d73h">Deployment</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-model/" class="astro-nul3d73h"><span class="astro-nul3d73h">How the diagrams are made</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/security-model/" class="astro-nul3d73h"><span class="astro-nul3d73h">Security model</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/request-lifecycle/" class="astro-nul3d73h"><span class="astro-nul3d73h">Request lifecycle</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-all-views/" class="astro-nul3d73h"><span class="astro-nul3d73h">All diagrams</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Project</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="6"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/project/contributing/" class="astro-nul3d73h"><span class="astro-nul3d73h">Contributing</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/development/" class="astro-nul3d73h"><span class="astro-nul3d73h">Development setup</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/faq/" class="astro-nul3d73h"><span class="astro-nul3d73h">FAQ</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/stability/" class="astro-nul3d73h"><span class="astro-nul3d73h">Stability and versioning</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/limits/" class="astro-nul3d73h"><span class="astro-nul3d73h">Limits, and when not to use restactd</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/status/" class="astro-nul3d73h"><span class="astro-nul3d73h">Status and roadmap</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/changelog/" class="astro-nul3d73h"><span class="astro-nul3d73h">Changelog</span></a></li></ul></details></li></ul><script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script></sl-sidebar-state-persist><div class="md:sl-hidden"><div class="mobile-preferences sl-flex astro-6v5yx33v"><div class="social-icons astro-6v5yx33v"><nav class="header-links astro-o2gh7vpa" aria-label="Project links"><a class="text-link astro-o2gh7vpa" href="https://restact.org">restact.org</a><a class="text-link astro-o2gh7vpa" href="https://github.com/stackumi/restact">Specification</a><a class="icon-link astro-o2gh7vpa" href="https://github.com/stackumi/restactd" aria-label="restactd on GitHub"><svg aria-hidden="true" class="astro-o2gh7vpa astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg></a></nav></div><starlight-theme-select><label style="--sl-select-width: 6.25em" class="astro-jr4snmog"><span class="sr-only astro-jr4snmog">Select theme</span><svg aria-hidden="true" class="icon label-icon astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg><select autocomplete="off" class="astro-jr4snmog"><option value="dark" class="astro-jr4snmog">Dark</option><option value="light" class="astro-jr4snmog">Light</option><option value="auto" selected class="astro-jr4snmog">Auto</option></select><svg aria-hidden="true" class="icon caret astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>
+	StarlightThemeProvider.updatePickers();
+</script></div></div></div></sl-sidebar-pane></nav><div class="main-frame astro-sq27eg72"><script type="module">var e=document.getElementById(`starlight__sidebar`),t=e?.querySelector(`sl-sidebar-state-persist`),n=`sl-sidebar-state`,r=()=>{let r=[],i=t?.dataset.hash||``;try{let e=sessionStorage.getItem(n),t=JSON.parse(e||`{}`);Array.isArray(t.open)&&t.hash===i&&(r=t.open)}catch{}return{hash:i,open:r,scroll:e?.scrollTop||0}},i=e=>{try{sessionStorage.setItem(n,JSON.stringify(e))}catch{}},a=()=>i(r()),o=(e,t)=>{let n=r();n.open[t]=e,i(n)};t?.addEventListener(`click`,e=>{if(!(e.target instanceof Element))return;let t=e.target.closest(`summary`)?.closest(`details`);if(!t)return;let n=t.querySelector(`sl-sidebar-restore`),r=parseInt(n?.dataset.index||``);isNaN(r)||o(!t.open,r)}),addEventListener(`visibilitychange`,()=>{document.visibilityState===`hidden`&&a()});</script><div class="lg:sl-flex astro-nl4wwkdd"><aside class="right-sidebar-container print:hidden astro-nl4wwkdd"><div class="right-sidebar astro-nl4wwkdd"><div class="lg:sl-hidden astro-hrawfijo"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-yeu5gc5s"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-yeu5gc5s"><details id="starlight__mobile-toc" class="astro-yeu5gc5s"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-yeu5gc5s"><span class="toggle sl-flex astro-yeu5gc5s">On this page<svg aria-hidden="true" class="caret astro-yeu5gc5s astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current astro-yeu5gc5s"></span></summary><div class="dropdown astro-yeu5gc5s"><ul class="isMobile astro-3xkpx34j" style="--depth: 0;"><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#_top" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Overview</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#logs" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Logs</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#health-and-readiness" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Health and readiness</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#opentelemetry" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">OpenTelemetry</span></a><ul class="isMobile astro-3xkpx34j" style="--depth: 1;"><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#configuration" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Configuration</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#traces" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Traces</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#metrics" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Metrics</span></a></li></ul></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#metering-signals" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Metering signals</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#what-to-alert-on" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">What to alert on</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#related" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Related</span></a></li></ul></div></details></nav></mobile-starlight-toc><script type="module" src="/docs/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-hrawfijo"><div class="sl-container astro-hrawfijo"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-3xkpx34j" style="--depth: 0;"><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#_top" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Overview</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#logs" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Logs</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#health-and-readiness" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Health and readiness</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#opentelemetry" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">OpenTelemetry</span></a><ul class="astro-3xkpx34j" style="--depth: 1;"><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#configuration" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Configuration</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#traces" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Traces</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#metrics" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Metrics</span></a></li></ul></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#metering-signals" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Metering signals</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#what-to-alert-on" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">What to alert on</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#related" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Related</span></a></li></ul></nav></starlight-toc><script type="module" src="/docs/_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js"></script></div></div></div></aside><div class="main-pane astro-nl4wwkdd"><main data-pagefind-body class="astro-bbavt7ux" lang="en" dir="ltr"><div class="content-panel astro-t7jq6hup"><div class="sl-container astro-t7jq6hup"><h1 id="_top" class="astro-oponp3ly">Observability</h1></div></div><div class="content-panel astro-t7jq6hup"><div class="sl-container astro-t7jq6hup"><div class="sl-markdown-content"><p>restactd writes logs, serves two health endpoints, and can export traces, metrics and logs over OpenTelemetry. This page covers each and what to alert on.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="logs">Logs</h2><a class="sl-anchor-link" href="#logs"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Logs”</span></a></div>
+<p>Log events go to stderr, one event per line. The boot summary (the <code dir="auto">store:</code>, <code dir="auto">auth:</code> and similar lines printed at startup) goes to stdout as plain text. Lines starting <code dir="auto">telemetry:</code>, <code dir="auto">quota:</code>, <code dir="auto">compile cache:</code> and <code dir="auto">warning:</code> go to stderr; the rest of the summary goes to stdout.</p>
+<div class="expressive-code"><link rel="stylesheet" href="/docs/_astro/ec.925gg.css"><script type="module" src="/docs/_astro/ec.0vx5m.js"></script><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">telemetry: off (no OTEL_EXPORTER_OTLP_ENDPOINT)</span></div></div><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">restactd dev commit=2c46581a1b2c target=x86_64-unknown-linux-gnu profile=release features=none</span></div></div><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">store: filesystem (durable) at /var/lib/restact</span></div></div><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">auth: HS256 bearer tokens</span></div></div><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">…</span></div></div><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">REST:ACT host on http://127.0.0.1:8080</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="telemetry: off (no OTEL_EXPORTER_OTLP_ENDPOINT)restactd dev commit=2c46581a1b2c target=x86_64-unknown-linux-gnu profile=release features=nonestore: filesystem (durable) at /var/lib/restactauth: HS256 bearer tokens…REST:ACT host on http://127.0.0.1:8080"><div></div></button></div></figure></div>
+<p>The first stdout line is the build: version, the commit it was built from (<code dir="auto">unknown</code> when the build could not tell), target, profile and compiled features. <code dir="auto">restactd --version</code> prints the same line and exits without starting anything, so quote it in bug reports.</p>
+<p>Read the boot summary after every deployment: it states the store, the authentication mode, the quotas (<code dir="auto">quota: fuel=off calls=3 storage_bytes=off objects=off window=lifetime</code>) and which optional surfaces are on. A <code dir="auto">warning:</code> line there means the host started with a feature disabled, such as a missing runner component.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Effect</th></tr></thead><tbody><tr><td><code dir="auto">RESTACT_LOG</code></td><td>A <code dir="auto">tracing</code> filter directive such as <code dir="auto">info</code>, <code dir="auto">debug</code> or <code dir="auto">restact.egress=debug</code>. The default admits restactd’s own events at <code dir="auto">info</code> and everything else at <code dir="auto">warn</code>.</td></tr><tr><td><code dir="auto">RESTACT_LOG_FORMAT=json</code></td><td>One JSON object per line with the keys <code dir="auto">ts</code>, <code dir="auto">level</code>, <code dir="auto">target</code>, <code dir="auto">trace_id</code>, <code dir="auto">span_id</code>, <code dir="auto">message</code> and <code dir="auto">fields</code>.</td></tr><tr><td><code dir="auto">RESTACT_ACCESS_LOG=1</code></td><td>One <code dir="auto">access</code> line per data-plane request, collection listing, SSE subscribe and token mint: method, path, subject and status. Object values are never logged.</td></tr><tr><td><code dir="auto">RESTACT_ACCESS_LOG_INVOCATIONS=1</code></td><td>With the access log on, also one line per verb invocation, with the <code dir="auto">:verb</code> in the path.</td></tr></tbody></table>
+<p>With <code dir="auto">RESTACT_ACCESS_LOG_INVOCATIONS=1</code> also set, an invocation line looks like this in text mode, and the same fields appear under <code dir="auto">fields</code> in JSON mode. It carries the method, path, subject and status, and no error code:</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">access method=GET path=/v1/demo:run subject=alice status=405</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="access method=GET path=/v1/demo:run subject=alice status=405"><div></div></button></div></figure></div>
+<p>The access log is the complete per-route record. Metric route labels fold into an overflow series when a host has very many distinct routes, and the access line does not.</p>
+<p>Values that callers control (paths, subjects, error text from a verb) are escaped before they are logged, so one request cannot forge a second log line. Verb <code dir="auto">log</code> output is rate-limited per tenant and in total (<code dir="auto">RESTACT_GUEST_LOG_RATE_PER_SEC</code>, <code dir="auto">RESTACT_GUEST_LOG_BURST</code>, <code dir="auto">RESTACT_GUEST_LOG_CEILING_PER_SEC</code>).</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="health-and-readiness">Health and readiness</h2><a class="sl-anchor-link" href="#health-and-readiness"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Health and readiness”</span></a></div>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">curl</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-i</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">localhost:8080/healthz</span><span style="--0:#A3B0B8;--1:#45525E">    </span><span style="--0:#929EA9;--1:#57646F"># 200 ok</span></div></div><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">curl</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-i</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">localhost:8080/readyz</span><span style="--0:#A3B0B8;--1:#45525E">     </span><span style="--0:#929EA9;--1:#57646F"># 200 ready</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="curl -i localhost:8080/healthz    # 200 okcurl -i localhost:8080/readyz     # 200 ready"><div></div></button></div></figure></div>
+<ul>
+<li><code dir="auto">/healthz</code> answers <code dir="auto">200</code> with <code dir="auto">ok</code> as long as the process is serving HTTP. It checks nothing else. Use it as the liveness probe.</li>
+<li><code dir="auto">/readyz</code> answers <code dir="auto">200</code> with <code dir="auto">ready</code> when the backing store responds. On PostgreSQL it runs <code dir="auto">SELECT 1</code>; if the database is unreachable it answers <code dir="auto">503</code> and logs a warning. Memory and filesystem stores are always ready. Use it as the readiness probe so a node that lost its database is taken out of rotation.</li>
+</ul>
+<p>Both are exempt from the <code dir="auto">RESTACT_ALLOWED_HOSTS</code> check, so a probe that addresses the container by IP works. The Docker image’s built-in <code dir="auto">HEALTHCHECK</code> uses <code dir="auto">/healthz</code>.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="opentelemetry">OpenTelemetry</h2><a class="sl-anchor-link" href="#opentelemetry"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “OpenTelemetry”</span></a></div>
+<p>Export is off unless two things are true: the binary was built with the <code dir="auto">otel</code> Cargo feature, and an endpoint is set. With no endpoint nothing is built and no socket opens. The <code dir="auto">Dockerfile</code> has no build argument for the <code dir="auto">otel</code> feature, so an image with export needs a custom build. From source:</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">cargo</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">build</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-p</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restactd</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">--release</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">--features</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">otel</span></div></div><div class="ec-line"><div class="code"><span style="--0:#A3B0B8;--1:#45525E">OTEL_EXPORTER_OTLP_ENDPOINT=</span><span style="--0:#E7EDF0;--1:#14212A">http://otel-collector:4318</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">cargo</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">run</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-p</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restactd</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">--release</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">--features</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">otel</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="cargo build -p restactd --release --features otelOTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 cargo run -p restactd --release --features otel"><div></div></button></div></figure></div>
+<p>With an endpoint set, a binary built without the feature says so on its first line: <code dir="auto">telemetry: off (otel feature not compiled)</code>. With export on it prints, for example:</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#a3b0b8;--1:#45525e">telemetry: otlp http://otel-collector:4318 traces,metrics,logs sampler=1.0 enduser=raw export=ok</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="telemetry: otlp http://otel-collector:4318 traces,metrics,logs sampler=1.0 enduser=raw export=ok"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="configuration">Configuration</h3><a class="sl-anchor-link" href="#configuration"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Configuration”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Meaning</th></tr></thead><tbody><tr><td><code dir="auto">OTEL_EXPORTER_OTLP_ENDPOINT</code></td><td>Base URL of an OTLP collector that accepts <code dir="auto">http/json</code>. The host appends <code dir="auto">/v1/traces</code>, <code dir="auto">/v1/metrics</code> and <code dir="auto">/v1/logs</code>.</td></tr><tr><td><code dir="auto">OTEL_EXPORTER_OTLP_TRACES_ENDPOINT</code>, <code dir="auto">…_METRICS_ENDPOINT</code>, <code dir="auto">…_LOGS_ENDPOINT</code></td><td>A full URL for one signal, used as given.</td></tr><tr><td><code dir="auto">OTEL_SDK_DISABLED=true</code></td><td>Build no exporter, whatever else is set.</td></tr><tr><td><code dir="auto">OTEL_SERVICE_NAME</code>, <code dir="auto">OTEL_RESOURCE_ATTRIBUTES</code></td><td>The exported resource.</td></tr><tr><td><code dir="auto">OTEL_TRACES_SAMPLER</code></td><td><code dir="auto">always_on</code> (default), <code dir="auto">always_off</code> or <code dir="auto">traceidratio</code>. Any other value is a fatal startup error when an exporter would be built.</td></tr><tr><td><code dir="auto">OTEL_TRACES_SAMPLER_ARG</code></td><td>The ratio for <code dir="auto">traceidratio</code>, a number from 0 to 1.</td></tr></tbody></table>
+<p>Rules the host enforces at startup, each as a <code dir="auto">fatal:</code> line that names the variable:</p>
+<ul>
+<li><code dir="auto">OTEL_EXPORTER_OTLP_HEADERS</code> (and its per-signal forms) must not be set. Credentials for your telemetry backend belong on the collector, not on the host.</li>
+<li>An endpoint must be a plain <code dir="auto">http://</code> or <code dir="auto">https://</code> URL with no user name, password, query string or fragment.</li>
+</ul>
+<p><code dir="auto">http://</code> endpoints are plaintext. Point them at a collector on your own network. <code dir="auto">https://</code> is verified against the system CA certificates, so a slim container image needs <code dir="auto">ca-certificates</code>. The standard <code dir="auto">HTTP_PROXY</code>, <code dir="auto">HTTPS_PROXY</code> and <code dir="auto">NO_PROXY</code> variables apply. On shutdown the host flushes pending data and waits at most 2 seconds for the collector.</p>
+<p><code dir="auto">RESTACT_LOG</code> controls stderr only. What is exported is fixed: the host’s own spans and log records at <code dir="auto">info</code> and above, and never output from verbs.</p>
+<div class="sl-heading-wrapper level-h3"><h3 id="traces">Traces</h3><a class="sl-anchor-link" href="#traces"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Traces”</span></a></div>
+<p>The sampling decision is always made by the host. An incoming <code dir="auto">traceparent</code> header from an authenticated caller becomes the parent of the request’s trace; from an anonymous caller it is recorded as a link only, so an unauthenticated client cannot choose your trace ids.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span</th><th>Covers</th></tr></thead><tbody><tr><td><code dir="auto">http.server</code></td><td>One HTTP request.</td></tr><tr><td><code dir="auto">restact.auth</code></td><td>Resolving the caller’s identity.</td></tr><tr><td><code dir="auto">restact.policy</code></td><td>An authorization decision.</td></tr><tr><td><code dir="auto">restact.invoke</code></td><td>A verb invocation, including composed calls.</td></tr><tr><td><code dir="auto">restact.worker</code></td><td>A process-isolation worker.</td></tr><tr><td><code dir="auto">restact.store.op</code></td><td>A store operation, labeled with the backend.</td></tr><tr><td><code dir="auto">restact.verb.deploy</code>, <code dir="auto">restact.verb.property</code>, <code dir="auto">restact.verb.rollback</code></td><td>Management writes.</td></tr><tr><td><code dir="auto">restact.object.delete</code></td><td>An object delete and its cascade.</td></tr><tr><td><code dir="auto">restact.egress.call</code></td><td>A mediated outbound call.</td></tr><tr><td><code dir="auto">restact.schedule.fire</code>, <code dir="auto">restact.subscription.deliver</code></td><td>Timer and subscription work.</td></tr><tr><td><code dir="auto">restact.async.continuation</code></td><td>The background part of a <code dir="auto">202</code> request; linked to the request that started it.</td></tr><tr><td><code dir="auto">restact.mcp.call_tool</code></td><td>A tool call through the <code dir="auto">/mcp</code> facet.</td></tr></tbody></table>
+<p>Spans carry the caller’s subject as <code dir="auto">enduser.id</code>.</p>
+<div class="sl-heading-wrapper level-h3"><h3 id="metrics">Metrics</h3><a class="sl-anchor-link" href="#metrics"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Metrics”</span></a></div>
+<p>Metrics are exported on the same endpoint settings. None of them carries a subject or a concrete object path.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Instrument</th><th>Use it to watch</th></tr></thead><tbody><tr><td><code dir="auto">http.server.request.duration</code>, <code dir="auto">http.server.active_requests</code></td><td>Latency and load at the HTTP layer.</td></tr><tr><td><code dir="auto">restact.invoke.duration</code>, <code dir="auto">restact.invoke.fuel</code>, <code dir="auto">restact.invoke.inflight</code></td><td>Verb latency, compute used, and concurrency.</td></tr><tr><td><code dir="auto">restact.worker.spawn.duration</code></td><td>The cost of process isolation.</td></tr><tr><td><code dir="auto">restact.store.op.duration</code></td><td>Store latency.</td></tr><tr><td><code dir="auto">restact.events.subscribers</code>, <code dir="auto">.published</code>, <code dir="auto">.dropped</code></td><td>Event delivery, including dropped events.</td></tr><tr><td><code dir="auto">restact.schedule.fired</code></td><td>Schedule ticks.</td></tr><tr><td><code dir="auto">restact.verb.lifecycle</code></td><td>Management operations on verbs: upload, code, policy, properties, rollback and delete.</td></tr><tr><td><code dir="auto">restact.egress.calls</code>, <code dir="auto">.duration</code>, <code dir="auto">.bytes</code></td><td>Mediated outbound calls.</td></tr><tr><td><code dir="auto">restact.llm.calls</code>, <code dir="auto">.tokens</code></td><td>Calls to configured model connectors.</td></tr><tr><td><code dir="auto">restact.auth.decisions</code>, <code dir="auto">restact.policy.decisions</code></td><td>Authentication and authorization outcomes, including denials.</td></tr><tr><td><code dir="auto">restact.guest.log.dropped</code></td><td>Verb log lines dropped by the rate limiter.</td></tr></tbody></table>
+<p>The three instruments that carry a verb route label stop adding new label sets after 500; further sets fold into one point with <code dir="auto">otel.metric.overflow=true</code>. Use the access log for per-route accounting on a host with many routes.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="metering-signals">Metering signals</h2><a class="sl-anchor-link" href="#metering-signals"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Metering signals”</span></a></div>
+<p>Each invocation is metered for fuel (compute), wall-clock time, memory and call count. These are enforced limits that also show up as status codes:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal</th><th>Status</th><th><code dir="auto">restact_code</code></th></tr></thead><tbody><tr><td>Per-verb fuel exhausted</td><td><code dir="auto">429</code></td><td><code dir="auto">cpu-budget</code></td></tr><tr><td>Per-tenant call, fuel or storage quota exhausted</td><td><code dir="auto">429</code></td><td><code dir="auto">quota</code></td></tr><tr><td>Wall-clock deadline</td><td><code dir="auto">408</code></td><td><code dir="auto">timeout</code></td></tr><tr><td>Memory limit</td><td><code dir="auto">507</code></td><td><code dir="auto">memory-limit</code></td></tr><tr><td>Composition depth, fan-out or cycle</td><td><code dir="auto">508</code></td><td><code dir="auto">composition-cycle</code></td></tr></tbody></table>
+<p>Count <code dir="auto">429</code> and <code dir="auto">507</code> responses in your proxy or from the access log to see which tenants hit limits; the <code dir="auto">restact_code</code> is in the response body, not in the access line. See <a href="/docs/operate/troubleshooting/#budget-exhaustion">Troubleshooting</a> for what each means and how to raise it.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="what-to-alert-on">What to alert on</h2><a class="sl-anchor-link" href="#what-to-alert-on"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “What to alert on”</span></a></div>
+<ul>
+<li><code dir="auto">/readyz</code> failing for more than a few probe intervals.</li>
+<li>A rising rate of <code dir="auto">5xx</code>, and of <code dir="auto">429</code> with <code dir="auto">restact_code: quota</code>.</li>
+<li><code dir="auto">restact.events.dropped</code> above zero, and <code dir="auto">restact.guest.log.dropped</code> climbing.</li>
+<li><code dir="auto">restact.store.op.duration</code> and <code dir="auto">restact.worker.spawn.duration</code> p99.</li>
+<li>On PostgreSQL, the log line <code dir="auto">restact.pg.quota read_failed fail_open=true</code>: quota enforcement is degraded while the database errors.</li>
+</ul>
+<div class="sl-heading-wrapper level-h2"><h2 id="related">Related</h2><a class="sl-anchor-link" href="#related"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Related”</span></a></div>
+<ul>
+<li><a href="/docs/operate/production/">Production checklist</a></li>
+<li><a href="/docs/reference/configuration/#observability">Configuration reference</a></li>
+</ul></div><footer class="sl-flex astro-m6h2krdb"><div class="meta sl-flex astro-m6h2krdb"></div><div class="pagination-links print:hidden astro-jou7pfkz" dir="ltr"><a href="/docs/operate/storage/" rel="prev" class="astro-jou7pfkz"><svg aria-hidden="true" class="astro-jou7pfkz astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span class="astro-jou7pfkz">Previous<br class="astro-jou7pfkz"><span class="link-title astro-jou7pfkz">Storage and scaling</span></span></a><a href="/docs/operate/performance/" rel="next" class="astro-jou7pfkz"><svg aria-hidden="true" class="astro-jou7pfkz astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span class="astro-jou7pfkz">Next<br class="astro-jou7pfkz"><span class="link-title astro-jou7pfkz">Performance</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>

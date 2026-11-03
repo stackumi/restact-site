@@ -3,3 +3,6 @@ dist/
 .astro/
 .wrangler/
 .DS_Store
+
+# sync-docs stages here before swapping it into public/docs/
+/public/docs.next/

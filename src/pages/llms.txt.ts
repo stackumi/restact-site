@@ -34,7 +34,7 @@ A verb is a WebAssembly component. It runs with the caller's permissions, can us
 
 - [restactd](${u('/restactd/')}): the reference server, in Rust on Wasmtime
 - [Get started](${u('/start/')}): run restactd and deploy a first verb
-- [restactd documentation](${RESTACTD_DOCS.home}): its own site, with its own llms.txt
+- [restactd documentation](${u(RESTACTD_DOCS.home)}): served under /docs, with its own llms.txt
 
 ## Optional
 

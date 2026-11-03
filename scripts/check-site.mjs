@@ -19,8 +19,11 @@
 //     names the sitemap once INDEXABLE is true
 //   - /.well-known/security.txt has a Contact, an Expires date still ahead, and its own Canonical URL
 //   - no email address in src/content/spec/** (the vendored specification sources)
-import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+//   - the vendored docs under /docs/ match their SOURCE.json, hold no address or forbidden name, have
+//     their own 404 page and agree with INDEXABLE on noindex; the page rules above skip them
+import { readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { EMAIL, FORBIDDEN, scanText, treeHash, walk } from './vendored.mjs';
 
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const CONFIG = new URL('../src/site.config.ts', import.meta.url).pathname;
@@ -37,13 +40,6 @@ const BANNED_WORDS = [
   /\bimagine\b/i, /\bnot just\b/i, /\bit['’]s not\b[^.]{0,80}\bit['’]s\b/i,
 ];
 
-const FORBIDDEN = [
-  [/docker pull/i, '`docker pull`'], [/REST:VIEW/, 'REST:VIEW'], [/REST\/ACT/, 'REST/ACT'], [/RestAct/, 'RestAct'],
-  [/pathfinder/i, 'pathfinder'], [/\bdiscovery\.[a-z0-9-]+\.[a-z]{2,}/i, 'a discovery.* hostname'], [/ghcr\.io/i, 'ghcr.io'],
-  [/fonts\.(?:googleapis|gstatic)\.com/i, 'a Google Fonts request'],
-];
-
-const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b/;
 
 const errors = [];
 const err = (page, msg) => errors.push(`${page}: ${msg}`);
@@ -60,14 +56,6 @@ if (!SITE_URL) {
   process.exit(2);
 }
 
-function* walk(dir) {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) yield* walk(p);
-    else yield p;
-  }
-}
-
 // Vendored specification sources must hold no email address.
 const SPEC_SRC = new URL('../src/content/spec/', import.meta.url).pathname;
 if (existsSync(SPEC_SRC)) {
@@ -78,7 +66,10 @@ if (existsSync(SPEC_SRC)) {
   }
 }
 
-const pages = [...walk(DIST)].filter((p) => p.endsWith('.html'));
+// The vendored restactd docs (public/docs/, by sync-docs.mjs) are restactd's pages, checked by its
+// own gate; they get the checks below the page loop instead of the site's page rules.
+const DOCS = join(DIST, 'docs');
+const pages = [...walk(DIST)].filter((p) => p.endsWith('.html') && !p.startsWith(DOCS + '/'));
 const route = (file) => {
   const r = '/' + relative(DIST, file).replace(/index\.html$/, '').replace(/\.html$/, '');
   return r;
@@ -194,6 +185,20 @@ for (const m of llms.matchAll(/\]\((https?:[^)\s]+)\)/g)) {
   if (!m[1].startsWith(SITE_URL)) continue;
   const p = new URL(m[1]).pathname;
   if (!fileFor(p)) err('/llms.txt', `link to ${p} (no such route)`);
+}
+
+// The vendored docs: the files sync-docs.mjs recorded (no hand edits), no address or forbidden
+// name in any text file, a 404 page of their own, and noindex agreeing with INDEXABLE.
+if (existsSync(DOCS)) {
+  const src = existsSync(join(DOCS, 'SOURCE.json')) ? JSON.parse(readFileSync(join(DOCS, 'SOURCE.json'), 'utf8')) : {};
+  if (src.tree_sha256 !== treeHash(DOCS, ['SOURCE.json'])) err('/docs/', 'files differ from SOURCE.json; re-run `pnpm sync:docs` rather than editing public/docs/');
+  for (const [f, what] of scanText(DOCS)) err(`/docs/${f}`, what);
+  if (!existsSync(join(DOCS, '404.html'))) err('/docs/', 'no 404.html of its own');
+  for (const f of walk(DOCS)) {
+    if (!f.endsWith('.html')) continue;
+    const noindex = /<meta name="robots" content="[^"]*noindex/.test(readFileSync(f, 'utf8'));
+    if (noindex !== !indexable) err(`/docs/${relative(DOCS, f)}`, `noindex ${noindex ? 'present' : 'missing'} while INDEXABLE is ${indexable}`);
+  }
 }
 
 // security.txt (RFC 9116): a contact, an Expires date that has not passed, and its own URL as Canonical

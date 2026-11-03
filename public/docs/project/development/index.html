@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-bbavt7ux"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Development | restactd</title><link rel="canonical" href="https://restact.org/docs/project/development/"/><link rel="sitemap" href="/docs/sitemap-index.xml"/><link rel="shortcut icon" href="/docs/favicon.svg" type="image/svg+xml"/><meta name="generator" content="Astro v7.4.3"/><meta name="generator" content="Starlight v0.42.7"/><meta property="og:title" content="Development"/><meta property="og:type" content="article"/><meta property="og:url" content="https://restact.org/docs/project/development/"/><meta property="og:locale" content="en"/><meta property="og:description" content="How to build, run, test and extend restactd. If you are new to the code, read Architecture first."/><meta property="og:site_name" content="restactd"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="How to build, run, test and extend restactd. If you are new to the code, read Architecture first."/><meta name="robots" content="noindex, nofollow"/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/docs/_astro/print.ehPL0gv-.css" media="print"><link rel="stylesheet" href="/docs/_astro/common.8ehDrKCn.css"><style>@layer starlight.components{.card:where(.astro-noz2mrra){--sl-card-border:var(--sl-color-purple);--sl-card-bg:var(--sl-color-purple-low);border:1px solid var(--sl-color-gray-5);background-color:var(--sl-color-black);flex-direction:column;gap:clamp(.5rem,.125rem + 1vw,1rem);padding:clamp(1rem,.125rem + 3vw,2.5rem)}.card:where(.astro-noz2mrra):nth-child(4n+1){--sl-card-border:var(--sl-color-orange);--sl-card-bg:var(--sl-color-orange-low)}.card:where(.astro-noz2mrra):nth-child(4n+3){--sl-card-border:var(--sl-color-green);--sl-card-bg:var(--sl-color-green-low)}.card:where(.astro-noz2mrra):nth-child(4n+4){--sl-card-border:var(--sl-color-red);--sl-card-bg:var(--sl-color-red-low)}.card:where(.astro-noz2mrra):nth-child(4n+5){--sl-card-border:var(--sl-color-blue);--sl-card-bg:var(--sl-color-blue-low)}.title:where(.astro-noz2mrra){font-weight:600;font-size:var(--sl-text-h4);color:var(--sl-color-white);line-height:var(--sl-line-height-headings);align-items:center;gap:1rem}.card:where(.astro-noz2mrra) .icon:where(.astro-noz2mrra){border:1px solid var(--sl-card-border);background-color:var(--sl-card-bg);border-radius:.25rem;flex-shrink:0;padding:.2em}.card:where(.astro-noz2mrra) .body:where(.astro-noz2mrra){font-size:clamp(var(--sl-text-sm), calc(.5rem + 1vw), var(--sl-text-body));margin:0}.card-grid:where(.astro-7bippwma){grid-template-columns:100%;gap:1rem;display:grid}.card-grid:where(.astro-7bippwma)>*{margin-top:0!important}@media (width>=50rem){.card-grid:where(.astro-7bippwma){grid-template-columns:1fr 1fr;gap:1.5rem}.stagger:where(.astro-7bippwma){--stagger-height:5rem;padding-bottom:var(--stagger-height)}.stagger:where(.astro-7bippwma)>:nth-child(2n){transform:translateY(var(--stagger-height))}}}
+@layer starlight.components{svg:where(.astro-ivqccbcx){color:var(--sl-icon-color);font-size:var(--sl-icon-size,1em);width:1em;height:1em;overflow:visible}}
+</style><script type="module" src="/docs/_astro/page.cNngjUgL.js"></script></head><body class="astro-bbavt7ux"><a class="sl-skip-link astro-zqm5rwbq" href="#_top">Skip to content</a><div class="page sl-flex astro-sq27eg72"><header class="header astro-sq27eg72"><div class="header astro-lx564e2l"><div class="title-wrapper sl-flex astro-lx564e2l"><a href="/docs/" class="site-title sl-flex astro-hen6hmfb" aria-label="REST:ACT restactd"><img class="mark light:sl-hidden print:hidden astro-hen6hmfb" alt="" src="/docs/_astro/restact-mark.BAErAmgm.svg" width="64" height="64"><img class="mark dark:sl-hidden print:block astro-hen6hmfb" alt="" src="/docs/_astro/restact-mark-light.CSFiS8iq.svg" width="64" height="64"><span class="wordmark astro-hen6hmfb" translate="no" aria-hidden="true">REST:<span class="lit astro-hen6hmfb">ACT</span></span><span class="product astro-hen6hmfb" translate="no" aria-hidden="true">restactd</span></a></div><div class="sl-flex print:hidden astro-lx564e2l"><site-search class="astro-lx564e2l astro-i7atkdel" data-translations="{&quot;placeholder&quot;:&quot;Search&quot;}"><button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="astro-i7atkdel"><svg aria-hidden="true" class="astro-i7atkdel astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg><span class="sl-hidden md:sl-block astro-i7atkdel" aria-hidden="true">Search</span><kbd class="sl-hidden md:sl-flex astro-i7atkdel" style="display: none;"><kbd class="astro-i7atkdel">Ctrl</kbd><kbd class="astro-i7atkdel">K</kbd></kbd></button><dialog style="padding:0" aria-label="Search" class="astro-i7atkdel"><div class="dialog-frame sl-flex astro-i7atkdel"><button data-close-modal class="sl-flex md:sl-hidden astro-i7atkdel">Cancel</button><div class="search-container astro-i7atkdel"><div id="starlight__search" class="astro-i7atkdel"></div></div></div></dialog></site-search><script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script><script type="module" src="/docs/_astro/Search.astro_astro_type_script_index_0_lang.DrbjDjUC.js"></script></div><div class="sl-hidden md:sl-flex print:hidden right-group astro-lx564e2l"><div class="sl-flex social-icons astro-lx564e2l"><nav class="header-links astro-o2gh7vpa" aria-label="Project links"><a class="text-link astro-o2gh7vpa" href="https://restact.org">restact.org</a><a class="text-link astro-o2gh7vpa" href="https://github.com/stackumi/restact">Specification</a><a class="icon-link astro-o2gh7vpa" href="https://github.com/stackumi/restactd" aria-label="restactd on GitHub"><svg aria-hidden="true" class="astro-o2gh7vpa astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg></a></nav></div><starlight-theme-select><label style="--sl-select-width: 6.25em" class="astro-jr4snmog"><span class="sr-only astro-jr4snmog">Select theme</span><svg aria-hidden="true" class="icon label-icon astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg><select autocomplete="off" class="astro-jr4snmog"><option value="dark" class="astro-jr4snmog">Dark</option><option value="light" class="astro-jr4snmog">Light</option><option value="auto" selected class="astro-jr4snmog">Auto</option></select><svg aria-hidden="true" class="icon caret astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>
+	StarlightThemeProvider.updatePickers();
+</script><script type="module">var e=`starlight-theme`,t=e=>e===`auto`||e===`dark`||e===`light`?e:`auto`,n=()=>t(typeof localStorage<`u`&&localStorage.getItem(e));function r(t){typeof localStorage<`u`&&localStorage.setItem(e,t===`light`||t===`dark`?t:``)}var i=()=>matchMedia(`(prefers-color-scheme: light)`).matches?`light`:`dark`;function a(e){StarlightThemeProvider.updatePickers(e),document.documentElement.dataset.theme=e===`auto`?i():e,r(e)}matchMedia(`(prefers-color-scheme: light)`).addEventListener(`change`,()=>{n()===`auto`&&a(`auto`)});var o=class extends HTMLElement{constructor(){super(),a(n()),this.querySelector(`select`)?.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&a(t(e.currentTarget.value))})}};customElements.define(`starlight-theme-select`,o);</script><script type="module">var e=class extends HTMLElement{constructor(){super();let e=this.querySelector(`select`);e&&(e.addEventListener(`change`,e=>{e.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=e.currentTarget.value)}),window.addEventListener(`pageshow`,t=>{if(!t.persisted)return;let n=e.querySelector(`option[selected]`)?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}};customElements.define(`starlight-lang-select`,e);</script></div></div></header><nav class="sidebar print:hidden astro-sq27eg72" aria-label="Main"><button popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden astro-prik2mej"><svg aria-hidden="true" class="open-menu astro-prik2mej astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg><svg aria-hidden="true" class="close-menu astro-prik2mej astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg><span class="sr-only astro-prik2mej">Menu</span></button><script type="module">var e=class extends HTMLElement{constructor(){super();let e=matchMedia(`(min-width: 50em)`),t=()=>{this.popover=e.matches?null:`auto`};t(),e.addEventListener(`change`,()=>t()),this.addEventListener(`toggle`,({newState:e})=>this.trapFocus(e===`open`))}trapFocus(e){document.querySelectorAll(`.main-frame, .sl-skip-link`).forEach(t=>{t.toggleAttribute(`inert`,e)})}};customElements.define(`sl-sidebar-pane`,e);</script><sl-sidebar-pane popover id="starlight__sidebar" class="sidebar-pane astro-sq27eg72"><div class="sidebar-content sl-flex astro-sq27eg72"><sl-sidebar-state-persist data-hash="17hga88" class="astro-s2oiz2u2"><script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script><ul class="top-level astro-nul3d73h"><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Get started</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="0"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/start/introduction/" class="astro-nul3d73h"><span class="astro-nul3d73h">Introduction</span></a></li><li class="astro-nul3d73h"><a href="/docs/start/install/" class="astro-nul3d73h"><span class="astro-nul3d73h">Install</span></a></li><li class="astro-nul3d73h"><a href="/docs/start/quickstart/" class="astro-nul3d73h"><span class="astro-nul3d73h">Quickstart</span></a></li><li class="astro-nul3d73h"><a href="/docs/start/tutorial/" class="astro-nul3d73h"><span class="astro-nul3d73h">Tutorial: build a small app</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Concepts</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="1"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/concepts/overview/" class="astro-nul3d73h"><span class="astro-nul3d73h">The model in one page</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/verbs-and-objects/" class="astro-nul3d73h"><span class="astro-nul3d73h">Verbs, objects and routes</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/capabilities-and-budgets/" class="astro-nul3d73h"><span class="astro-nul3d73h">Capabilities and budgets</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/identity-and-authority/" class="astro-nul3d73h"><span class="astro-nul3d73h">Identity and authority</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/discovery/" class="astro-nul3d73h"><span class="astro-nul3d73h">Discovery and optional features</span></a></li><li class="astro-nul3d73h"><a href="/docs/concepts/language-tiers/" class="astro-nul3d73h"><span class="astro-nul3d73h">Language tiers</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Guides</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="2"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/guides/javascript/" class="astro-nul3d73h"><span class="astro-nul3d73h">Write verbs in JavaScript</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/python/" class="astro-nul3d73h"><span class="astro-nul3d73h">Write verbs in Python</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/rust/" class="astro-nul3d73h"><span class="astro-nul3d73h">Write verbs in Rust</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/authoring-verbs/" class="astro-nul3d73h"><span class="astro-nul3d73h">Authoring reference</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/object-data/" class="astro-nul3d73h"><span class="astro-nul3d73h">Store and query object data</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/composition/" class="astro-nul3d73h"><span class="astro-nul3d73h">Compose verbs</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/lifecycle-hooks/" class="astro-nul3d73h"><span class="astro-nul3d73h">Lifecycle hooks</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/schedules/" class="astro-nul3d73h"><span class="astro-nul3d73h">Schedules and subscriptions</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/egress/" class="astro-nul3d73h"><span class="astro-nul3d73h">Outbound calls and secrets</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/authentication/" class="astro-nul3d73h"><span class="astro-nul3d73h">Add authentication</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/ai-agents/" class="astro-nul3d73h"><span class="astro-nul3d73h">Use restactd from AI agents</span></a></li><li class="astro-nul3d73h"><a href="/docs/guides/embedding/" class="astro-nul3d73h"><span class="astro-nul3d73h">Embed restactd in a Rust app</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Operate</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="3"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/operate/docker/" class="astro-nul3d73h"><span class="astro-nul3d73h">Run with Docker</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/storage/" class="astro-nul3d73h"><span class="astro-nul3d73h">Storage and scaling</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/observability/" class="astro-nul3d73h"><span class="astro-nul3d73h">Observability</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/performance/" class="astro-nul3d73h"><span class="astro-nul3d73h">Performance</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/production/" class="astro-nul3d73h"><span class="astro-nul3d73h">Production checklist</span></a></li><li class="astro-nul3d73h"><a href="/docs/operate/troubleshooting/" class="astro-nul3d73h"><span class="astro-nul3d73h">Troubleshooting</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Reference</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="4"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/reference/http-api/" class="astro-nul3d73h"><span class="astro-nul3d73h">HTTP API</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/cli/" class="astro-nul3d73h"><span class="astro-nul3d73h">The restact command line</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/configuration/" class="astro-nul3d73h"><span class="astro-nul3d73h">Configuration</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/features/" class="astro-nul3d73h"><span class="astro-nul3d73h">Feature flags in discovery</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/wit/" class="astro-nul3d73h"><span class="astro-nul3d73h">WIT interfaces</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/errors/" class="astro-nul3d73h"><span class="astro-nul3d73h">Errors and status codes</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/conformance/" class="astro-nul3d73h"><span class="astro-nul3d73h">Conformance suite</span></a></li><li class="astro-nul3d73h"><a href="/docs/reference/glossary/" class="astro-nul3d73h"><span class="astro-nul3d73h">Glossary</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Architecture</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="5"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/architecture/overview/" class="astro-nul3d73h"><span class="astro-nul3d73h">Overview</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-context/" class="astro-nul3d73h"><span class="astro-nul3d73h">System context</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-containers/" class="astro-nul3d73h"><span class="astro-nul3d73h">Containers</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-components/" class="astro-nul3d73h"><span class="astro-nul3d73h">Host components</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-deployment/" class="astro-nul3d73h"><span class="astro-nul3d73h">Deployment</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-model/" class="astro-nul3d73h"><span class="astro-nul3d73h">How the diagrams are made</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/security-model/" class="astro-nul3d73h"><span class="astro-nul3d73h">Security model</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/request-lifecycle/" class="astro-nul3d73h"><span class="astro-nul3d73h">Request lifecycle</span></a></li><li class="astro-nul3d73h"><a href="/docs/architecture/c4-all-views/" class="astro-nul3d73h"><span class="astro-nul3d73h">All diagrams</span></a></li></ul></details></li><li class="astro-nul3d73h"><details open class="astro-nul3d73h"><summary class="astro-nul3d73h"><span class="group-label astro-nul3d73h"><span class="large astro-nul3d73h">Project</span></span><svg aria-hidden="true" class="caret astro-nul3d73h astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></summary><sl-sidebar-restore data-index="6"></sl-sidebar-restore><ul class="astro-nul3d73h"><li class="astro-nul3d73h"><a href="/docs/project/contributing/" class="astro-nul3d73h"><span class="astro-nul3d73h">Contributing</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/development/" aria-current="page" class="astro-nul3d73h"><span class="astro-nul3d73h">Development setup</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/faq/" class="astro-nul3d73h"><span class="astro-nul3d73h">FAQ</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/stability/" class="astro-nul3d73h"><span class="astro-nul3d73h">Stability and versioning</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/limits/" class="astro-nul3d73h"><span class="astro-nul3d73h">Limits, and when not to use restactd</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/status/" class="astro-nul3d73h"><span class="astro-nul3d73h">Status and roadmap</span></a></li><li class="astro-nul3d73h"><a href="/docs/project/changelog/" class="astro-nul3d73h"><span class="astro-nul3d73h">Changelog</span></a></li></ul></details></li></ul><script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script></sl-sidebar-state-persist><div class="md:sl-hidden"><div class="mobile-preferences sl-flex astro-6v5yx33v"><div class="social-icons astro-6v5yx33v"><nav class="header-links astro-o2gh7vpa" aria-label="Project links"><a class="text-link astro-o2gh7vpa" href="https://restact.org">restact.org</a><a class="text-link astro-o2gh7vpa" href="https://github.com/stackumi/restact">Specification</a><a class="icon-link astro-o2gh7vpa" href="https://github.com/stackumi/restactd" aria-label="restactd on GitHub"><svg aria-hidden="true" class="astro-o2gh7vpa astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg></a></nav></div><starlight-theme-select><label style="--sl-select-width: 6.25em" class="astro-jr4snmog"><span class="sr-only astro-jr4snmog">Select theme</span><svg aria-hidden="true" class="icon label-icon astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg><select autocomplete="off" class="astro-jr4snmog"><option value="dark" class="astro-jr4snmog">Dark</option><option value="light" class="astro-jr4snmog">Light</option><option value="auto" selected class="astro-jr4snmog">Auto</option></select><svg aria-hidden="true" class="icon caret astro-jr4snmog astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg></label></starlight-theme-select><script>
+	StarlightThemeProvider.updatePickers();
+</script></div></div></div></sl-sidebar-pane></nav><div class="main-frame astro-sq27eg72"><script type="module">var e=document.getElementById(`starlight__sidebar`),t=e?.querySelector(`sl-sidebar-state-persist`),n=`sl-sidebar-state`,r=()=>{let r=[],i=t?.dataset.hash||``;try{let e=sessionStorage.getItem(n),t=JSON.parse(e||`{}`);Array.isArray(t.open)&&t.hash===i&&(r=t.open)}catch{}return{hash:i,open:r,scroll:e?.scrollTop||0}},i=e=>{try{sessionStorage.setItem(n,JSON.stringify(e))}catch{}},a=()=>i(r()),o=(e,t)=>{let n=r();n.open[t]=e,i(n)};t?.addEventListener(`click`,e=>{if(!(e.target instanceof Element))return;let t=e.target.closest(`summary`)?.closest(`details`);if(!t)return;let n=t.querySelector(`sl-sidebar-restore`),r=parseInt(n?.dataset.index||``);isNaN(r)||o(!t.open,r)}),addEventListener(`visibilitychange`,()=>{document.visibilityState===`hidden`&&a()});</script><div class="lg:sl-flex astro-nl4wwkdd"><aside class="right-sidebar-container print:hidden astro-nl4wwkdd"><div class="right-sidebar astro-nl4wwkdd"><div class="lg:sl-hidden astro-hrawfijo"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-yeu5gc5s"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-yeu5gc5s"><details id="starlight__mobile-toc" class="astro-yeu5gc5s"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-yeu5gc5s"><span class="toggle sl-flex astro-yeu5gc5s">On this page<svg aria-hidden="true" class="caret astro-yeu5gc5s astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current astro-yeu5gc5s"></span></summary><div class="dropdown astro-yeu5gc5s"><ul class="isMobile astro-3xkpx34j" style="--depth: 0;"><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#_top" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Overview</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#toolchain" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Toolchain</span></a><ul class="isMobile astro-3xkpx34j" style="--depth: 1;"><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#formatting" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Formatting</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#how-long-make-ci-takes" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">How long make ci takes</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#gotchas-read-these-first" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Gotchas (read these first)</span></a></li></ul></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#make-targets" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Make targets</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#build--run" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Build / run</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#test" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Test</span></a><ul class="isMobile astro-3xkpx34j" style="--depth: 1;"><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#against-an-arbitrary-server" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Against an arbitrary server</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#coverage" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Coverage</span></a></li></ul></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#docker" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Docker</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#pull-requests" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Pull requests</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#conventions--constraints" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Conventions &amp; constraints</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#extending-the-host" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Extending the host</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#repository-layout" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Repository layout</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#where-things-live" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Where things live</span></a></li></ul></div></details></nav></mobile-starlight-toc><script type="module" src="/docs/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-hrawfijo"><div class="sl-container astro-hrawfijo"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-3xkpx34j" style="--depth: 0;"><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#_top" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Overview</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#toolchain" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Toolchain</span></a><ul class="astro-3xkpx34j" style="--depth: 1;"><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#formatting" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Formatting</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#how-long-make-ci-takes" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">How long make ci takes</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#gotchas-read-these-first" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Gotchas (read these first)</span></a></li></ul></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#make-targets" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Make targets</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#build--run" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Build / run</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#test" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Test</span></a><ul class="astro-3xkpx34j" style="--depth: 1;"><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#against-an-arbitrary-server" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Against an arbitrary server</span></a></li><li style="--depth: 1;" class="astro-3xkpx34j"><a href="#coverage" style="--depth: 1;" class="astro-3xkpx34j"><span style="--depth: 1;" class="astro-3xkpx34j">Coverage</span></a></li></ul></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#docker" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Docker</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#pull-requests" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Pull requests</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#conventions--constraints" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Conventions &amp; constraints</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#extending-the-host" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Extending the host</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#repository-layout" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Repository layout</span></a></li><li style="--depth: 0;" class="astro-3xkpx34j"><a href="#where-things-live" style="--depth: 0;" class="astro-3xkpx34j"><span style="--depth: 0;" class="astro-3xkpx34j">Where things live</span></a></li></ul></nav></starlight-toc><script type="module" src="/docs/_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js"></script></div></div></div></aside><div class="main-pane astro-nl4wwkdd"><main data-pagefind-body class="astro-bbavt7ux" lang="en" dir="ltr"><div class="content-panel astro-t7jq6hup"><div class="sl-container astro-t7jq6hup"><h1 id="_top" class="astro-oponp3ly">Development</h1></div></div><div class="content-panel astro-t7jq6hup"><div class="sl-container astro-t7jq6hup"><div class="sl-markdown-content"><p>How to build, run, test and extend restactd. If you are new to the code, read
+<a href="/docs/architecture/overview/">Architecture</a> first.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="toolchain">Toolchain</h2><a class="sl-anchor-link" href="#toolchain"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Toolchain”</span></a></div>
+<p>Rust is pinned to an exact version (currently 1.99.1). <a href="https://github.com/stackumi/restactd/blob/main/mise.toml"><code dir="auto">mise.toml</code></a> is the source
+of truth; <a href="https://github.com/stackumi/restactd/blob/main/rust-toolchain.toml"><code dir="auto">rust-toolchain.toml</code></a> mirrors it (plus the <code dir="auto">wasm32-wasip2</code>
+target and <code dir="auto">rustfmt</code>/<code dir="auto">clippy</code>) for rustup-only callers and CI, and the workspace <code dir="auto">rust-version</code>
+in <code dir="auto">Cargo.toml</code> is its major.minor; the Dockerfile builder stage’s <code dir="auto">rust:</code> tag and digest is the fourth site.
+<code dir="auto">make check-toolchain-pin</code> fails if they disagree. To bump Rust, edit all four together and fix what the new clippy reports. CI installs the
+pin via <code dir="auto">.github/actions/rust-toolchain</code>, never “newest stable”. The one-time setup:</p>
+<div class="expressive-code"><link rel="stylesheet" href="/docs/_astro/ec.925gg.css"><script type="module" src="/docs/_astro/ec.0vx5m.js"></script><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">./scripts/bootstrap.sh</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="./scripts/bootstrap.sh"><div></div></button></div></figure></div>
+<p>This installs (idempotently, without sudo): the Rust toolchain and wasm target, the WebAssembly
+component tooling (<code dir="auto">wasm-tools</code>, <code dir="auto">wac</code>, <code dir="auto">wkg</code>, and <code dir="auto">cargo-component</code> at the version CI uses), and the
+git hooks. The tools <code dir="auto">make ci</code> and your first <code dir="auto">git commit</code> need are pinned in <code dir="auto">mise.toml</code>: gitleaks
+(the pre-commit secret scan), cargo-deny, shellcheck, node, actionlint and zizmor. When <a href="https://mise.jdx.dev">mise</a> is
+installed the script runs <code dir="auto">mise install</code> for them; without mise it lists what is missing and where to
+get it. A tool counts as present only when it is on <code dir="auto">PATH</code>, because <code dir="auto">make</code> runs it from there: if mise
+installed it but your shell cannot see it, the script says so and exits non-zero. Add
+<code dir="auto">eval "$(mise activate bash)"</code> to your shell rc (or put mise’s shims directory on <code dir="auto">PATH</code>) and open a new shell.
+The Python gates (<code dir="auto">openapi-validate</code>, <code dir="auto">plugins-check</code>) need PyYAML and jsonschema, which the
+script installs with <code dir="auto">pip</code> when they are absent.</p>
+<div class="sl-heading-wrapper level-h3"><h3 id="formatting">Formatting</h3><a class="sl-anchor-link" href="#formatting"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Formatting”</span></a></div>
+<p>The repository has no auto-formatting. The Rust code is not rustfmt-formatted, and <code dir="auto">rustfmt.toml</code>
+sets <code dir="auto">disable_all_formatting = true</code> so <code dir="auto">cargo fmt</code> and an editor’s format-on-save change nothing.
+A change matches the style of the code around it. <code dir="auto">.editorconfig</code> records the indentation in use
+(four spaces for Rust, Python and WIT, two for shell, JavaScript, YAML and JSON, tabs in the
+Makefile). Clippy with <code dir="auto">-D warnings</code> is the enforced style gate.</p>
+<div class="sl-heading-wrapper level-h3"><h3 id="how-long-make-ci-takes">How long <code dir="auto">make ci</code> takes</h3><a class="sl-anchor-link" href="#how-long-make-ci-takes"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “How long make ci takes”</span></a></div>
+<p>On the project’s CI runner (six dedicated CPUs) with a warm build directory, the parts of <code dir="auto">make ci</code>
+take roughly: 1.5 minutes for the static guards, 1 to 5 for clippy and the unit tests, 6 to 7 for
+restactd’s own suite (<code dir="auto">host-tests</code>, plus about 3 for the runner and example builds it needs), 1 for
+cargo-deny and the secrets scan, and under 1 for the plugin lint. That is about 10 to 18 minutes on
+an unchanged tree, and about 25 after a change to the host crate, which rebuilds the test binaries.
+These are CI’s job durations, not a local measurement. No recent CI run started from a cold build
+directory, so the cold figure is an estimate: about 30 minutes, and longer on a laptop with fewer
+cores. <code dir="auto">make suites</code>, the black-box
+suites, add about 35 minutes on top.</p>
+<div class="sl-heading-wrapper level-h3"><h3 id="gotchas-read-these-first">Gotchas (read these first)</h3><a class="sl-anchor-link" href="#gotchas-read-these-first"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Gotchas (read these first)”</span></a></div>
+<ul>
+<li>The host binds <code dir="auto">127.0.0.1:8080</code>, so run one instance at a time. Restart it by killing whatever
+is listening on that port (<code dir="auto">lsof -tiTCP:8080 -sTCP:LISTEN | xargs -r kill</code>), never
+<code dir="auto">pkill -f target/debug/restactd</code>, which matches by binary path and kills every restactd
+on the machine. Run it in the background when it must persist across steps. The black-box
+suites take <code dir="auto">RESTACT_TEST_PORT=&#x3C;free port></code> (default 8080; <code dir="auto">RESTACT_CONFORMANCE_PORT</code> is an alias
+for <code dir="auto">conformance-test.sh</code>) and clean up only a restactd listening on that port.</li>
+<li>The workspace members are <code dir="auto">host</code> (with <code dir="auto">host/cwasm</code>), <code dir="auto">conformance</code>, and <code dir="auto">mcp</code>.
+<code dir="auto">examples/</code> and <code dir="auto">sdk/</code> are excluded: they build for <code dir="auto">wasm32-wasip2</code> (with <code dir="auto">cargo-component</code>, or
+plain <code dir="auto">cargo build --target wasm32-wasip2</code> for the SDK), not the host toolchain.</li>
+<li>The JavaScript tier is interpreted, not compiled. Build the trusted QuickJS runner component once with
+<code dir="auto">scripts/build-js-runner.sh</code> (needs <code dir="auto">cargo-component</code> + the <code dir="auto">wasm32-wasip2</code> target; the <code dir="auto">rquickjs</code>
+build fetches a WASI SDK and compiles QuickJS from C). A checkout that skips it just starts without
+the JS tier (discovery omits it, and an upload with <code dir="auto">?lang=text/javascript</code> returns <code dir="auto">415</code>).</li>
+<li>With <code dir="auto">curl</code> and bound-verb routes, pass <code dir="auto">{id}</code> with <code dir="auto">-g</code> (globoff) or URL-encoded as
+<code dir="auto">%7Bid%7D</code>; otherwise curl’s glob expansion mangles the path.</li>
+</ul>
+<div class="sl-heading-wrapper level-h2"><h2 id="make-targets">Make targets</h2><a class="sl-anchor-link" href="#make-targets"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Make targets”</span></a></div>
+<p>A top-level <a href="https://github.com/stackumi/restactd/blob/main/Makefile"><code dir="auto">Makefile</code></a> wraps every command on this page: the cargo invocations, the
+<code dir="auto">scripts/</code> suites, the CI gates, and the Docker build/run. Run <code dir="auto">make</code> (or <code dir="auto">make help</code>) for the
+grouped, self-documenting list. The raw commands below still work; the targets are just shortcuts.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Target</th><th>Runs</th></tr></thead><tbody><tr><td><code dir="auto">make build</code> / <code dir="auto">make build-release</code></td><td><code dir="auto">cargo build -p restactd</code> (debug / release)</td></tr><tr><td><code dir="auto">make build-all</code></td><td>host + the example verbs + both scripting-tier runners</td></tr><tr><td><code dir="auto">make run</code></td><td><code dir="auto">cargo run -p restactd</code> (<code dir="auto">make kill</code> stops a running instance)</td></tr><tr><td><code dir="auto">make test</code> / <code dir="auto">make clippy</code></td><td>workspace unit tests / the clippy lint gate</td></tr><tr><td><code dir="auto">make ci</code></td><td>most of the CI gate set locally: the static guards, the unsafe-code guard, clippy (default features plus <code dir="auto">openbao</code>, <code dir="auto">otel</code> and <code dir="auto">postgres</code>), unit and host tests, cargo-deny, the secrets scan and the plugin checks. The black-box suites are <code dir="auto">make suites</code></td></tr><tr><td><code dir="auto">make smoke</code> / <code dir="auto">make conformance</code></td><td>the headline black-box suites</td></tr><tr><td><code dir="auto">make suites</code></td><td>the CI <code dir="auto">suites</code> job: builds the runners and the example verbs, then restactd’s own tests, the black-box suites and the MCP bridge suites; smoke and conformance run with the JS/Python tiers <strong>required</strong></td></tr><tr><td><code dir="auto">make docker-build</code> / <code dir="auto">make docker-run</code></td><td>build and run the container image (see <a href="#docker">Docker</a>)</td></tr></tbody></table>
+<p>Variables are overridable, e.g. <code dir="auto">make docker-run PORT=127.0.0.1:9090</code>.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="build--run">Build / run</h2><a class="sl-anchor-link" href="#build--run"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Build / run”</span></a></div>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">cargo</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">build</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-p</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restactd</span><span style="--0:#A3B0B8;--1:#45525E">          </span><span style="--0:#929EA9;--1:#57646F"># or: make build</span></div></div><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">cargo</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">run</span><span style="--0:#A3B0B8;--1:#45525E">   </span><span style="--0:#E7EDF0;--1:#14212A">-p</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restactd</span><span style="--0:#A3B0B8;--1:#45525E">          </span><span style="--0:#929EA9;--1:#57646F"># serves the API on :8080; `make run` adds the site</span></div></div><div class="ec-line"><div class="code"><span class="indent">                                      </span><span style="--0:#929EA9;--1:#57646F"># (RESTACT_BUILTIN_SITE=1)</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="cargo build -p restactd          # or: make buildcargo run   -p restactd          # serves the API on :8080; &#x60;make run&#x60; adds the site"><div></div></button></div></figure></div>
+<p>Build an example verb (from its own directory, since it’s outside the workspace):</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">cd</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">examples/word-count</span><span style="--0:#A3B0B8;--1:#45525E"> &#x26;&#x26; </span><span style="--0:#E7EDF0;--1:#14212A">cargo</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">component</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">build</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">--release</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="cd examples/word-count &#x26;&#x26; cargo component build --release"><div></div></button></div></figure></div>
+<p><code dir="auto">make build-all</code> builds the host, the example verbs, and the JS/Python runners in one step, after
+which <code dir="auto">make run</code> has the demo, docs, and both scripting tiers available.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="test">Test</h2><a class="sl-anchor-link" href="#test"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Test”</span></a></div>
+<p>Tests are the source of truth. Most black-box scripts start their own copy of the host, so stop any
+running instance first.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Command</th><th>Covers</th></tr></thead><tbody><tr><td><code dir="auto">./scripts/spike-smoke.sh</code></td><td>The security spine end-to-end (~290 assertions): invocation, limits, routing/taxonomy, the upload allow-list, composition, auth, idempotency, async ops, discovery/OPTIONS, data properties. Fast, local.</td></tr><tr><td><code dir="auto">./scripts/conformance-test.sh</code></td><td>The full <a href="https://github.com/stackumi/restactd/tree/main/conformance">conformance suite</a>, run against <strong>both</strong> the in-process and process-isolation backends.</td></tr><tr><td><code dir="auto">./scripts/auth-test.sh</code></td><td>HS256 bearer auth, <code dir="auto">public</code>/<code dir="auto">owner</code> policy matchers, runs-as-caller.</td></tr><tr><td><code dir="auto">./scripts/persistence-test.sh</code></td><td>An uploaded verb + its module survive a host restart (durable store).</td></tr><tr><td><code dir="auto">./scripts/quota-test.sh</code></td><td>Per-tenant invocation/compute quotas, fail-closed.</td></tr><tr><td><code dir="auto">./scripts/isolation-test.sh</code></td><td>The per-request process-isolation backend.</td></tr><tr><td><code dir="auto">./scripts/egress-test.sh</code></td><td>The mediated outbound call (feature <code dir="auto">mediated-egress</code>): the boot-time configuration checks, a credentialed round trip, and that the secret never reaches the caller, the logs or stored objects.</td></tr><tr><td><code dir="auto">./scripts/transport-test.sh</code></td><td>The Host allowlist, the cross-origin (CSRF) check and the non-loopback bind interlock.</td></tr><tr><td><code dir="auto">./scripts/body-deadline-test.sh</code></td><td>The total request-body deadline: a trickled body is cut with 408.</td></tr><tr><td><code dir="auto">./scripts/postgres-test.sh</code></td><td>The optional PostgreSQL active-active backend: two nodes + a worker over one Postgres prove the cross-node guarantees. Needs the <code dir="auto">postgres</code> feature + docker (or <code dir="auto">RESTACT_DATABASE_URL</code>).</td></tr><tr><td><code dir="auto">./scripts/bench-invoke.sh</code></td><td>Informational micro-benchmark of the hot path: latency, cold start and memory per tier, with <code dir="auto">oha</code> (see <a href="/docs/operate/performance/">Performance</a>). <strong>Not</strong> pass/fail.</td></tr><tr><td><code dir="auto">python3 openapi/scripts/validate.py</code></td><td>The <code dir="auto">x-restact</code> JSON Schema + every example + docs.</td></tr></tbody></table>
+<p>The conformance suite is the executable definition of “compliant”; the others target the reference
+host specifically. <strong>Both must stay green on both executor backends.</strong></p>
+<div class="sl-heading-wrapper level-h3"><h3 id="against-an-arbitrary-server">Against an arbitrary server</h3><a class="sl-anchor-link" href="#against-an-arbitrary-server"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Against an arbitrary server”</span></a></div>
+<p>The <code dir="auto">conformance-test.sh</code> wrapper builds and starts its own host on localhost and pins the runner
+to <code dir="auto">http://127.0.0.1:$RESTACT_TEST_PORT</code> (default 8080), so it ignores an externally-set <code dir="auto">RESTACT_BASE_URL</code>. To test an external
+server, run the runner binary directly (it honors <code dir="auto">RESTACT_BASE_URL</code>):</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">cargo</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">build</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-p</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restact-conformance</span></div></div><div class="ec-line"><div class="code"><span style="--0:#A3B0B8;--1:#45525E">RESTACT_BASE_URL=</span><span style="--0:#E7EDF0;--1:#14212A">https://your-host</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">./target/debug/restact-conformance</span></div></div><div class="ec-line"><div class="code"><span style="--0:#929EA9;--1:#57646F"># required: RESTACT_FIX_DEMO/_WC/_NET (fixture component paths the runner deploys; it exits 2</span></div></div><div class="ec-line"><div class="code"><span style="--0:#929EA9;--1:#57646F"># if one is unset or unreadable)</span></div></div><div class="ec-line"><div class="code"><span style="--0:#929EA9;--1:#57646F"># optional: RESTACT_CONFORMANCE_TOKEN=&#x3C;bearer> (the default client), RESTACT_TOKEN_ALICE/BOB</span></div></div><div class="ec-line"><div class="code"><span style="--0:#929EA9;--1:#57646F"># (the AUTHZ checks; empty → skipped), RESTACT_CONFORMANCE_NO_SETUP=1 (pre-deployed fixtures),</span></div></div><div class="ec-line"><div class="code"><span style="--0:#929EA9;--1:#57646F"># RESTACT_FIX_COUNTER (JavaScript fixture; the check is skipped without it).</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="cargo build -p restact-conformanceRESTACT_BASE_URL=https://your-host ./target/debug/restact-conformance"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="coverage">Coverage</h3><a class="sl-anchor-link" href="#coverage"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Coverage”</span></a></div>
+<p>Coverage is informational (no CI gate) and reported as two separate numbers, because a single
+percentage would conflate code that is verifiable in two different ways:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Command</th><th>What it measures</th></tr></thead><tbody><tr><td><code dir="auto">make coverage</code></td><td>Unit line coverage of the host crate with default features, from the in-process <code dir="auto">cargo test</code> suite (<code dir="auto">http_tests.rs</code> and the per-module <code dir="auto">#[cfg(test)]</code> tests).</td></tr><tr><td><code dir="auto">make coverage-functional</code></td><td>Functional line coverage: the host binary is instrumented (<code dir="auto">cargo llvm-cov show-env</code>) and driven through <code dir="auto">postgres-test.sh</code> + <code dir="auto">spike-smoke.sh</code>, capturing the running binary and its worker subprocesses.</td></tr></tbody></table>
+<p>The optional PostgreSQL backend (<code dir="auto">host/src/pg/*.rs</code>) and the cross-node
+wiring in <code dir="auto">lib.rs</code> (<code dir="auto">open_backends</code> / <code dir="auto">readyz</code> / the LISTEN-loop spawners / <code dir="auto">build_worker_executor</code>)
+are not unit-testable in-process, because they need a real database or a separate worker process. A
+real-database “unit” test would exercise Postgres, not the type under test. So the PostgreSQL backend is
+excluded from the unit number (<code dir="auto">make coverage</code> builds default features, so <code dir="auto">pg/*.rs</code> isn’t compiled)
+and earns its confidence as a functional percentage instead.</p>
+<p>A module with thin or zero unit coverage must carry a correspondingly higher functional number.
+<code dir="auto">pg/*.rs</code> should be near-fully covered by <code dir="auto">make coverage-functional</code> (<code dir="auto">postgres-test.sh</code> exercises it
+end to end), while a unit-heavy module like <code dir="auto">policy.rs</code> leans on the unit number. When you add code
+that can only be reached cross-node or through a real database, add the assertion to the relevant
+black-box suite rather than reaching for a unit test that can’t exist.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="docker">Docker</h2><a class="sl-anchor-link" href="#docker"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Docker”</span></a></div>
+<p>The repo ships a self-contained multi-stage <a href="https://github.com/stackumi/restactd/blob/main/Dockerfile"><code dir="auto">Dockerfile</code></a>. The builder compiles the
+host plus the example verbs and both scripting-tier runners; the runtime image is a slim,
+non-root Debian that binds <code dir="auto">0.0.0.0:8080</code> and persists to a <code dir="auto">/data</code> volume. The image sets
+<code dir="auto">RESTACT_ALLOWED_HOSTS=localhost</code>, so it answers only to <code dir="auto">localhost</code>, <code dir="auto">127.0.0.1</code> and <code dir="auto">[::1]</code> until you
+override it with the names clients use.</p>
+<div class="expressive-code"><figure class="frame is-terminal not-content"><figcaption class="header"><span class="title"></span><span class="sr-only">Terminal window</span></figcaption><pre data-language="sh"><code><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">make</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">docker-build</span><span style="--0:#A3B0B8;--1:#45525E">                    </span><span style="--0:#929EA9;--1:#57646F"># docker build -t ghcr.io/stackumi/restactd:dev . (IMAGE=restactd for a plain local name)</span></div></div><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">make</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">docker-run</span><span style="--0:#A3B0B8;--1:#45525E">                      </span><span style="--0:#929EA9;--1:#57646F"># -p 127.0.0.1:8080:8080 (loopback; PORT=0.0.0.0:8080 exposes it), persisting to the `restact-data` volume</span></div></div><div class="ec-line"><div class="code"><span style="--0:#929EA9;--1:#57646F"># raw equivalents:</span></div></div><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">docker</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">build</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-t</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restactd:dev</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">.</span></div></div><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">docker</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">run</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">--rm</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-p</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">127.0.0.1:8080:8080</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-v</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restact-data:/data</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">-e</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">RESTACT_BUILTIN_SITE=1</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">restactd:dev</span></div></div><div class="ec-line"><div class="code"><span style="--0:#E7EDF0;--1:#14212A">curl</span><span style="--0:#A3B0B8;--1:#45525E"> </span><span style="--0:#E7EDF0;--1:#14212A">localhost:8080/healthz</span><span style="--0:#A3B0B8;--1:#45525E">          </span><span style="--0:#929EA9;--1:#57646F"># -> ok</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="make docker-build                    # docker build -t ghcr.io/stackumi/restactd:dev . (IMAGE=restactd for a plain local name)make docker-run                      # -p 127.0.0.1:8080:8080 (loopback; PORT=0.0.0.0:8080 exposes it), persisting to the &#x60;restact-data&#x60; volumedocker build -t restactd:dev .docker run --rm -p 127.0.0.1:8080:8080 -v restact-data:/data -e RESTACT_BUILTIN_SITE=1 restactd:devcurl localhost:8080/healthz          # -> ok"><div></div></button></div></figure></div>
+<ul>
+<li>The two scripting tiers are on by default. For a faster, lighter build that omits them, use
+<code dir="auto">make docker-build-core</code> (<code dir="auto">--build-arg WITH_JS=false --build-arg WITH_PY=false</code>); the host then
+starts without the JS/Python tiers, and <code dir="auto">?lang=text/javascript</code> or <code dir="auto">?lang=text/x-python</code> uploads return <code dir="auto">415</code>.</li>
+<li>The first (cold) build is slow: the JS runner downloads a WASI SDK and compiles QuickJS from C.</li>
+<li>Configure the container with the same environment variables as a native run; see
+<a href="/docs/reference/configuration/#examples">Configuration</a> for a Docker example and the full variable reference.</li>
+<li>Release archives are built by the release workflow. <code dir="auto">make release-local VERSION=0.1.0-dev</code> (a <code dir="auto">*-dev</code> label, or exactly the workspace version) builds the same tarballs into <code dir="auto">dist/</code>, smoke-tests them and runs the verify checks, and <code dir="auto">make release-images VERSION=0.1.0-dev</code> builds the two images from them without pushing. The maintainer steps for cutting a release are in <a href="https://github.com/stackumi/restactd/blob/main/docs/project/releasing.md">Releasing</a>.</li>
+<li>The <code dir="auto">Dockerfile</code> build above is for development, and it targets <code dir="auto">linux/amd64</code>.
+<a href="https://github.com/stackumi/restactd/blob/main/.github/workflows/docker.yml"><code dir="auto">.github/workflows/docker.yml</code></a> runs it on demand as a build and boot check; it publishes nothing.
+Released images are assembled from the release tarballs by <a href="https://github.com/stackumi/restactd/blob/main/release/image.Dockerfile"><code dir="auto">release/image.Dockerfile</code></a>; see <a href="https://github.com/stackumi/restactd/blob/main/docs/project/releasing.md">Releasing</a>.</li>
+</ul>
+<div class="sl-heading-wrapper level-h2"><h2 id="pull-requests">Pull requests</h2><a class="sl-anchor-link" href="#pull-requests"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Pull requests”</span></a></div>
+<p>Open a pull request as a draft (<code dir="auto">gh pr create --draft</code>). A draft runs only the light CI jobs: the
+static guards, the plugin lint and the supply-chain scans. The docs-site build
+(<a href="https://github.com/stackumi/restactd/blob/main/.github/workflows/docs-site.yml"><code dir="auto">docs-site.yml</code></a>) also runs when the change touches its inputs.
+Test locally with <code dir="auto">make ci</code> and the suites that cover your change, then mark the pull request ready
+with <code dir="auto">gh pr ready</code> when the change is final. That starts the heavy jobs: clippy and the unit tests
+first, then restactd’s own tests and the black-box suites. Each later push runs them again.</p>
+<p>In the public repository every CI job runs on GitHub-hosted runners: pushes, scheduled and manual
+runs, and pull requests, forks included. The self-hosted runners serve only a private repository
+and are not registered to the public one. That registration is the
+control; the workflow files enforce nothing, because a pull request runs its own copy of them. The
+<code dir="auto">runs-on</code> expression in <a href="https://github.com/stackumi/restactd/blob/main/.github/workflows/ci.yml"><code dir="auto">ci.yml</code></a> only picks the runner for cost and
+speed, each self-hosted job opens with a step that fails if it finds itself on a non-hosted runner
+outside that private repository (a guard against our own misconfiguration), and <code dir="auto">make check-runner-routing</code>
+keeps the expression and that step in place. The hosted runners are smaller than the self-hosted
+ones, so a timing-sensitive test can fail on a hosted run where it passes locally; re-run once
+before treating it as a regression.</p>
+<p>A workflow run from a fork waits for a maintainer to approve it, for every outside collaborator.
+Read the diff, including <code dir="auto">.github/</code>, <code dir="auto">scripts/</code> and <code dir="auto">Makefile</code>, before approving: an approved run
+executes that code on a GitHub-hosted runner with a read-only token and no secrets.</p>
+<p>A ready pull request skips the heavy jobs when every file it changes is on the skip-list in
+<a href="https://github.com/stackumi/restactd/blob/main/scripts/ci/classify-changes.sh"><code dir="auto">scripts/ci/classify-changes.sh</code></a>: files under a <code dir="auto">docs/</code>
+subdirectory or <code dir="auto">docs-site/</code>, top-level <code dir="auto">docs/*.md</code> pages, most design records in <code dir="auto">spec/decisions/</code>, and
+top-level Markdown and licence files. Test hosts seed fixture pages rather than the live ones, so prose
+changes need no heavy run. Markdown elsewhere in the tree (for example under <code dir="auto">cli/</code>, which the bridge
+embeds) and non-Markdown files directly in <code dir="auto">docs/</code> are not on the list.</p>
+<p>The otel, PostgreSQL and plugin end-to-end jobs, and the MCP bridge suites inside the <code dir="auto">suites</code> job,
+run only when the change touches what they test.
+<a href="https://github.com/stackumi/restactd/blob/main/scripts/ci/classify-jobs.sh"><code dir="auto">scripts/ci/classify-jobs.sh</code></a> decides this from the changed paths
+and, for otel and PostgreSQL, from whether a changed file contains <code dir="auto">feature = "otel"</code> or
+<code dir="auto">feature = "postgres"</code>. A push to <code dir="auto">main</code> runs every CI job.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="conventions--constraints">Conventions &#x26; constraints</h2><a class="sl-anchor-link" href="#conventions--constraints"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Conventions &#x26; constraints”</span></a></div>
+<ul>
+<li>The WIT package <code dir="auto">rest-act:plugin@0.1.0</code> (<a href="https://github.com/stackumi/restactd/tree/main/wit"><code dir="auto">wit/</code></a>) becomes frozen at the first public
+release, or earlier if the maintainer declares it. Until then a change needs the maintainer’s
+approval, and a breaking one lands as a single change set across every component built against
+the package, including <code dir="auto">host/wit/</code>, the packaged copy the host compiles against; <code dir="auto">make check-host-wit</code> fails when it differs from <code dir="auto">wit/</code>. New
+capabilities arrive as new, individually gated worlds and interfaces. See
+<a href="/docs/reference/wit/#stability">WIT interfaces</a>.</li>
+<li><a href="https://github.com/stackumi/restactd/tree/main/openapi"><code dir="auto">openapi/x-restact-extension.schema.json</code></a> is <code dir="auto">additionalProperties: false</code>. Extend
+it through new <code dir="auto">$defs</code>, then run the validator.</li>
+<li>Design decisions are recorded in <code dir="auto">spec/decisions/</code>, indexed in its README. When you make a
+non-obvious design decision, add or extend a record. Deferred work is a
+<a href="https://github.com/stackumi/restactd/issues">GitHub issue</a>.</li>
+<li>In the <code dir="auto">RESTACT_WORKER</code> subprocess path, only the response goes to stdout. All diagnostics use
+<code dir="auto">eprintln!</code> (stderr); never <code dir="auto">println!</code> on that path.</li>
+<li>Optional features are discovery-gated. Advertise them in <code dir="auto">service.features</code>; a verb may require a
+feature, and the host returns <code dir="auto">501</code> if it is unsupported. Keep new features optional and
+advertised.</li>
+<li>Extend <code dir="auto">scripts/spike-smoke.sh</code> (fast, local) and the conformance suite whenever observable
+behavior changes.</li>
+</ul>
+<div class="sl-heading-wrapper level-h2"><h2 id="extending-the-host">Extending the host</h2><a class="sl-anchor-link" href="#extending-the-host"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Extending the host”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>You want to…</th><th>Start in…</th></tr></thead><tbody><tr><td>Add or change a route</td><td><code dir="auto">host/src/lib.rs</code> (the axum router + <code dir="auto">handle_v1</code> dispatch).</td></tr><tr><td>Change how verbs resolve/bind</td><td><code dir="auto">host/src/registry.rs</code>.</td></tr><tr><td>Add a capability or execution behavior</td><td><code dir="auto">host/src/wasm_exec.rs</code> (and a new gated WIT world in <code dir="auto">wit/</code>).</td></tr><tr><td>Add an executor backend</td><td>implement the <code dir="auto">Executor</code> trait in <code dir="auto">host/src/executors.rs</code>.</td></tr><tr><td>Change storage</td><td><code dir="auto">host/src/store.rs</code> (the <code dir="auto">Store</code> trait).</td></tr><tr><td>Change auth/policy/quota</td><td><code dir="auto">host/src/auth.rs</code> / <code dir="auto">policy.rs</code> / <code dir="auto">quota.rs</code>.</td></tr><tr><td>Add a conformance check</td><td><code dir="auto">conformance/src/</code> (gate it on the discovery document).</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="repository-layout">Repository layout</h2><a class="sl-anchor-link" href="#repository-layout"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Repository layout”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Path</th><th>Contents</th></tr></thead><tbody><tr><td><code dir="auto">host/</code></td><td>the <code dir="auto">restactd</code> server crate</td></tr><tr><td><code dir="auto">wit/</code></td><td>the WIT worlds verbs are written against</td></tr><tr><td><code dir="auto">sdk/</code></td><td><code dir="auto">restact-sdk</code>, the Rust SDK for verbs</td></tr><tr><td><code dir="auto">examples/</code></td><td>example verbs and the JavaScript and Python runner components</td></tr><tr><td><code dir="auto">site/</code></td><td>the built-in static site and playground</td></tr><tr><td><code dir="auto">conformance/</code></td><td>the black-box conformance suite</td></tr><tr><td><code dir="auto">cli/</code></td><td>the <code dir="auto">restact</code> client, including the <code dir="auto">restact mcp</code> bridge</td></tr><tr><td><code dir="auto">plugins/</code></td><td>agent skills for Claude Code, Codex and Cursor</td></tr><tr><td><code dir="auto">openapi/</code></td><td>the <code dir="auto">x-restact</code> OpenAPI extension schema and examples</td></tr><tr><td><code dir="auto">spec/</code></td><td>maintainer design notes</td></tr><tr><td><code dir="auto">scripts/</code></td><td>black-box test suites and build scripts</td></tr><tr><td><code dir="auto">Makefile</code>, <code dir="auto">Dockerfile</code></td><td>the build, test and image entry points</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h2"><h2 id="where-things-live">Where things live</h2><a class="sl-anchor-link" href="#where-things-live"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 1 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 0 0-1.42-1.42m8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 1 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l3.88-3.89a4.49 4.49 0 0 0 0-6.33M8.83 15.17a1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.92-4.92a1 1 0 1 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Where things live”</span></a></div>
+<ul>
+<li>Concepts and the why: <a href="https://github.com/stackumi/restact/blob/main/concepts.md"><code dir="auto">concepts.md</code></a></li>
+<li>The normative wire format: <a href="https://github.com/stackumi/restact/blob/main/draft-byrd-restact-protocol-00.md"><code dir="auto">draft-byrd-restact-protocol-00.md</code></a></li>
+<li>Deferred work: <a href="https://github.com/stackumi/restactd/issues">GitHub issues</a></li>
+</ul></div><footer class="sl-flex astro-m6h2krdb"><div class="meta sl-flex astro-m6h2krdb"></div><div class="pagination-links print:hidden astro-jou7pfkz" dir="ltr"><a href="/docs/project/contributing/" rel="prev" class="astro-jou7pfkz"><svg aria-hidden="true" class="astro-jou7pfkz astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg><span class="astro-jou7pfkz">Previous<br class="astro-jou7pfkz"><span class="link-title astro-jou7pfkz">Contributing</span></span></a><a href="/docs/project/faq/" rel="next" class="astro-jou7pfkz"><svg aria-hidden="true" class="astro-jou7pfkz astro-ivqccbcx" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg><span class="astro-jou7pfkz">Next<br class="astro-jou7pfkz"><span class="link-title astro-jou7pfkz">FAQ</span></span></a></div></footer></div></div></main></div></div></div></div></body></html>

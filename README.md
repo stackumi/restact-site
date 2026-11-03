@@ -52,6 +52,27 @@ Markdown files into HTML (section numbering, `{#anchor}` ids, `{{xref}}` links, 
 BCP 14 keywords). `src/lib/spec-map.ts` holds the hand-written gists and core/optional tags for the
 section map on `/spec/`; the build fails if the draft gains a top-level section with no entry.
 
+### The restactd documentation, at /docs
+
+`/docs/` is the restactd documentation (Astro Starlight), built in the restactd repository and
+committed here as static files under `public/docs/` (stackumi/restactd#901). The build there bakes
+`https://restact.org` and `/docs` into every link. To update it, a person runs
+
+```sh
+corepack pnpm sync:docs v0.1.0                     # a restactd release: its docs tarball and .sha256
+corepack pnpm sync:docs ../restact                 # or a local restactd checkout, before the release asset exists
+corepack pnpm verify
+```
+
+and commits the result. From a release, the sync refuses a tarball whose sha256 does not match the
+release's. From a checkout, it runs restactd's docs gate there (`make docs-site-check`, which needs
+Docker; `C4_EXPORT=skip` builds only, with diagram placeholders). It scans the copy for addresses
+and names that must not be published, replaces `public/docs/` wholesale, and writes
+`public/docs/SOURCE.json` (the release or commit, and a hash of the tree). `pnpm verify` recomputes
+that hash, so a hand edit under `public/docs/` fails it. The docs carry their own `404.html`:
+Cloudflare serves the nearest one, so a missing `/docs/…` page gets the docs' 404 and the rest of
+the site keeps its own.
+
 ## Layout
 
 | Path | What |
@@ -64,7 +85,7 @@ section map on `/spec/`; the build fails if the draft gains a top-level section 
 | `src/layouts/MdPage.astro` | maps MDX frontmatter onto `Docs.astro` |
 | `src/components/` | Shell: Header, Tagline, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
 | `src/pages/spec/` | the specification hub, the draft, presentation verbs and registries pages |
-| `scripts/` | `sync-spec.mjs` (vendor the specification sources), `check-site.mjs` (content checks) |
+| `scripts/` | `sync-spec.mjs` (vendor the specification sources), `sync-docs.mjs` (vendor the restactd docs), `check-site.mjs` (content checks), `vendored.mjs` (their shared scans) |
 | `src/lib/term.ts` | markup helper for hand-coloured terminal and JSON blocks |
 | `src/lib/shiki-theme.mjs` | the highlighting theme, built from the CSS tokens |
 
