@@ -5,13 +5,13 @@
   "type": "module",
   "description": "restact.org and restact.dev: the REST:ACT protocol site",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "check": "astro check",
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check",
     "sync:spec": "node scripts/sync-spec.mjs",
     "check:content": "node scripts/check-site.mjs",
-    "verify": "astro check && astro build && node scripts/check-site.mjs"
+    "verify": "pnpm run check && pnpm run build && pnpm run check:content"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.0",
