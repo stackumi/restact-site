@@ -37,8 +37,11 @@ export const GITHUB = {
   plugins: 'https://github.com/stackumi/restactd/blob/main/plugins/README.md',
 };
 
-/** The restactd documentation site. A custom domain later is a change to this one line. */
-export const DOCS_SITE_URL = 'https://stackumi.github.io/restactd';
+/**
+ * The restactd documentation: built in the restactd repository and vendored into public/docs/ by
+ * `pnpm sync:docs`, so it is served from this site at /docs (stackumi/restactd#901).
+ */
+export const DOCS_SITE_URL = '/docs';
 const DOCS = DOCS_SITE_URL;
 export const RESTACTD_DOCS = {
   home: `${DOCS}/`,
@@ -87,6 +90,7 @@ export const NAV: NavLink[] = [
   { label: 'Specification', href: '/spec/' },
   { label: 'Get started', href: '/start/' },
   { label: 'restactd', href: '/restactd/' },
+  { label: 'Docs', href: '/docs/' },
   { label: 'Presentation verbs', href: '/presentation-verbs/' },
   { label: 'Security', href: '/security/' },
   { label: 'Compare', href: '/compare/' },

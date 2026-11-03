@@ -1,0 +1,13 @@
+# restactd
+
+> Documentation for restactd, the reference host for REST:ACT: run sandboxed WebAssembly verbs over plain HTTP, with budgets, capabilities and run-as-caller identity.
+
+## Documentation Sets
+
+- [Abridged documentation](https://restact.org/docs/llms-small.txt): a compact version of the documentation for restactd, with non-essential content removed
+- [Complete documentation](https://restact.org/docs/llms-full.txt): the full documentation for restactd
+
+## Notes
+
+- The complete documentation includes all content from the official documentation
+- The content is automatically generated from the same source as the official documentation
