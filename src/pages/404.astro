@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+/* Served by Cloudflare, with status 404, for any unknown path: wrangler.jsonc sets
+   assets.not_found_handling to "404-page", which serves this build output (dist/404.html). The
+   mono line shows the requested path, filled in by the script (the page itself is static), and its
+   status, so it reads as a failed request. */
+---
+
+<Base title="Not found" description="This page does not exist." canonical={false}>
+  <section class="nf container">
+    <h1>No object at this path.</h1>
+    <p class="req mono"><span class="m">GET</span> <span data-path>/</span> <span class="status">404 Not Found</span></p>
+    <p class="lede">The page you asked for does not exist or has moved. Start from the home page or read the specification.</p>
+    <div class="actions">
+      <a class="btn btn--primary" href="/">Home</a>
+      <a class="btn" href="/spec/">Specification</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    padding-block: clamp(64px, 12vw, 140px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  .status {
+    margin-left: 1ch;
+    color: var(--ink-3);
+  }
+  h1 {
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+  .req {
+    max-width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--sunk);
+    font-size: 15px;
+    color: var(--ink);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .m {
+    color: var(--signal);
+    font-weight: 600;
+  }
+  .lede {
+    max-width: 520px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+</style>
+
+<script>
+  const el = document.querySelector('[data-path]');
+  if (el) el.textContent = location.pathname;
+</script>

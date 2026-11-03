@@ -1,90 +1,388 @@
 ---
-import Mark from '../assets/mark.svg';
-import Wordmark from '../assets/wordmark.svg';
-/* The placeholder: the mark and the wordmark on the slate ground, nothing else. Colours, geometry
-   and the rise follow docs/design/restact-visual-identity.md in the restact repository. */
+import Base from '../layouts/Base.astro';
+import AnatomyDemo from '../components/AnatomyDemo.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import ReaderGroups from '../components/ReaderGroups.astro';
+import { term } from '../lib/term';
+import { DRAFT, GITHUB, RESTACTD_DOCS, SITE } from '../site.config';
+
+/* The home page: a documentation hub. The draft's title, the one-line reason for the protocol and
+   the abstract open it, with one next step per reader. Then one object answers four requests, what
+   the protocol is for, the mandatory core, and one verb built, uploaded and called. It closes on the
+   reader-grouped links and a note on comments. The page sets the tagline in its opening, so the
+   tagline bar is off here. Copy sits up here, markup below. */
+
+const DRAFT_URL = '/spec/draft/';
+
+/* The title sets its name and subtitle on two lines, so the line break stands in for the colon after
+   "Protocol" (screen readers still hear it); REST:ACT's own colon is the only one shown. */
+const [titleName, titleSub] = DRAFT.title.split(': ');
+
+const dek = {
+  why: 'Let users and their agents add the functions an API doesn’t have.',
+  scope: {
+    protocol: { label: 'open-source protocol', href: '/spec/' },
+    server: { label: 'reference server', href: '/restactd/' },
+  },
+};
+
+const abstract = [
+  'REST:ACT is an HTTP protocol that lets the clients of an API add their own code to the server, within the permissions the server grants them. A client uploads a small program, called a verb, to a path in the server’s object tree, and anyone the server allows can call it with GET or POST.',
+  'A verb is a WebAssembly component. It runs with the caller’s permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit.',
+];
+
+/* One next step for each of the three readers, named as the reader groups at the close name them,
+   then the reference server, which all three can use. */
+const next = [
+  { label: 'Review the protocol', href: DRAFT_URL },
+  { label: 'Implement a server', href: '/spec/' },
+  { label: 'Write and call verbs', href: '/start/' },
+  { label: 'Run the reference server', href: '/restactd/' },
+];
+
+const demo = {
+  heading: 'How the server reads a request',
+  lead: 'Four requests to the same note, notes/42. Select one to see how the server reads it.',
+};
+
+const paths = {
+  heading: 'Where to go next',
+  groups: [
+    {
+      reader: 'Reviewing the protocol',
+      links: [
+        { label: 'Read the draft', href: DRAFT_URL, body: 'Addressing, method semantics, capabilities, limits, authorization and security considerations.' },
+        { label: 'Specification overview', href: '/spec/', body: 'A section-by-section map of the draft, marked core or optional.' },
+        { label: 'Security model', href: '/security/', body: 'The threat model and how the draft answers it.' },
+      ],
+    },
+    {
+      reader: 'Implementing a server',
+      links: [
+        { label: 'How it works', href: '/how-it-works/', body: 'Addressing and verb resolution, step by step.' },
+        { label: 'restact-conformance', href: RESTACTD_DOCS.conformance, body: 'Black-box tests for any server, run against the features it advertises.' },
+        { label: 'restactd', href: '/restactd/', body: 'The reference server, in Rust on Wasmtime: what it implements, its documentation and its source.' },
+      ],
+    },
+    {
+      reader: 'Writing and calling verbs',
+      links: [
+        { label: 'Get started', href: '/start/', body: 'Run restactd locally and deploy a first verb in JavaScript, Python or Rust.' },
+        { label: 'restact mcp', href: GITHUB.mcp, body: 'Serves a REST:ACT host’s verbs as MCP tools.' },
+        { label: 'restact-sdk', href: GITHUB.sdk, body: 'A Rust crate for writing verbs.' },
+      ],
+    },
+  ],
+};
+
+const uses = {
+  heading: 'What it is for',
+  lead: 'A few examples of what client-extensible APIs make possible:',
+  items: [
+    'A user uploads a function that transforms rows in a database.',
+    'A bot contributes a tool to a remote service.',
+    'A social platform runs a profile owner’s code when other people interact with the profile.',
+    'An interactive environment where participants write both the content and the programs.',
+  ],
+  after:
+    'The draft treats every uploaded verb as hostile. Execution is deny-by-default, resource-limited, and bounded by the caller’s own authority.',
+};
+
+const core = {
+  heading: 'What a server must implement',
+  lead: 'A conformant server implements six things. Everything else in the draft is an optional feature, which the server lists in its discovery document.',
+  items: [
+    { name: 'Addressing and verb invocation', body: 'A colon separates the object path from the verb name, as in /v1/notes/42:wordCount.', href: `${DRAFT_URL}#addressing` },
+    { name: 'Capability confinement', body: 'A verb reaches only the host interfaces it imports. The server refuses an upload that imports one it does not grant.', href: `${DRAFT_URL}#capabilities` },
+    { name: 'Resource limits', body: 'Every call has wall-clock, compute and memory limits, answered with 408, 429 and 507.', href: `${DRAFT_URL}#limits` },
+    { name: 'Runs as the caller', body: 'A verb acts with the caller’s authority, narrowed by what the verb declared and by the target’s policy.', href: `${DRAFT_URL}#exec-identity` },
+    { name: 'Problem Details errors', body: 'Errors are RFC 9457 problem details carrying a restact_code.', href: `${DRAFT_URL}#errors` },
+    { name: 'A discovery document', body: '/.well-known/restact lists the server’s features, limits and verbs.', href: `${DRAFT_URL}#discovery` },
+  ],
+};
+
+const example = {
+  heading: 'A verb, end to end',
+  lead: 'A Rust verb that counts words, built with plain cargo, uploaded with the draft’s reference deployment request, POST /v1/modules, and called with GET. The upload names notes/42:wordCount, so it creates the wordCount verb that the demo above calls. A local restactd without authentication lets a verb bind to an object that does not exist yet.',
+  needs: {
+    server: { before: 'The commands need', link: { label: 'restactd', href: '/restactd/' }, after: 'running on localhost:8080.' },
+    how: { link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },
+  },
+  rustLabel: 'src/lib.rs',
+  rust: `use restact_sdk::{export_verb, Error, ErrorExt, Payload, Verb};
+
+struct WordCount;
+
+impl Verb for WordCount {
+    fn invoke(input: Payload) -> Result<Payload, Error> {
+        let text = String::from_utf8(input)
+            .map_err(|_| Error::invalid_input("input is not UTF-8"))?;
+        Ok(text.split_whitespace().count().to_string().into_bytes())
+    }
+}
+
+export_verb!(WordCount);`,
+  shell: term(`
+$ cargo build --release --target wasm32-wasip2
+$ curl -X POST --data-binary @target/wasm32-wasip2/release/word_count.wasm \\
+    'localhost:8080/v1/modules?verb=notes/42¦wordCount&kind=function'
+$ curl 'localhost:8080/v1/notes/42¦wordCount?input=one%20two%20three'
+«3»
+`),
+  more: { label: 'The same verb in JavaScript and Python', href: '/start/' },
+};
+
+/* The feedback channel is an open decision, so this note stays unlinked. */
+const feedback = 'The draft is open for review. A channel for comments has not been chosen yet.';
+
+/** Split a sentence so paths and identifiers render in monospace; the words are unchanged. */
+const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42:wordCount|notes\/42|restact_code)/g;
+const split = (s: string) => s.split(CODEY).map((t, i) => ({ t, code: i % 2 === 1 }));
+
+/* Structured data: the site, under both spellings of its name. */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.name,
+  alternateName: ['restact', 'The REST:ACT Protocol'],
+  url: new URL('/', Astro.site).href,
+  description: SITE.description,
+  inLanguage: 'en',
+};
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0d1418" />
-    <meta name="description" content="REST:ACT — every noun can act." />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>REST:ACT</title>
-  </head>
-  <body>
-    <main>
-      <h1 class="lockup">
-        <Mark class="mark" aria-hidden="true" />
-        <Wordmark class="wordmark" role="img" aria-label="REST:ACT" />
-      </h1>
-    </main>
-  </body>
-</html>
+<Base fullTitle={DRAFT.title} jsonLd={jsonLd} tagline={false}>
+  <section class="container opening" aria-labelledby="title">
+    <h1 id="title"><span class="name">{titleName}</span><span class="sr-only">: </span>{titleSub}</h1>
+    <p class="dek">
+      {dek.why}{' '}
+      <span class="scope">
+        An <a href={dek.scope.protocol.href}>{dek.scope.protocol.label}</a> and{' '}
+        <a href={dek.scope.server.href}>{dek.scope.server.label}</a>.
+      </span>
+    </p>
+    {abstract.map((p) => <p>{p}</p>)}
+    <ul class="next" aria-label="Start here">
+      {next.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+    </ul>
+  </section>
 
-<style is:global>
-  :root {
-    --bg: #0d1418;
-    --tile: #1a242a;
-    --edge: #36444d;
-    --dash: #4a5963;
-    --ink: #e7edf0;
-    --signal: #56d5c9;
-    --wall-l: #2a9e93;
-    --wall-r: #1f7a72;
-    /* The wordmark's cap height; the lockup is sized from it (identity §4). */
-    --cap: clamp(28px, 6vw, 64px);
-    color-scheme: dark;
+  <section class="container sect demo" aria-labelledby="demo">
+    <h2 id="demo">{demo.heading}</h2>
+    <p class="lead">
+      {split(demo.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}
+    </p>
+    <AnatomyDemo />
+  </section>
+
+  <section class="container sect" aria-labelledby="uses">
+    <div class="measure">
+      <h2 id="uses">{uses.heading}</h2>
+      <p class="lead">{uses.lead}</p>
+      <ul class="uses">
+        {uses.items.map((u) => <li>{u}</li>)}
+      </ul>
+      <p>{uses.after}</p>
+    </div>
+  </section>
+
+  <section class="container sect" aria-labelledby="core">
+    <div class="measure">
+      <h2 id="core">{core.heading}</h2>
+      <p class="lead">{core.lead}</p>
+    </div>
+    <ul class="core">
+      {
+        core.items.map((c) => (
+          <li>
+            <a href={c.href}>{c.name}</a>
+            <p>{split(c.body).map((x) => (x.code ? <code>{x.t}</code> : x.t))}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="container sect" aria-labelledby="example">
+    <div class="measure">
+      <h2 id="example">{example.heading}</h2>
+      <p class="lead">{split(example.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}</p>
+      <p>
+        {example.needs.server.before} <a href={example.needs.server.link.href}>{example.needs.server.link.label}</a>{' '}
+        {example.needs.server.after} <a href={example.needs.how.link.href}>{example.needs.how.link.label}</a>{' '}
+        {example.needs.how.after}
+      </p>
+    </div>
+    <div class="codes">
+      <CodeBlock lang="rust" code={example.rust} label={example.rustLabel} />
+      <CodeBlock variant="terminal" html={example.shell} />
+    </div>
+    <p class="more"><a href={example.more.href}>{example.more.label}</a></p>
+  </section>
+
+  <section class="container sect last" aria-labelledby="paths">
+    <h2 id="paths">{paths.heading}</h2>
+    <ReaderGroups groups={paths.groups} />
+    <p class="feedback" id="feedback">{feedback}</p>
+  </section>
+</Base>
+
+<style>
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    background:
-      radial-gradient(60% 50% at 44% 46%, rgba(86, 213, 201, 0.07), transparent 70%),
-      var(--bg);
+
+  /* Opening: one column, the only thing in the first view that asks to be read first. */
+  .opening {
+    padding-block: 64px 32px;
+  }
+  .opening h1 {
+    max-width: 32ch;
+    margin-bottom: 28px;
+    font-size: clamp(32px, 3.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+  .opening h1 .name {
+    display: block;
+  }
+  .opening p {
+    max-width: 62ch;
+    font-size: 19px;
+    line-height: 1.65;
     color: var(--ink);
   }
-  main {
-    min-height: 100%;
-    display: grid;
-    place-items: center;
-    padding: clamp(24px, 6vw, 64px);
+  .opening p + p {
+    margin-top: 16px;
   }
-  .lockup {
-    margin: 0;
+  /* The plain reason sits between the formal title and the abstract, a step above body size. */
+  .opening .dek {
+    max-width: 34em;
+    margin-bottom: 28px;
+    font-size: 23px;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+  /* The scope sentence takes its own line, so the reason never wraps around it. */
+  .dek .scope {
+    display: block;
+    color: var(--ink-3);
+  }
+  .opening .dek + p {
+    margin-top: 0;
+  }
+  .next {
     display: flex;
+    flex-wrap: wrap;
+    gap: 4px 32px;
+    margin-top: 24px;
+  }
+  .next a {
+    display: inline-flex;
     align-items: center;
-    gap: calc(var(--cap) * 0.42);
+    min-height: 44px;
+    font-size: 17px;
+    font-weight: 600;
   }
-  .mark {
-    height: calc(var(--cap) * 1.55);
-    width: auto;
-    flex: none;
+
+  /* Sections (.sect, .measure) come from global.css: a hairline with 32px either side, no boxes. */
+  .lead {
+    font-size: 18px;
+    color: var(--ink-2);
   }
-  .mark .tile { fill: var(--tile); stroke: var(--edge); stroke-width: 0.9; }
-  .mark .place { fill: none; stroke: var(--dash); stroke-width: 0.9; stroke-dasharray: 1.6 1.6; }
-  .mark .wl { fill: var(--wall-l); }
-  .mark .wr { fill: var(--wall-r); }
-  .mark .top { fill: var(--signal); }
-  /* The rise (identity §7), once on first paint: each lit tile starts in its place on the plane;
-     the back one rises first and the front one 60 ms later. Never loops. */
-  .mark .back { animation: rise-back 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 240ms both; }
-  .mark .front { animation: rise-front 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 300ms both; }
-  @keyframes rise-back { from { transform: translateY(14px); } to { transform: none; } }
-  @keyframes rise-front { from { transform: translateY(12px); } to { transform: none; } }
-  .wordmark {
-    /* The outline's box is 72.8 units tall for a 70-unit cap height. */
-    height: calc(var(--cap) * 72.8 / 70);
-    width: auto;
+
+  /* The demo follows the abstract on the same left edge, close to the text width. */
+  .demo .lead {
+    margin-bottom: 24px;
   }
-  .wordmark .ink { fill: var(--ink); }
-  .wordmark .lit { fill: var(--signal); }
-  @media (prefers-reduced-motion: reduce) {
-    .mark .back, .mark .front { animation: none; }
+  .demo :global(.anatomy) {
+    max-width: 800px;
+  }
+  .demo :global(.anatomy p) {
+    margin: 0;
+  }
+
+  .core li a {
+    font-weight: 600;
+  }
+  .core li p {
+    margin-top: 4px;
+    font-size: 16px;
+    color: var(--ink-2);
+  }
+
+  /* Uses: examples, so an ordinary bulleted list; rules would make them read as records. */
+  .uses {
+    margin-block: 20px 24px;
+    padding-left: 1.25em;
+    list-style: disc;
+  }
+  .uses li {
+    padding-block: 4px;
+  }
+  .uses li::marker {
+    color: var(--ink-3);
+  }
+
+  /* Core: a compact three-column list. */
+  .core {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 56px;
+    margin-top: 32px;
+    font-variant-numeric: tabular-nums;
+  }
+  .core li {
+    padding-block: 18px 22px;
+    border-top: 1px solid var(--hair);
+  }
+
+  /* Example. */
+  .codes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    max-width: 880px;
+    margin-top: 32px;
+  }
+  .more {
+    margin-top: 24px;
+  }
+
+  .measure > p + p {
+    margin-top: 12px;
+  }
+  /* The comments note: the channel is undecided, so it is plain text under the reader groups. */
+  .feedback {
+    max-width: 68ch;
+    margin-top: 32px;
+    color: var(--ink-3);
+  }
+
+  @media (max-width: 1080px) {
+    .core {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .opening {
+      padding-block: 40px 28px;
+    }
+    .opening p,
+    .lead {
+      font-size: 17px;
+    }
+    .opening .dek {
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+    .next {
+      margin-top: 16px;
+    }
+    .core {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>

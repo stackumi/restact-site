@@ -1,0 +1,77 @@
+---
+import Docs from '../../layouts/Docs.astro';
+import SpecBody from '../../components/SpecBody.astro';
+import SpecSideNav from '../../components/SpecSideNav.astro';
+import { renderDraft, DRAFT_FILE, SPECS_REPO, readSpec } from '../../lib/specmd';
+import { DRAFT } from '../../site.config';
+
+const doc = renderDraft();
+const f = doc.front;
+if (f.docname !== DRAFT.docname) throw new Error(`site.config DRAFT.docname (${DRAFT.docname}) differs from the draft's front matter (${f.docname})`);
+const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
+const sourceUrl = `${SPECS_REPO}/blob/main/${DRAFT_FILE}`;
+const summary = 'The REST:ACT draft: addressing, methods, capabilities, resource limits, composition and discovery. An Internet-Draft, not yet submitted; not a standard.';
+/* Structured data: the draft as a technical article, dated by the specification repository commit it is rendered from. */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: f.title,
+  alternateName: f.docname,
+  description: summary,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  author: { '@type': 'Person', name: f.author },
+  dateModified: source.date,
+  inLanguage: 'en',
+  isBasedOn: sourceUrl,
+  isPartOf: { '@type': 'WebSite', name: 'REST:ACT', url: new URL('/', Astro.site).href },
+};
+const top = doc.sections.filter((s) => s.depth === 1);
+const sideItems = [
+  ...top.map((s) => ({ href: `#${s.id}`, label: s.title, num: s.num })),
+  { href: '#references', label: 'References', num: '' },
+];
+---
+
+<Docs
+  title={f.title}
+  description={`${DRAFT.status}. It is not a standard. This is the normative text of the protocol, rendered from the Markdown source.`}
+  summary={summary}
+  type="article"
+  jsonLd={jsonLd}
+  headings={doc.headings}
+  verbatimToc
+  chips={['Normative', f.category, f.stream]}
+  editUrl={sourceUrl}
+>
+  <SpecSideNav slot="side" title="In this draft" items={sideItems} />
+
+  <div class="doc-card">
+    <dl class="rows">
+      <dt>Document</dt>
+      <dd class="mono">{f.docname}</dd>
+      <dt>Author</dt>
+      <dd>{f.author}</dd>
+      <dt>Category</dt>
+      <dd>{f.category}, {f.stream.toLowerCase()}</dd>
+      <dt>Area</dt>
+      <dd>{f.area}</dd>
+      <dt>Keywords</dt>
+      <dd>{f.keywords.join(', ')}</dd>
+      <dt>Rendered from</dt>
+      <dd>
+        <a class="mono" href={`${SPECS_REPO}/commit/${source.commit}`}>stackumi/restact @ {source.commit.slice(0, 7)}</a>
+      </dd>
+    </dl>
+    <p class="statement">
+      This is written as an individual Internet-Draft on the independent stream, intended category Experimental. It has not
+      yet been submitted to the IETF, and it is not a standard.
+    </p>
+    <div class="actions">
+      <a class="btn" href={sourceUrl}>Source on GitHub</a>
+      <a class="btn" href="/spec/">Section map and registries</a>
+    </div>
+  </div>
+
+  <SpecBody segments={doc.segments} />
+  <Fragment set:html={doc.refsHtml} />
+</Docs>

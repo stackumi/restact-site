@@ -1,0 +1,164 @@
+---
+import { Code } from 'astro:components';
+import type { ComponentProps } from 'astro/types';
+import { restactTheme } from '../lib/shiki-theme.mjs';
+/**
+ * A code block: optional label strip, a copy button, and Shiki highlighting that follows the
+ * theme tokens (only keywords take the signal colour).
+ *
+ * Props
+ *   code     source text; highlighted with Shiki when `lang` is given
+ *   lang     a Shiki language id ("js", "python", "rust", "json", "bash"); default plain text
+ *   html     pre-marked HTML for the <code> element instead of `code` (see lib/term.ts)
+ *   label    text on the left of the strip, e.g. a filename or "http"
+ *   variant  "plain" (default) or "terminal" (the strip labelled "shell")
+ *   copy     show the copy button (default true)
+ *   wrap     wrap long lines at the box edge on wide screens (terminal blocks always wrap, at
+ *            every width, with a hanging indent)
+ * The button and its live region are wired by the script below. Without JavaScript the block is
+ * still fully readable; the button is hidden until the script runs.
+ */
+interface Props {
+  code?: string;
+  lang?: ComponentProps<typeof Code>['lang'];
+  html?: string;
+  label?: string;
+  variant?: 'plain' | 'terminal';
+  copy?: boolean;
+  wrap?: boolean;
+}
+const { code = '', lang = 'text', html, label, variant = 'plain', copy = true, wrap = false } = Astro.props;
+const stripLabel = label ?? (variant === 'terminal' ? 'shell' : undefined);
+const showStrip = copy || stripLabel;
+---
+
+<figure class:list={['codeblock', variant, { wrap }]} data-codeblock>
+  {
+    showStrip && (
+      <div class="strip">
+        {stripLabel && <span class="label">{stripLabel}</span>}
+        {copy && (
+          <button type="button" class="copy" data-copy hidden>
+            Copy
+          </button>
+        )}
+      </div>
+    )
+  }
+  <div class="body">
+    {
+      html !== undefined ? (
+        <pre><code set:html={html} /></pre>
+      ) : (
+        <Code code={code} lang={lang} theme={restactTheme} />
+      )
+    }
+  </div>
+  <span class="sr-only" role="status" aria-live="polite" data-copy-status></span>
+</figure>
+
+<style>
+  .codeblock {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--sunk);
+    overflow: hidden;
+  }
+  .strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 4px 8px 4px 16px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--sunk-head);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .copy {
+    position: relative;
+    margin-left: auto;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: color 120ms ease, background-color 120ms ease;
+  }
+  /* The button looks 32px tall; its hit area is 44px. */
+  .copy::after {
+    content: '';
+    position: absolute;
+    inset: -6px -4px;
+  }
+  .copy:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .copy[hidden] {
+    display: none;
+  }
+  .body :global(pre) {
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  /* A block that scrolls sideways shades the edge that hides more code: the covers scroll with
+     the text and uncover a shadow fixed to the box edge. */
+  .plain:not(.wrap) .body :global(pre) {
+    background-image:
+      linear-gradient(to right, var(--sunk) 40%, transparent),
+      linear-gradient(to left, var(--sunk) 40%, transparent),
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 14%, transparent), transparent),
+      linear-gradient(to left, color-mix(in srgb, var(--ink) 14%, transparent), transparent);
+    background-position: left, right, left, right;
+    background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+  }
+  /* A terminal line is a command: wrap it at the box edge at every width (a quoted URL has no break
+     point), indenting the continuation so each command still starts at the margin. */
+  .terminal .body :global(pre) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .terminal .body :global(.ln) {
+    display: block;
+    padding-left: 2ch;
+    text-indent: -2ch;
+  }
+  @media (min-width: 640px) {
+    .wrap .body :global(pre) {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+  .body :global(code) {
+    font-family: var(--font-mono);
+  }
+</style>
+
+<script>
+  import { wireCopy } from '../scripts/copy';
+  document.querySelectorAll<HTMLElement>('[data-codeblock]').forEach((block) => {
+    const button = block.querySelector<HTMLButtonElement>('[data-copy]');
+    const pre = block.querySelector('pre');
+    if (!button || !pre) return;
+    button.hidden = false;
+    wireCopy(button, pre, block.querySelector<HTMLElement>('[data-copy-status]'));
+  });
+</script>

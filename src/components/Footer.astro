@@ -1,0 +1,80 @@
+---
+import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
+/**
+ * Site footer: one quiet row. The source repositories and the restactd documentation on the left,
+ * the draft's docname on the right. Every protocol page is already in the header nav.
+ */
+interface Props {
+  wide?: boolean;
+}
+const { wide = false } = Astro.props;
+const sources = [
+  { label: 'Specification repository', href: GITHUB.specs },
+  { label: 'restactd', href: GITHUB.restactd },
+  { label: 'restactd documentation', href: RESTACTD_DOCS.home },
+];
+---
+
+<footer class="site-footer">
+  <div class:list={['row', { wide }]}>
+    <nav aria-label="Source and documentation">
+      <ul>
+        {
+          sources.map((s) => (
+            <li>
+              <a href={s.href}>{s.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <p class="docname mono">{DRAFT.docname}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--band);
+    border-top: 1px solid var(--line);
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+  .row {
+    max-width: calc(var(--measure) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 22px var(--gutter);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px 32px;
+  }
+  .row.wide {
+    max-width: calc(1360px + 2 * var(--gutter));
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .docname {
+    font-size: 13.5px;
+    color: var(--ink-3);
+  }
+  @media (max-width: 560px) {
+    .row {
+      padding-block: 16px 24px;
+    }
+    ul {
+      gap: 0 22px;
+    }
+  }
+</style>

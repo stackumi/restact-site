@@ -1,0 +1,117 @@
+---
+import '@fontsource-variable/public-sans';
+import '@fontsource-variable/public-sans/wght-italic.css';
+import '@fontsource-variable/jetbrains-mono';
+import sansLatin from '@fontsource-variable/public-sans/files/public-sans-latin-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Tagline from '../components/Tagline.astro';
+import { INDEXABLE, SITE, THEME_KEY } from '../site.config';
+/**
+ * The page shell every page uses: head, theme pre-paint script, skip link, Header, the tagline bar,
+ * <main>, Footer.
+ *
+ * Props
+ *   title        page name; the document title is "<title> · REST:ACT"
+ *   fullTitle    the whole document title, used as given (the home page, and titles that already
+ *                name REST:ACT); overrides `title`
+ *   description  meta description, under 160 characters (default: the site description)
+ *   type         Open Graph type: "website" (default) or "article"
+ *   jsonLd       structured data for this page: one schema.org object or a list of them
+ *   canonical    emit the canonical link and og:url (default true; the 404 page turns it off)
+ *   wide         use the 1360px docs width in the frame (the Docs layout sets this)
+ *   tagline      show the tagline bar (default true; the home page sets its sentence in the opening)
+ * Robots: <meta name="robots"> and /robots.txt both follow INDEXABLE in site.config.ts.
+ * Canonical links, og:url and og:image are absolute on `site` in astro.config.mjs (restact.org).
+ */
+interface Props {
+  title?: string;
+  fullTitle?: string;
+  description?: string;
+  type?: 'website' | 'article';
+  jsonLd?: object | object[];
+  canonical?: boolean;
+  wide?: boolean;
+  tagline?: boolean;
+}
+const {
+  title,
+  description = SITE.description,
+  type = 'website',
+  jsonLd,
+  canonical = true,
+  wide = false,
+  tagline = true,
+} = Astro.props;
+const fullTitle = Astro.props.fullTitle ?? (title ? `${title} · ${SITE.name}` : SITE.name);
+const url = new URL(Astro.url.pathname, Astro.site).href;
+const image = new URL(SITE.image.path, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {!INDEXABLE && <meta name="robots" content="noindex, nofollow" />}
+    {canonical && <link rel="canonical" href={url} />}
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={url} />}
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content={String(SITE.image.width)} />
+    <meta property="og:image:height" content={String(SITE.image.height)} />
+    <meta property="og:image:alt" content={SITE.image.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {
+      jsonLd && (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')}
+        />
+      )
+    }
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#0b5560" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin />
+    <!-- Pick the theme before first paint: the visitor's stored choice, else light. Dark is opt-in. -->
+    <script is:inline define:vars={{ key: THEME_KEY }}>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        var t = null;
+        try {
+          t = localStorage.getItem(key);
+        } catch (e) {}
+        if (t !== 'dark') t = 'light';
+        root.setAttribute('data-theme', t);
+        if (t === 'dark') {
+          var cs = document.querySelector('meta[name="color-scheme"]');
+          if (cs) cs.setAttribute('content', 'dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header wide={wide} />
+    {tagline && <Tagline wide={wide} />}
+    <main id="main">
+      <slot />
+    </main>
+    <Footer wide={wide} />
+    <script>
+      import '../scripts/theme';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+---
+/**
+ * The light/dark toggle (44x44), drawn for the masthead band. The label always names the theme a
+ * press switches to; the click handler and the stored choice live in src/scripts/theme.ts, loaded
+ * once by Base.astro. Without JavaScript the button could do nothing, so it is hidden.
+ */
+---
+
+<button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to the dark theme">
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="8.5"></circle>
+    <path d="M12 3.5v17"></path>
+    <path d="M12 7h3.5M12 11h6M12 15h5.5"></path>
+  </svg>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--on-brand);
+    cursor: pointer;
+    transition: background-color 120ms ease;
+  }
+  :global(html:not(.js)) .theme-toggle {
+    display: none;
+  }
+  .theme-toggle:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+</style>

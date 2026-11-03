@@ -1,0 +1,209 @@
+// Content checks over the built site (dist/**/*.html). Run after `astro build`:
+//   node scripts/check-site.mjs        (or: pnpm run check:content)
+//
+// Any error exits non-zero. What it enforces:
+//   - banned marketing/AI-tell wording in visible text (allowed inside <code> and <pre>); the
+//     specification text itself is exempt, because the normative text is not ours to reword. Pages
+//     that render it wrap exactly that span in <!--verbatim-->...<!--/verbatim--> (SpecBody does),
+//     so our own copy on those pages is still checked, as are all meta descriptions.
+//   - no email addresses, no names or hosts that must not be published
+//   - noindex meta on every page, and a disallowing robots.txt, while INDEXABLE is false
+//   - exactly one <h1> per page
+//   - no duplicate id on a page, and no kramdown or template leftovers ({{ref}}, {:ial}, {::ext},
+//     "--- middle") in the rendered specification pages under /spec/
+//   - internal links and same-site anchors resolve (every href="#x" needs a matching id="x")
+//   - every page but the 404 has a canonical link on `site` (astro.config.mjs) naming its own path,
+//     a link-preview image that exists, a meta description of at most 160 characters, and
+//     structured data (if any) that parses
+//   - /sitemap.xml lists exactly the pages, /llms.txt's links on the site resolve, and robots.txt
+//     names the sitemap once INDEXABLE is true
+//   - /.well-known/security.txt has a Contact, an Expires date still ahead, and its own Canonical URL
+//   - no email address in src/content/spec/** (the vendored specification sources)
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { join, relative } from 'node:path';
+
+const DIST = new URL('../dist/', import.meta.url).pathname;
+const CONFIG = new URL('../src/site.config.ts', import.meta.url).pathname;
+const ASTRO_CONFIG = new URL('../astro.config.mjs', import.meta.url).pathname;
+
+const BANNED_WORDS = [
+  /\bseamless(?:ly)?\b/i, /\brobust(?:ness)?\b/i, /\bleverag(?:e|es|ed|ing)\b/i, /\bpowerful\b/i,
+  /\bcutting[- ]edge\b/i, /\bunlock(?:s|ed|ing)?\b/i, /\bempower(?:s|ed|ing|ment)?\b/i,
+  /\belevate[sd]?\b/i, /\bstreamlin(?:e|es|ed|ing)\b/i, /\bharness(?:es|ed|ing)?\b/i,
+  /\bdelv(?:e|es|ed|ing)\b/i, /\bdive into\b/i, /\bgame[- ]changer\b/i, /\brevolutioni[sz]e[sd]?\b/i,
+  /\bnext[- ]generation\b/i, /\bworld[- ]class\b/i, /\beffortless(?:ly)?\b/i, /\bsupercharg(?:e|es|ed|ing)\b/i,
+  /\bunleash(?:es|ed|ing)?\b/i, /\bin today['’]s\b[^.]{0,60}\blandscape\b/i, /\bwhether you['’]re\b/i,
+  /\bat its core\b/i, /\bit['’]s worth noting\b/i, /\bsimply\b/i, /\bjust\b/i, /\bblazing(?:ly)?[- ]fast\b/i,
+  /\bimagine\b/i, /\bnot just\b/i, /\bit['’]s not\b[^.]{0,80}\bit['’]s\b/i,
+];
+
+const FORBIDDEN = [
+  [/docker pull/i, '`docker pull`'], [/REST:VIEW/, 'REST:VIEW'], [/REST\/ACT/, 'REST/ACT'], [/RestAct/, 'RestAct'],
+  [/pathfinder/i, 'pathfinder'], [/\bdiscovery\.[a-z0-9-]+\.[a-z]{2,}/i, 'a discovery.* hostname'], [/ghcr\.io/i, 'ghcr.io'],
+  [/fonts\.(?:googleapis|gstatic)\.com/i, 'a Google Fonts request'],
+];
+
+const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b/;
+
+const errors = [];
+const err = (page, msg) => errors.push(`${page}: ${msg}`);
+
+if (!existsSync(DIST)) {
+  console.error('dist/ not found. Run `astro build` first.');
+  process.exit(2);
+}
+
+const indexable = /INDEXABLE\s*=\s*true/.test(readFileSync(CONFIG, 'utf8'));
+const SITE_URL = (readFileSync(ASTRO_CONFIG, 'utf8').match(/\bsite:\s*'([^']+)'/) ?? [])[1];
+if (!SITE_URL) {
+  console.error('astro.config.mjs has no `site`.');
+  process.exit(2);
+}
+
+function* walk(dir) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) yield* walk(p);
+    else yield p;
+  }
+}
+
+// Vendored specification sources must hold no email address.
+const SPEC_SRC = new URL('../src/content/spec/', import.meta.url).pathname;
+if (existsSync(SPEC_SRC)) {
+  for (const f of walk(SPEC_SRC)) {
+    if (!f.endsWith('.md')) continue;
+    const m = readFileSync(f, 'utf8').match(EMAIL);
+    if (m) err(relative(SPEC_SRC, f), `email address "${m[0]}" in a vendored specification file`);
+  }
+}
+
+const pages = [...walk(DIST)].filter((p) => p.endsWith('.html'));
+const route = (file) => {
+  const r = '/' + relative(DIST, file).replace(/index\.html$/, '').replace(/\.html$/, '');
+  return r;
+};
+
+const strip = (html, ...tags) => tags.reduce((h, t) => h.replace(new RegExp(`<${t}\\b[^>]*>[\\s\\S]*?</${t}>`, 'gi'), ' '), html);
+const decode = (s) => s.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n));
+const idsCache = new Map();
+const idsOf = (file) => {
+  if (!idsCache.has(file)) idsCache.set(file, new Set([...readFileSync(file, 'utf8').matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
+  return idsCache.get(file);
+};
+const fileFor = (r) => {
+  const base = join(DIST, r);
+  for (const c of [join(base, 'index.html'), base + '.html', base]) {
+    if (existsSync(c) && statSync(c).isFile()) return c;
+  }
+  return null;
+};
+
+for (const file of pages) {
+  const page = route(file);
+  const html = readFileSync(file, 'utf8');
+  const noScripts = strip(html, 'script', 'style');
+  // Drop only the verbatim specification span (comments are removed below, so do this first).
+  const ours = noScripts.replace(/<!--verbatim-->[\s\S]*?<!--\/verbatim-->/g, ' ');
+  const visibleHtml = strip(ours, 'pre', 'code', 'svg').replace(/<!--[\s\S]*?-->/g, ' ');
+  const text = decode(visibleHtml.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
+  const desc = decode((html.match(/<meta name="description" content="([^"]*)"/) ?? [])[1] ?? '');
+
+  // (a) banned words, outside code
+  for (const re of BANNED_WORDS) {
+    const m = (text + ' ' + desc).match(re);
+    if (m) err(page, `banned wording "${m[0]}"`);
+  }
+  // (b) emails, anywhere in the markup (scripts and styles excluded)
+  const em = noScripts.match(EMAIL);
+  if (em) err(page, `email address "${em[0]}"`);
+  // (c) forbidden names and hosts, anywhere including code
+  for (const [re, label] of FORBIDDEN) if (re.test(noScripts)) err(page, `contains ${label}`);
+  // (d) noindex while not indexable
+  const noindex = /<meta name="robots" content="[^"]*noindex/.test(html);
+  if (!indexable && !noindex) err(page, 'missing noindex meta while INDEXABLE is false');
+  if (indexable && noindex) err(page, 'noindex meta present while INDEXABLE is true');
+  // (e) one h1
+  const h1s = (noScripts.match(/<h1[\s>]/g) ?? []).length;
+  if (h1s !== 1) err(page, `${h1s} <h1> elements (want exactly 1)`);
+  // (e2) duplicate ids
+  const seenIds = new Set();
+  for (const m of noScripts.matchAll(/\sid="([^"]+)"/g)) {
+    if (seenIds.has(m[1])) err(page, `duplicate id "${m[1]}"`);
+    seenIds.add(m[1]);
+  }
+  // (e3) markup that should have been consumed by the specification renderer
+  if (page.startsWith('/spec/')) {
+    const body = decode(noScripts.replace(/<[^>]+>/g, ' '));
+    for (const [re, label] of [[/\{\{/, '{{'], [/\{:/, '{:'], [/(?:^|\s)---\s+(?:abstract|middle|back)\b/, '--- section marker'], [/@@\w+@@/, '@@ placeholder'], [/\u0000/, 'NUL placeholder']]) {
+      if (re.test(body)) err(page, `unrendered markup "${label}"`);
+    }
+  }
+  // (e4) canonical, link preview, description length, structured data
+  const canonical = (html.match(/<link rel="canonical" href="([^"]*)"/) ?? [])[1];
+  if (page === '/404') {
+    if (canonical) err(page, 'the 404 page has a canonical link');
+  } else if (canonical !== new URL(page, SITE_URL).href) {
+    err(page, `canonical link ${canonical ?? '(missing)'}, want ${new URL(page, SITE_URL).href}`);
+  }
+  const og = (html.match(/<meta property="og:image" content="([^"]*)"/) ?? [])[1];
+  if (!og) err(page, 'no og:image');
+  else if (!og.startsWith(SITE_URL) || !existsSync(join(DIST, new URL(og).pathname))) err(page, `og:image ${og} is not a file on the site`);
+  if (desc.length > 160) err(page, `meta description is ${desc.length} characters (at most 160)`);
+  for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    try {
+      JSON.parse(m[1]);
+    } catch (e) {
+      err(page, `structured data does not parse: ${e.message}`);
+    }
+  }
+  // (f) links
+  for (const m of noScripts.matchAll(/<a\b[^>]*?\shref="([^"]*)"/g)) {
+    const href = decode(m[1]);
+    if (!href || /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(href)) continue; // external, mailto, tel
+    const [pathPart, hash] = href.split('#');
+    const target = pathPart.split('?')[0] || page;
+    const abs = target.startsWith('/') ? target : new URL(target, 'http://x' + page).pathname;
+    const dest = fileFor(abs);
+    if (!dest) {
+      err(page, `link to ${abs} (no such route)`);
+      continue;
+    }
+    if (hash && dest.endsWith('.html') && !idsOf(dest).has(hash)) err(page, `anchor #${hash} not found on ${abs}`);
+  }
+}
+
+// robots.txt must agree with INDEXABLE
+const robots = existsSync(join(DIST, 'robots.txt')) ? readFileSync(join(DIST, 'robots.txt'), 'utf8') : '';
+if (!indexable && !/^Disallow:\s*\/\s*$/m.test(robots)) err('/robots.txt', 'does not disallow everything while INDEXABLE is false');
+if (indexable && /^Disallow:\s*\/\s*$/m.test(robots)) err('/robots.txt', 'disallows everything while INDEXABLE is true');
+
+if (indexable && !/^Sitemap:\s*\S+\/sitemap\.xml\s*$/m.test(robots)) err('/robots.txt', 'does not name the sitemap while INDEXABLE is true');
+
+// sitemap.xml lists every page but the 404, and nothing else
+const sitemap = existsSync(join(DIST, 'sitemap.xml')) ? readFileSync(join(DIST, 'sitemap.xml'), 'utf8') : '';
+const listed = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+const want = new Set(pages.map(route).filter((r) => r !== '/404').map((r) => new URL(r, SITE_URL).href));
+for (const u of want) if (!listed.has(u)) err('/sitemap.xml', `missing ${u}`);
+for (const u of listed) if (!want.has(u)) err('/sitemap.xml', `lists ${u}, which is not a page`);
+
+// llms.txt: its links on the site resolve
+const llms = existsSync(join(DIST, 'llms.txt')) ? readFileSync(join(DIST, 'llms.txt'), 'utf8') : '';
+if (!llms.startsWith('# ')) err('/llms.txt', 'missing, or does not start with an H1');
+for (const m of llms.matchAll(/\]\((https?:[^)\s]+)\)/g)) {
+  if (!m[1].startsWith(SITE_URL)) continue;
+  const p = new URL(m[1]).pathname;
+  if (!fileFor(p)) err('/llms.txt', `link to ${p} (no such route)`);
+}
+
+// security.txt (RFC 9116): a contact, an Expires date that has not passed, and its own URL as Canonical
+const sectxt = existsSync(join(DIST, '.well-known/security.txt')) ? readFileSync(join(DIST, '.well-known/security.txt'), 'utf8') : '';
+if (!/^Contact: \S+$/m.test(sectxt)) err('/.well-known/security.txt', 'missing, or has no Contact');
+const expires = Date.parse((sectxt.match(/^Expires: (\S+)$/m) ?? [])[1]);
+if (!(expires > Date.now())) err('/.well-known/security.txt', 'Expires is missing or has passed; renew EXPIRES in src/pages/.well-known/security.txt.ts');
+if (!sectxt.includes(`Canonical: ${new URL('/.well-known/security.txt', SITE_URL)}\n`)) err('/.well-known/security.txt', 'Canonical does not name its own URL on `site`');
+
+const unique = (a) => [...new Set(a)];
+for (const e of unique(errors)) console.error(`error    ${e}`);
+console.log(`checked ${pages.length} pages, ${unique(errors).length} errors`);
+process.exit(errors.length ? 1 : 0);

@@ -1,0 +1,51 @@
+---
+/**
+ * A tone callout: a 1px border and a faint ground, both tinted from the tone.
+ *
+ * Props
+ *   tone   "note" (petrol, the default) | "warn" | "danger"
+ *   title  bold first line
+ * Slot: the body, as inline content or paragraphs.
+ */
+interface Props {
+  tone?: 'note' | 'warn' | 'danger';
+  title?: string;
+}
+const { tone = 'note', title } = Astro.props;
+---
+
+<aside class={`callout ${tone}`} role="note">
+  {title && <div class="title">{title}</div>}
+  <div class="body"><slot /></div>
+</aside>
+
+<style>
+  .callout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 18px;
+    border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--line));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--tone) 6%, var(--ground));
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .note {
+    --tone: var(--signal);
+  }
+  .warn {
+    --tone: var(--warn);
+  }
+  .danger {
+    --tone: var(--danger);
+  }
+  .title {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .body :global(p + p) {
+    margin-top: 8px;
+  }
+</style>
