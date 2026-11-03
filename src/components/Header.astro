@@ -1,0 +1,264 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { NAV, GITHUB } from '../site.config';
+/**
+ * The sticky masthead: the brand band with the wordmark, the main nav, a GitHub link and the theme
+ * toggle. The DOM follows the visible desktop order, except that the Menu button sits just before
+ * the nav so an open menu is the next Tab stop. The nav marks the current section with aria-current
+ * (a link is current when the page path starts with its href).
+ *
+ * Below 1080px the nav folds behind the Menu button and opens inside the band as full-width rows.
+ * Without JavaScript (no `.js` on <html>) the button stays hidden and the nav wraps under the
+ * wordmark instead.
+ *
+ * Props
+ *   wide  use the 1360px docs width instead of the 1168px page measure
+ */
+interface Props {
+  wide?: boolean;
+}
+const { wide = false } = Astro.props;
+const path = Astro.url.pathname;
+const isCurrent = (href: string) => path === href || path.startsWith(href);
+---
+
+<header class="site-header" data-masthead>
+  <div class:list={['bar', { wide }]}>
+    <a class="wordmark" href="/">REST:ACT</a>
+    <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>
+      <span class="bars" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="menu-label" data-menu-label>Menu</span>
+    </button>
+    <nav id="site-nav" class="nav" aria-label="Main" data-site-nav>
+      <ul>
+        {
+          NAV.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+        <li><a href={GITHUB.specs}>GitHub</a></li>
+      </ul>
+    </nav>
+    <div class="actions">
+      <ThemeToggle />
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+  .bar {
+    max-width: calc(var(--measure) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 10px var(--gutter);
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 32px;
+  }
+  .bar.wide {
+    max-width: calc(1360px + 2 * var(--gutter));
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--on-brand);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+  .wordmark:hover {
+    color: var(--on-brand);
+  }
+  .nav {
+    margin-left: auto;
+  }
+  .nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 26px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--on-brand);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    text-underline-offset: 0.35em;
+  }
+  .nav a:hover {
+    color: var(--on-brand);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+  }
+  .nav a[aria-current] {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    margin-right: -10px;
+  }
+  /* :global so the ring also reaches the ThemeToggle component inside the band. */
+  .site-header :global(:focus-visible) {
+    outline-color: var(--on-brand);
+  }
+
+  .menu-toggle {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    margin-right: -10px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--on-brand);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .menu-toggle:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+  .bars {
+    position: relative;
+    width: 18px;
+    height: 12px;
+  }
+  .bars span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    transition:
+      transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 160ms ease;
+  }
+  .bars span:nth-child(1) {
+    top: 0;
+  }
+  .bars span:nth-child(2) {
+    top: 5px;
+  }
+  .bars span:nth-child(3) {
+    top: 10px;
+  }
+  [aria-expanded='true'] .bars span:nth-child(1) {
+    transform: translateY(5px) rotate(45deg);
+  }
+  [aria-expanded='true'] .bars span:nth-child(2) {
+    opacity: 0;
+  }
+  [aria-expanded='true'] .bars span:nth-child(3) {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
+  /* Narrow screens: wordmark, theme toggle and Menu on one row; the nav opens below them. Without
+     JavaScript the nav wraps as a row under the wordmark. */
+  @media (max-width: 1079px) {
+    .bar {
+      gap: 0;
+      padding-block: 12px;
+      min-height: var(--header-h);
+    }
+    .actions {
+      order: 1;
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .menu-toggle {
+      order: 2;
+    }
+    .nav {
+      order: 3;
+      flex: 1 0 100%;
+      margin-left: 0;
+    }
+    .nav ul {
+      gap: 0 22px;
+    }
+    :global(.js) .menu-toggle {
+      display: inline-flex;
+    }
+    :global(.js) .nav {
+      display: none;
+    }
+    :global(.js) .nav[data-open] {
+      display: block;
+    }
+    :global(.js) .nav ul {
+      flex-direction: column;
+      gap: 0;
+      margin-top: 8px;
+      border-top: 1px solid rgb(255 255 255 / 0.2);
+    }
+    :global(.js) .nav li + li {
+      border-top: 1px solid rgb(255 255 255 / 0.12);
+    }
+    :global(.js) .nav a {
+      display: flex;
+      min-height: 48px;
+      font-size: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bars span {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-masthead]');
+  const toggle = header?.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const label = header?.querySelector<HTMLElement>('[data-menu-label]');
+  const nav = header?.querySelector<HTMLElement>('[data-site-nav]');
+  if (header && toggle && label && nav) {
+    const isOpen = () => toggle.getAttribute('aria-expanded') === 'true';
+    const set = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      label.textContent = open ? 'Close' : 'Menu';
+      nav.toggleAttribute('data-open', open);
+    };
+    toggle.addEventListener('click', () => set(!isOpen()));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) {
+        set(false);
+        toggle.focus();
+      }
+    });
+    nav.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) set(false);
+    });
+    document.addEventListener('click', (e) => {
+      if (isOpen() && !header.contains(e.target as Node)) set(false);
+    });
+    // Close when keyboard focus leaves the header, so the open menu never hides the focused element.
+    document.addEventListener('focusin', (e) => {
+      if (isOpen() && !header.contains(e.target as Node)) set(false);
+    });
+  }
+</script>

@@ -1,0 +1,721 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T00:00:00Z",
+  "title": "Design System: REST:ACT",
+  "extensions": {
+    "colorMeta": {
+      "petrol": {
+        "role": "primary",
+        "displayName": "Deep Petrol",
+        "canonical": "#0b5560",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "petrol-deep": {
+        "role": "primary",
+        "displayName": "Petrol Shadow",
+        "canonical": "#073f47",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "petrol-tint": {
+        "role": "primary",
+        "displayName": "Pale Petrol",
+        "canonical": "#e8f1f1",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "on-petrol": {
+        "role": "neutral",
+        "displayName": "On Petrol",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "rust": {
+        "role": "secondary",
+        "displayName": "Rust (POST only)",
+        "canonical": "#9c3f16",
+        "tonalRamp": [
+          "#3f1806",
+          "#6a2a0e",
+          "#9c3f16",
+          "#c25a2c",
+          "#ea9067",
+          "#f2b89c",
+          "#f8dccd",
+          "#fcf0ea"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "footer-band": {
+        "role": "neutral",
+        "displayName": "Footer Band",
+        "canonical": "#f2f4f4",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "code-ground": {
+        "role": "neutral",
+        "displayName": "Code Ground",
+        "canonical": "#f5f7f7",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "code-strip": {
+        "role": "neutral",
+        "displayName": "Code Strip",
+        "canonical": "#eef2f2",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e4e8e8",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#d6dcdc",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Rule",
+        "canonical": "#a8b2b3",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#172022",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#3d494c",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#5a6669",
+        "tonalRamp": [
+          "#172022",
+          "#3d494c",
+          "#5a6669",
+          "#8b9799",
+          "#a8b2b3",
+          "#d6dcdc",
+          "#e4e8e8",
+          "#f5f7f7"
+        ]
+      },
+      "selection": {
+        "role": "primary",
+        "displayName": "Selection",
+        "canonical": "#c9e0e0",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "good": {
+        "role": "tertiary",
+        "displayName": "Good (status only)",
+        "canonical": "#1b6e45",
+        "tonalRamp": [
+          "#0a2b1b",
+          "#124a2f",
+          "#1b6e45",
+          "#2f9463",
+          "#6fcf9d",
+          "#a3e2c1",
+          "#d2f1e1",
+          "#eef9f3"
+        ]
+      },
+      "warn": {
+        "role": "tertiary",
+        "displayName": "Warn (status only)",
+        "canonical": "#855400",
+        "tonalRamp": [
+          "#2e1d00",
+          "#553600",
+          "#855400",
+          "#ad7410",
+          "#e6ad5c",
+          "#f0cb94",
+          "#f8e5c8",
+          "#fdf5ea"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger (status only)",
+        "canonical": "#b02a24",
+        "tonalRamp": [
+          "#3d0e0c",
+          "#701b17",
+          "#b02a24",
+          "#d2534c",
+          "#ef8a83",
+          "#f5b5b0",
+          "#fadbd8",
+          "#fdf1f0"
+        ]
+      },
+      "dark-petrol-band": {
+        "role": "primary",
+        "displayName": "Dark Petrol Band (dark theme)",
+        "canonical": "#0a4952",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "dark-petrol-tint": {
+        "role": "primary",
+        "displayName": "Dark Petrol Tint (dark theme)",
+        "canonical": "#112b2f",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "dark-signal": {
+        "role": "primary",
+        "displayName": "Dark Signal (dark theme)",
+        "canonical": "#6cc3cb",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "dark-signal-hover": {
+        "role": "primary",
+        "displayName": "Dark Signal Hover (dark theme)",
+        "canonical": "#9dd8dd",
+        "tonalRamp": [
+          "#04252a",
+          "#073f47",
+          "#0b5560",
+          "#2e8e98",
+          "#6cc3cb",
+          "#9dd8dd",
+          "#c9e0e0",
+          "#e8f1f1"
+        ]
+      },
+      "dark-rust": {
+        "role": "secondary",
+        "displayName": "Dark Rust (dark theme)",
+        "canonical": "#ea9067",
+        "tonalRamp": [
+          "#3f1806",
+          "#6a2a0e",
+          "#9c3f16",
+          "#c25a2c",
+          "#ea9067",
+          "#f2b89c",
+          "#f8dccd",
+          "#fcf0ea"
+        ]
+      },
+      "dark-ground": {
+        "role": "neutral",
+        "displayName": "Dark Ground (dark theme)",
+        "canonical": "#0e1b1e",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-footer-band": {
+        "role": "neutral",
+        "displayName": "Dark Footer Band (dark theme)",
+        "canonical": "#0b1618",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-code-ground": {
+        "role": "neutral",
+        "displayName": "Dark Code Ground (dark theme)",
+        "canonical": "#0a1517",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-hairline": {
+        "role": "neutral",
+        "displayName": "Dark Hairline (dark theme)",
+        "canonical": "#1c3034",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-rule": {
+        "role": "neutral",
+        "displayName": "Dark Rule (dark theme)",
+        "canonical": "#263d41",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-rule-strong": {
+        "role": "neutral",
+        "displayName": "Dark Rule Strong (dark theme)",
+        "canonical": "#3d5a5e",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-ink": {
+        "role": "neutral",
+        "displayName": "Dark Ink (dark theme)",
+        "canonical": "#e2ebeb",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-ink-2": {
+        "role": "neutral",
+        "displayName": "Dark Ink 2 (dark theme)",
+        "canonical": "#b0c0c1",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      },
+      "dark-ink-3": {
+        "role": "neutral",
+        "displayName": "Dark Ink 3 (dark theme)",
+        "canonical": "#8fa1a3",
+        "tonalRamp": [
+          "#0a1517",
+          "#0e1b1e",
+          "#1c3034",
+          "#263d41",
+          "#3d5a5e",
+          "#8fa1a3",
+          "#b0c0c1",
+          "#e2ebeb"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The single H1 per page; the draft title on the home page."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section H2s; 24px on phones."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Reader-group H3 over a rule."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "Opening abstract at a 62ch measure."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text at a 68ch measure; 16px under 720px."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Tagline bar, nav, footer, metadata rows."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Code blocks, paths, identifiers, docname."
+      }
+    },
+    "shadows": [
+      {
+        "name": "inline-code-ring",
+        "value": "inset 0 0 0 1px var(--hair)",
+        "purpose": "Hairline ring behind inline code in docs prose; the only shadow value. The system is otherwise flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-120",
+        "value": "120ms ease",
+        "purpose": "Colour, underline, border and background changes on links, buttons and rows."
+      },
+      {
+        "name": "menu-160",
+        "value": "160ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Menu bars crossing into a close mark."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition-duration: 0.01ms",
+        "purpose": "All transitions collapse under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "720px"
+      },
+      {
+        "name": "tagline-wrap",
+        "value": "860px"
+      },
+      {
+        "name": "masthead-menu",
+        "value": "1000px"
+      },
+      {
+        "name": "three-to-two-columns",
+        "value": "1080px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Masthead",
+      "kind": "nav",
+      "refersTo": "masthead",
+      "description": "Sticky petrol band: wordmark left, sentence-case nav with GitHub and the theme toggle right.",
+      "html": "<header class=\"ds-mast\"><a class=\"ds-mast-mark\" href=\"#\">REST:ACT</a><nav><a href=\"#\">How it works</a><a href=\"#\" aria-current=\"page\">Specification</a><a href=\"#\">Security</a><a href=\"#\">GitHub</a></nav><button class=\"ds-mast-toggle\" aria-label=\"Switch to the dark theme\"><svg viewBox=\"0 0 24 24\" width=\"19\" height=\"19\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 3.5v17\"/><path d=\"M12 7h3.5M12 11h6M12 15h5.5\"/></svg></button></header>",
+      "css": ".ds-mast{display:flex;align-items:center;gap:32px;min-height:64px;padding:10px 32px;background:var(--brand,#0b5560);color:var(--on-brand,#fff);font-family:var(--font-sans,'Public Sans',sans-serif)}.ds-mast-mark{color:inherit;font-size:20px;font-weight:700;letter-spacing:.02em;text-decoration:none}.ds-mast nav{display:flex;gap:26px;margin-left:auto}.ds-mast nav a{color:inherit;font-size:15px;font-weight:500;text-decoration:none;text-underline-offset:.35em}.ds-mast nav a:hover{text-decoration:underline;text-decoration-thickness:1px}.ds-mast nav a[aria-current]{text-decoration:underline;text-decoration-thickness:2px}.ds-mast-toggle{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:4px;background:transparent;color:inherit;cursor:pointer;transition:background-color 120ms ease}.ds-mast-toggle:hover{background:rgb(255 255 255 / .1)}.ds-mast :focus-visible{outline:2px solid #fff;outline-offset:2px}"
+    },
+    {
+      "name": "Tagline Bar",
+      "kind": "custom",
+      "refersTo": "tagline-bar",
+      "description": "Pale petrol strip under the masthead: purpose left, scope right in quieter ink.",
+      "html": "<p class=\"ds-tag\"><span>Let users and their agents add the functions an API doesn’t have.</span><span class=\"ds-tag-scope\">An open-source protocol and reference server.</span></p>",
+      "css": ".ds-tag{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;padding:10px 32px;background:var(--brand-tint,#e8f1f1);border-bottom:1px solid var(--line,#d6dcdc);font-family:var(--font-sans,'Public Sans',sans-serif);font-size:14.5px;line-height:1.5;color:var(--ink-2,#3d494c)}.ds-tag-scope{margin-left:auto;color:var(--ink-3,#5a6669)}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Petrol fill for the one action on the draft card or specification hub.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Read the draft</a>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border:1px solid var(--brand,#0b5560);border-radius:6px;background:var(--brand,#0b5560);color:var(--on-brand,#fff);font-family:var(--font-sans,'Public Sans',sans-serif);font-size:16px;font-weight:700;text-decoration:none;transition:background-color 120ms ease,border-color 120ms ease}.ds-btn-primary:hover{background:color-mix(in srgb,var(--brand,#0b5560) 82%,#000);border-color:color-mix(in srgb,var(--brand,#0b5560) 82%,#000)}.ds-btn-primary:focus-visible{outline:2px solid var(--signal,#0b5560);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Paper ground, strong-rule border; the quieter companion action.",
+      "html": "<a class=\"ds-btn\" href=\"#\">View on GitHub</a>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border:1px solid var(--line-strong,#a8b2b3);border-radius:6px;background:var(--surface,#fff);color:var(--ink,#172022);font-family:var(--font-sans,'Public Sans',sans-serif);font-size:16px;font-weight:600;text-decoration:none;transition:border-color 120ms ease}.ds-btn:hover{border-color:var(--ink-3,#5a6669)}.ds-btn:focus-visible{outline:2px solid var(--signal,#0b5560);outline-offset:2px}"
+    },
+    {
+      "name": "Ruled Link List",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The signature next-step pattern: a reader heading over hairline rows of link plus one-line note.",
+      "html": "<div class=\"ds-rl\"><h3>Reviewing the protocol</h3><ul><li><a href=\"#\">Read the draft</a><p>Addressing, method semantics, capabilities and limits.</p></li><li><a href=\"#\">Security model</a><p>The threat model and how the draft answers it.</p></li></ul></div>",
+      "css": ".ds-rl{font-family:var(--font-sans,'Public Sans',sans-serif);max-width:360px}.ds-rl h3{margin:0;padding-bottom:12px;border-bottom:1px solid var(--line,#d6dcdc);font-size:17px;font-weight:700;color:var(--ink,#172022)}.ds-rl ul{margin:0;padding:0;list-style:none}.ds-rl li{padding-block:18px;border-bottom:1px solid var(--hair,#e4e8e8)}.ds-rl a{font-weight:600;color:var(--signal,#0b5560);text-decoration-line:underline;text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:.22em;transition:color 120ms ease,text-decoration-color 120ms ease}.ds-rl a:hover{color:var(--signal-hover,#073f47);text-decoration-color:currentColor}.ds-rl a:focus-visible{outline:2px solid var(--signal,#0b5560);outline-offset:2px;border-radius:3px}.ds-rl p{margin:4px 0 0;font-size:16px;line-height:1.6;color:var(--ink-2,#3d494c)}"
+    },
+    {
+      "name": "Hairline Section",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The only section device: a hairline with 32px either side, then a 28px heading and a lead.",
+      "html": "<section class=\"ds-sect\"><h2>What it is for</h2><p>The draft’s introduction names four kinds of application.</p></section>",
+      "css": ".ds-sect{padding-bottom:32px;font-family:var(--font-sans,'Public Sans',sans-serif)}.ds-sect::before{content:'';display:block;height:1px;margin-bottom:32px;background:var(--hair,#e4e8e8)}.ds-sect h2{margin:0 0 14px;font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-.008em;color:var(--ink,#172022)}.ds-sect p{margin:0;font-size:18px;line-height:1.6;color:var(--ink-2,#3d494c)}"
+    },
+    {
+      "name": "Code Block",
+      "kind": "custom",
+      "refersTo": "code-block",
+      "description": "Tinted ground, 8px frame, mono label strip with a text Copy button; no window chrome.",
+      "html": "<figure class=\"ds-code\"><div class=\"ds-code-strip\"><span>shell</span><button>Copy</button></div><pre><span class=\"ds-p\">$ </span>curl 'localhost:8080/v1/text<span class=\"ds-s\">:</span>wordCount?input=one%20two'\n<span class=\"ds-o\">2</span></pre></figure>",
+      "css": ".ds-code{margin:0;border:1px solid var(--line,#d6dcdc);border-radius:8px;background:var(--sunk,#f5f7f7);overflow:hidden}.ds-code-strip{display:flex;align-items:center;min-height:40px;padding:4px 8px 4px 16px;border-bottom:1px solid var(--hair,#e4e8e8);background:var(--sunk-head,#eef2f2);font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:12px;color:var(--ink-3,#5a6669)}.ds-code-strip button{margin-left:auto;min-height:32px;padding:0 10px;border:0;border-radius:4px;background:transparent;font:inherit;color:var(--ink-2,#3d494c);cursor:pointer;transition:color 120ms ease,background-color 120ms ease}.ds-code-strip button:hover{color:var(--ink,#172022);background:var(--surface-2,#e8f1f1)}.ds-code-strip button:focus-visible{outline:2px solid var(--signal,#0b5560);outline-offset:2px}.ds-code pre{margin:0;padding:16px 20px;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:14px;line-height:1.6;color:var(--ink-2,#3d494c);font-variant-ligatures:none}.ds-p{color:var(--ink-3,#5a6669)}.ds-s{color:var(--signal,#0b5560)}.ds-o{color:var(--ink,#172022)}"
+    },
+    {
+      "name": "Callout",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Tone-tinted note: 35% tone border, 6% tone ground, bold ink title.",
+      "html": "<aside class=\"ds-callout\"><strong>Not yet submitted</strong><span>The draft is written in Internet-Draft format.</span></aside>",
+      "css": ".ds-callout{display:flex;flex-direction:column;gap:4px;padding:14px 18px;border:1px solid color-mix(in srgb,var(--signal,#0b5560) 35%,var(--line,#d6dcdc));border-radius:8px;background:color-mix(in srgb,var(--signal,#0b5560) 6%,var(--ground,#fff));font-family:var(--font-sans,'Public Sans',sans-serif);font-size:15.5px;line-height:1.6;color:var(--ink-2,#3d494c)}.ds-callout strong{color:var(--ink,#172022)}"
+    },
+    {
+      "name": "Footer",
+      "kind": "nav",
+      "refersTo": "footer",
+      "description": "One quiet row: source links left, docname in mono right.",
+      "html": "<footer class=\"ds-foot\"><nav><a href=\"#\">restact-specs</a><a href=\"#\">restactd</a><a href=\"#\">restactd documentation</a></nav><span>draft-byrd-restact-protocol-00</span></footer>",
+      "css": ".ds-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 32px;padding:22px 32px;background:var(--band,#f2f4f4);border-top:1px solid var(--line,#d6dcdc);font-family:var(--font-sans,'Public Sans',sans-serif);font-size:15px}.ds-foot nav{display:flex;gap:28px}.ds-foot a{display:inline-flex;align-items:center;min-height:44px;color:var(--signal,#0b5560);text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:.22em}.ds-foot a:hover{color:var(--signal-hover,#073f47);text-decoration-color:currentColor}.ds-foot a:focus-visible{outline:2px solid var(--signal,#0b5560);outline-offset:2px}.ds-foot span{font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:13.5px;color:var(--ink-3,#5a6669)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Standards Sheet Under a Petrol Masthead",
+    "overview": "The site reads as the documentation hub for a protocol proposal, not a product launch. One committed brand colour, a deep petrol, fills the sticky masthead; a pale petrol tagline bar sits under it; then the page is white reading space in near-black ink, divided by hairline rules. Sections carry no boxes, bands or tiles: a 1px hairline with equal space above and below is the only section device. The register follows a2a-protocol.org and W3C/IETF documents: a left-aligned column, the draft title as the H1, plain paragraphs, ruled link lists.\n\nDensity is moderate and textual. Petrol is the only hue in the interface; it marks the masthead, links, focus rings, GET and verbs in examples. Rust appears only where a request writes (POST). Everything else is ink at three weights, white, and grey-green hairlines. Code is set in JetBrains Mono on a faintly tinted ground; prose, headings and UI share one face, Public Sans.\n\nLight is the site's look and the default for every visitor; dark is an opt-in through the masthead toggle and never follows the OS preference. The old dark, teal, Space Grotesk landing-page look (status pill, two-tone slogan H1, stat strip, eyebrows, numbered feature cards, closing CTA card) is the confirmed anti-reference.",
+    "keyCharacteristics": [
+      "A petrol masthead band and pale-petrol tagline bar frame every page except the home page, which sets the tagline in its opening; below them, only white, ink and hairlines.",
+      "Sections are separated by a single hairline with 32px either side (28px on phones), never by boxes or grey bands.",
+      "One sans family for everything readable; mono only for code, paths, identifiers and the docname.",
+      "Link lists are ruled rows (title link plus a one-line note), not cards.",
+      "Light by default; dark is a deliberate, stored choice."
+    ],
+    "rules": [
+      {
+        "name": "The One Hue Rule",
+        "body": "Petrol is the only interface hue. If a new element wants colour, it is a link, a focus state or a GET; otherwise it is ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rust Means Write Rule",
+        "body": "Rust marks POST and action verbs. It is never a highlight, a badge colour or an accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Light Default Rule",
+        "body": "Light is the default for every visitor. Dark is chosen through the toggle and remembered; the OS preference is not consulted.",
+        "section": "colors"
+      },
+      {
+        "name": "The Machine Strings Rule",
+        "body": "Mono marks code, URLs, paths, identifiers, BCP 14 keywords and the docname. Prose, headings and buttons are never mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence-Case Rule",
+        "body": "Headings, nav and labels are sentence case at normal tracking. No uppercase tracked labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Section Rule",
+        "body": "A section begins with one hairline and 32px either side. No background bands, no boxed sections, no alternating fills.",
+        "section": "layout"
+      },
+      {
+        "name": "The Single Entry Rule",
+        "body": "The opening is one column: title, then abstract. Nothing sits beside it.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Page Rule",
+        "body": "Nothing floats. A state change is a colour, underline or border change.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** open every section with one hairline and 32px either side (28px on phones).",
+      "**Do** keep petrol the only hue: links, focus, GET, verbs, the masthead.",
+      "**Do** reserve rust for POST and action verbs.",
+      "**Do** set code, paths, identifiers and the docname in JetBrains Mono, everything else in Public Sans.",
+      "**Do** present next steps as ruled link lists with a one-line note under each link.",
+      "**Do** keep light the default and dark an opt-in stored by the toggle.",
+      "**Do** give every interactive target at least 44px of hit area (48px for menu rows and buttons)."
+    ],
+    "donts": [
+      "**Don't** box sections, add grey or tinted section bands, or build tile walls; frames belong only to self-contained objects: code blocks, callouts, the request demo, docs-prose tables, the draft card and docs pagers.",
+      "**Don't** use drop shadows or hover lift.",
+      "**Don't** put a label, kicker or eyebrow above a heading, or use uppercase tracked labels.",
+      "**Don't** use a status pill, two-tone headline, stat strip, numbered feature cards or a closing call-to-action card.",
+      "**Don't** add a second accent hue; status tones are for callouts and status words only.",
+      "**Don't** draw window dots or other chrome on code blocks.",
+      "**Don't** follow the OS colour-scheme preference."
+    ]
+  }
+}

@@ -1,0 +1,129 @@
+---
+layout: ../layouts/MdPage.astro
+title: Compared with other approaches
+description: REST:ACT adds one thing to HTTP APIs, a way for a client to install new behavior at runtime under the caller's authority. This page sets it beside REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, plugin systems, database-backed HTTP APIs, Shopify Functions, MCP and Cloudflare's Code Mode.
+summary: 'REST:ACT beside REST, RPC, GraphQL, serverless, Wasm platforms, Extism, PostgREST, Hasura, PocketBase and MCP. It adds one thing: runtime code from clients.'
+chips:
+  - Explanatory
+  - 'Normative text: draft, Relationship to Google AIP and JSON:API'
+---
+
+import Callout from '../components/Callout.astro';
+import InRestactd from '../components/InRestactd.astro';
+import { RESTACTD_DOCS } from '../site.config';
+
+Each approach below solves a problem that REST:ACT does not try to solve, and the reverse holds too. The table gives the short form, and the sections under it give the differences in detail.
+
+| Approach | Who defines behavior, and when | What it provides that REST:ACT leaves out |
+|---|---|---|
+| REST and OpenAPI | The API's developers, before release | Behavior its developers fix before release |
+| RPC and gRPC | The developers, in an IDL compiled into the server | Code generation, bidirectional streaming, a binary wire format |
+| GraphQL | The developers write resolvers; the client picks the shape of each read | Ad hoc reads with no deployment |
+| Serverless platforms | The account that deploys the function | Outbound network access and any library |
+| Wasm platforms | The application's developers or platform team | Packaging, workload placement, multi-host distribution |
+| Extism | The host's developers define extension points; users write plug-ins | Host SDKs for several environments |
+| Workers for Platforms | The platform, which deploys customers' code for them | Bindings to KV, D1 and R2 |
+| PostgREST, Supabase | The database's developers, in SQL functions and policies | The database as the data model |
+| Hasura | The developers write a handler behind a GraphQL field | Handlers in any language, anywhere |
+| PocketBase | The application's developer, in files beside the server | A backend in one executable |
+| Shopify Functions | App developers, at steps Shopify defines | Hooks into Shopify's discount, delivery and checkout logic |
+| MCP | The tool author, who exposes tools to an AI application | Prompts and a session model |
+| Cloudflare Code Mode | The model, for the task in front of it | One TypeScript API over the tools of several MCP servers |
+
+## Plain REST and OpenAPI
+
+REST:ACT keeps methods, status codes, conditional requests and caching, and adds the `:verb` suffix from AIP-136. It sits at Richardson Level 2 and extends the uniform interface on purpose, as OData does with its actions and functions.
+
+A client that only does CRUD sees an ordinary REST API, and discovery can point to a generated OpenAPI 3.1 document. OpenAPI describes an API whose behavior its developers fixed. REST:ACT adds a way to change that behavior at runtime.
+
+## RPC and gRPC
+
+Procedures there are defined in an IDL and compiled into the server. A verb is addressed off a resource, uses the HTTP method that matches its side effects, reports errors as RFC 9457 problem details, and may carry a `restact_grpc_code` for clients that expect one.
+
+gRPC supplies code generation, bidirectional streaming calls and a binary wire format, which the draft leaves out of scope.
+
+## GraphQL
+
+The client picks the shape of a read at request time, over resolvers the server's developers wrote. REST:ACT accessor verbs (`:get`, `:list`) play the role of resolvers and can compose child accessors, but a new shape means deploying a verb.
+
+An ad hoc GraphQL read needs no deployment, while a REST:ACT function is a cacheable `GET`.
+
+## Serverless platforms
+
+On AWS Lambda or Cloudflare Workers the deploying account typically owns the function's credentials and bill. A REST:ACT verb is deployed by an API client, runs as each caller, is charged to that caller, and is addressed by the resource it works on.
+
+A function platform gives code outbound network access and any library. A verb gets no socket interface. With the optional `llm-connector` feature it can ask the server for one bounded model completion through an owner-governed connector, and its descriptor then reports `networkAccess: "outbound"`.
+
+## Wasm platforms
+
+Spin and wasmCloud also run components with only the interfaces they are granted. There, the application's developers or platform team build and deploy components with tools like `spin` and `wash`.
+
+REST:ACT is a wire protocol for the clients of an API to upload components at runtime, bound to objects and run under per-caller authority. Packaging, workload placement and multi-host distribution belong to those platforms, and their standard interface sets are larger.
+
+## Extism
+
+Extism is a plug-in system built on WebAssembly. The host application defines an interface, and users or customers add logic by writing plug-ins against it. Extism supplies host SDKs for embedding that runtime in an application.
+
+Both share the idea of letting a product's users extend it with their own code. The difference is the layer. Extism is a library that a product's developers embed, and they design the extension points. REST:ACT is a wire protocol, so any client of a compliant server can upload a verb over HTTP, and the server enforces time, compute and memory limits on it, runs it as the caller by default and lists it in its discovery document.
+
+## Cloudflare Workers for Platforms
+
+Workers for Platforms lets a platform run its customers' code, or code written by AI, in isolated Workers kept in a dispatch namespace. A dynamic dispatch Worker receives each request and routes it to the right customer Worker. The platform can set per-customer limits on CPU time and subrequests.
+
+It shares the multi-tenant goal and the idea that uploaded code is untrusted. In the documented flow the customer does not deploy directly: the platform receives the code and calls Cloudflare's API to deploy it as a user Worker, and the platform writes the routing. REST:ACT specifies that upload and routing as an open HTTP surface, with authority rules attached: the client deploys the verb, it is addressed by the object it works on and it runs as each caller by default. The draft names WebAssembly components as the canonical verb format and recommends process or microVM isolation between tenants as defense in depth. [restactd](/restactd/) ships in-process and process isolation only.
+
+## PostgREST and Supabase
+
+PostgREST serves a Postgres database over HTTP. A function in the exposed schema is callable under `/rpc`. A function that does not modify the database also runs under `GET`, and a request with a valid JWT switches the database session to the role named in the token, so the database decides what the caller may do. Supabase's REST API is PostgREST, and `rpc()` calls its database functions. Supabase recommends `security invoker`, the default, so a function runs with the caller's privileges.
+
+This is the closest relative here. Read-only calls use `GET`, others use `POST`, and the code runs as the caller. PostgREST decides by function volatility: `GET` is always read-only, and `POST` is read-write only for volatile functions. REST:ACT separates a function from an action by declared kind, and a function is a cacheable `GET`. The functions there are SQL or other database code written by whoever administers the database, then exposed. A verb is uploaded at runtime by an API client, is not tied to a database, runs as a WebAssembly component under time, compute and memory limits, and works on the object it is bound to.
+
+## Hasura actions
+
+A Hasura action adds a field to the GraphQL schema, as a query or a mutation, and handles it by calling an HTTP webhook that the developer writes and hosts. The handler receives the action's name, its input and the session variables, and roles must be granted permission to execute the action.
+
+An action and a verb both put custom logic behind a typed, permissioned entry point. In Hasura the logic runs outside the engine, on infrastructure the developer chooses and in any language, and the handler is registered in Hasura's metadata. A REST:ACT verb runs inside the server, as the caller by default, and its uploader is any client allowed to deploy it.
+
+## PocketBase hooks
+
+PocketBase is a backend that ships as one executable. Developers extend it with JavaScript files in a `pb_hooks` directory next to the executable. Hooks can register event handlers, such as one that runs when a record is created, and custom routes. The files are read by an embedded JavaScript engine, and in development the process reloads when they change.
+
+The common ground is server-side JavaScript that adds behavior and routes. PocketBase hooks are written by the person running the application and are loaded from its filesystem. REST:ACT is for the case where the uploader is a client of the API, so a verb can use only the host interfaces it imports and runs under per-invocation limits.
+
+## Shopify Functions
+
+A Shopify Function is a WebAssembly module, usually written in Rust or JavaScript, that changes one step of Shopify's own backend logic, such as a discount, a delivery option or a checkout validation. App developers ship functions inside an app, and a store gets them by installing the app. Shopify runs a function when a customer reaches its step. The input is the JSON result of a GraphQL query the developer writes, and the output is a JSON list of operations for Shopify to carry out. A function is never called by URL, and it runs under an instruction-count limit.
+
+Both run code the platform does not trust as WebAssembly under fixed limits. Shopify chooses the extension points and when they run, and the code arrives in an app that a store installs. A REST:ACT verb has no fixed extension point. Any client allowed to deploy can add one at runtime, it gets a URL on the object it works on, and callers invoke it directly with `GET` or `POST`.
+
+## MCP
+
+The Model Context Protocol standardizes how an AI application discovers and calls the tools a server's author exposes. REST:ACT standardizes how a caller installs a new verb.
+
+The two compose. `restact mcp`, the MCP bridge in the restact command line, serves a host's verbs as MCP tools and its objects as MCP resources, so an agent can deploy a verb and call it in one session. Prompts and a session model are part of MCP and outside REST:ACT.
+
+## Cloudflare Code Mode and Dynamic Workers
+
+Code Mode turns the tools of the MCP servers an agent is connected to into a TypeScript API, and asks the model to write code against that API instead of calling the tools one at a time. Cloudflare runs the code in a Dynamic Worker, a Worker that another Worker creates at runtime from code it supplies. The parent Worker decides which bindings the Dynamic Worker receives and can block its network access, so the generated code reaches the tools only through those bindings and never sees their credentials. In Code Mode, each piece of generated code runs in a fresh sandbox that is thrown away afterward.
+
+Both let a model write code that a server runs in a sandbox, with only the access it is given. Code Mode's code is written for one task, runs once inside the application that asked for it, and is gone. A verb that an agent writes against a REST:ACT server stays deployed. It has a URL on the object it is bound to, and other callers can call it later. The verb's `policy` property decides who may call or change it, along with the object's `$policy` on a server that supports object policy. It is deployed through an open protocol rather than one platform's API.
+
+## Google AIP and JSON:API
+
+REST:ACT is a compatible extension of the Google API Design Guide. Its object and collection model follows AIP-122 and its data methods follow the standard methods. Verb invocation adopts the custom methods of AIP-136, and extends them by treating the colon-verb as an object that a path can continue past. AIP-136 is silent on what follows a custom method, so this is a superset that does not conflict, and any AIP-136 custom method is already a valid REST:ACT verb invocation. Pagination (AIP-158), filtering (AIP-160), field masks (AIP-161) and operations (AIP-151) are adopted as the draft describes.
+
+From JSON:API, REST:ACT borrows the optional relationship representation and the `source.pointer` error convention. It does not adopt JSON:API as its native representation, nor gRPC-style status objects.
+
+<Callout title="Where the ideas come from">
+  The draft draws on OData, AIP-136, JSON:API and the WebAssembly Component Model.
+</Callout>
+
+## In restactd
+
+<InRestactd
+  links={[
+    { label: 'Introduction', href: RESTACTD_DOCS.introduction, body: 'What restactd is, and what it is not: a function-as-a-service platform, a container runtime or a database.' },
+    { label: 'Limits, and when not to use restactd', href: RESTACTD_DOCS.limits, body: 'Where it stops being the right tool, including what its sandbox does not protect against.' },
+    { label: 'Use restactd from AI agents', href: RESTACTD_DOCS.aiAgents, body: 'The agent plugins, `restact mcp` and the `/mcp` endpoint.' },
+  ]}
+/>

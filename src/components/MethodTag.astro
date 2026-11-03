@@ -1,0 +1,31 @@
+---
+/**
+ * An HTTP method in the wire face. GET takes the signal (functions), POST the action colour
+ * (actions); every other method is neutral.
+ *
+ * Props
+ *   method  "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | any string
+ */
+interface Props {
+  method: string;
+}
+const { method } = Astro.props;
+const tone = method === 'GET' ? 'get' : method === 'POST' ? 'post' : 'other';
+---
+
+<span class={`method ${tone}`}>{method}</span>
+
+<style>
+  .method {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--ink-2);
+  }
+  .get {
+    color: var(--signal);
+  }
+  .post {
+    color: var(--action);
+  }
+</style>
