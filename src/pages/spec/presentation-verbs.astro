@@ -1,13 +1,10 @@
 ---
 import Docs from '../../layouts/Docs.astro';
 import SpecBody from '../../components/SpecBody.astro';
-import { renderPlain, readSpec, SPECS_REPO } from '../../lib/specmd';
+import { renderDraft, PV_FILE, SPECS_REPO } from '../../lib/specmd';
 
-const file = 'presentation-verbs.md';
-// The document's own title line becomes the page title; the rest renders as written.
-const md = readSpec(file).replace(/^# .*\n+/, '');
-const doc = renderPlain(md, { file, baseDepth: 1 });
-const sourceUrl = `${SPECS_REPO}/blob/main/${file}`;
+const doc = renderDraft(PV_FILE);
+const sourceUrl = `${SPECS_REPO}/blob/main/${PV_FILE}`;
 ---
 
 <Docs
@@ -16,7 +13,7 @@ const sourceUrl = `${SPECS_REPO}/blob/main/${file}`;
   summary="The application/vnd.restact.ui+json media type: a presentation verb returns a declarative UI document from a closed catalog that a trusted client renders."
   headings={doc.headings}
   verbatimToc
-  chips={['Normative', 'Companion to the draft']}
+  chips={['Normative', 'Extension draft']}
   editUrl={sourceUrl}
   asideLinks={[
     { label: 'Component catalog registry', href: '/spec/registries/#ui-catalog-nodes' },
@@ -24,4 +21,5 @@ const sourceUrl = `${SPECS_REPO}/blob/main/${file}`;
   ]}
 >
   <SpecBody segments={doc.segments} />
+  <Fragment set:html={doc.refsHtml} />
 </Docs>

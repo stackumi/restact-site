@@ -20,7 +20,7 @@ A verb is a WebAssembly component. It runs with the caller's permissions, can us
 - [The draft](${u('/spec/draft/')}): the normative text, "${DRAFT.title}"
 - [The draft's Markdown source](${raw}): the same text, as written
 - [Specification overview](${u('/spec/')}): the draft section by section, feature tokens, the guest contract, and tests
-- [Presentation verbs and their media type](${u('/spec/presentation-verbs/')}): application/vnd.restact.ui+json, normative
+- [Presentation verbs and their media type](${u('/spec/presentation-verbs/')}): application/vnd.restact.ui+json, the extension draft, normative
 - [Registries](${u('/spec/registries/')}): the registries the draft requests
 
 ## Explanations

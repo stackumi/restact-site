@@ -73,7 +73,7 @@ const documents = [
   {
     name: 'Presentation verbs',
     href: '/spec/presentation-verbs/',
-    status: 'Normative',
+    status: 'Normative, extension draft',
     covers: 'The application/vnd.restact.ui+json media type',
     mono: true,
   },
@@ -216,7 +216,9 @@ const registries = [
             tokens.map((t) => (
               <li data-q={`${t.token} ${t.plain} ${t.status}`.toLowerCase()}>
                 <span class="name">{t.token}</span>
+                <Fragment set:html="<!--verbatim-->" />
                 <span class="desc" set:html={t.html} />
+                <Fragment set:html="<!--/verbatim-->" />
                 <span class={`status ${t.status}`}>{t.status}</span>
               </li>
             ))

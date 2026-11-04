@@ -75,8 +75,9 @@ A verb is a WebAssembly component, and the interfaces it imports are its capabil
 | `object` | read and write the bound object's data, and others' under their access rules | gated |
 | `compose` | call the verbs it declared | gated |
 | `event` | publish an event on a topic | gated |
+| `llm` | request a bounded text completion through a connector, where `llm-connector` is advertised | gated |
 
-All five live in the WIT package `rest-act:plugin@0.1.0`, which only grows, so compiled verbs keep linking.
+All six live in the WIT package `rest-act:plugin@0.1.0`, which only grows, so compiled verbs keep linking.
 
 ## In restactd
 

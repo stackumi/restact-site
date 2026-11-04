@@ -4,7 +4,7 @@ A *catalog node* is one entry in the closed component vocabulary of the
 `application/vnd.restact.ui+json` media type: a JSON object whose `type` field names a registered
 node type and whose remaining fields are that type's properties, as returned by a presentation
 verb and rendered by a trusted, generic client. The normative description of presentation verbs,
-the media type, and the document model is [`../presentation-verbs.md`](../presentation-verbs.md);
+the media type, and the document model is [`../draft-byrd-restact-presentation-00.md`](../draft-byrd-restact-presentation-00.md);
 the vocabulary is tracked by [ADR-0056](https://github.com/stackumi/restactd/blob/main/spec/decisions/0056-presentation-verbs.md),
 [ADR-0114](https://github.com/stackumi/restactd/blob/main/spec/decisions/0114-presentation-verbs-normative.md),
 [ADR-0058](https://github.com/stackumi/restactd/blob/main/spec/decisions/0058-ui-catalog-v0.2.md),
@@ -32,7 +32,9 @@ the vocabulary is tracked by [ADR-0056](https://github.com/stackumi/restactd/blo
 [ADR-0105](https://github.com/stackumi/restactd/blob/main/spec/decisions/0105-ui-catalog-v019-collection-controls.md), and
 [ADR-0107](https://github.com/stackumi/restactd/blob/main/spec/decisions/0107-ui-catalog-v020-cell.md).
 
-- Registration policy: **Specification Required** (see [`README.md`](README.md)).
+- Registration policy: **Specification Required** (see [`README.md`](README.md)). The registry is
+  requested by [`../draft-byrd-restact-presentation-00.md`](../draft-byrd-restact-presentation-00.md)
+  §IANA Considerations.
 - Registry-specific rule: **additive-only** — a registered node type is never removed or
   redefined. A client MUST render an unregistered/unknown `type` as an inert placeholder (see the
   unknown-type rule below), never as markup and never silently skipped; this inert degradation is
@@ -197,7 +199,7 @@ These rules apply to every node type; per-node entries reference them rather tha
   every write regardless (advisory-validation rule). A server that must not disclose a field
   omits it from the document.
 
-The document root MUST be a `page` ([`../presentation-verbs.md`](../presentation-verbs.md) §4).
+The document root MUST be a `page` ([`../draft-byrd-restact-presentation-00.md`](../draft-byrd-restact-presentation-00.md) §The component catalog).
 
 ## Facet contracts
 
@@ -603,7 +605,7 @@ The view root: a titled container of blocks.
 | `title` | string | no | Rendered as the page heading, as text; heading omitted when absent (presence rule). |
 | `blocks` | node[] | no | Each entry rendered in order (node-position rule); non-array → `[]` (malformed-input rule). |
 | `refresh` | number | no | Consumed iff a finite number > 0: the client re-invokes the current view every `max(refresh, 5)` seconds — the ≥ 5 s clamp is normative — while the document is visible, and MUST pause the timer while the document is hidden, resuming on visibility. Re-render SHOULD preserve scroll position and focus. Absent or invalid → no auto-refresh. Each rendered document's own `refresh` governs the timer: a re-invocation that returns a document without a valid `refresh` stops the timer. A failed re-invocation (4xx/5xx/network) leaves the prior render in place and does **not** stop the timer — the next tick retries. |
-| `subscribe` | string[] | no | Consumed iff discovery `service.features` contains `event-subscriptions`; when the token is absent the field is ignored entirely. Each entry is an object path validated against the path rule **before any stream is opened**; an entry that fails validation is dropped individually; a non-array value is treated as absent (malformed-input rule). For each honored entry the client subscribes to the topic's event stream (`GET /v1/<path>` with `Accept: text/event-stream`) and, on any data-plane lifecycle event (`onCreate`/`onChange`/`onDelete`) or a gap signal (`gap`), re-invokes the current view. The stream is strictly an invalidation signal: the client MUST NOT interpret or render event names or payloads beyond treating those names as the invalidation set. A client MAY cap the number of honored entries but MUST honor at least the first valid one. Each rendered document's own `subscribe` governs the page's subscriptions, exactly as `refresh` governs its timer. `subscribe` is independent of `refresh`: both may be declared, and neither disables the other. |
+| `subscribe` | string[] | no | Consumed iff discovery `service.features` contains `event-subscriptions`; when the token is absent the field is ignored entirely. Each entry is an object path validated against the path rule **before any stream is opened**; an entry that fails validation is dropped individually; a non-array value is treated as absent (malformed-input rule). For each honored entry the client subscribes to the topic's event stream (`GET /v1/<path>` with `Accept: text/event-stream`) and, on any data-plane lifecycle event (`onCreate`/`onChange`/`onDelete`), a gap signal (`gap`), or an application's invalidation event (`invalidate`, the name a verb publishes on an anchor topic; amended 2026-10-18 by [ADR-0120](https://github.com/stackumi/restactd/blob/main/spec/decisions/0120-event-and-hook-integrity.md), since a verb may no longer publish the lifecycle names), re-invokes the current view. The stream is strictly an invalidation signal: the client MUST NOT interpret or render event names or payloads beyond treating those names as the invalidation set. A client MAY cap the number of honored entries but MUST honor at least the first valid one. Each rendered document's own `subscribe` governs the page's subscriptions, exactly as `refresh` governs its timer. `subscribe` is independent of `refresh`: both may be declared, and neither disables the other. |
 | `compose` | compose facet | no | Per the **`compose` facet contract** — the page-level insertion affordance and type menu. |
 | `titleEdit` | edit facet | no | Per the **`edit` facet contract**, governing the rendered page heading; consumed iff its `kind` is `"line"` (any other kind → ignored). `value` defaults to `page.title`. This is the rename-the-page affordance — the title is a `page` field, not a node, so it needs its own attachment point. |
 | `pager` | `pager` (embedded) | no | Since v0.8. Per the **`pager` shape** and the **Windowed emission** contract on `dataGrid`, by reference — one shared windowing mechanism, not a second one (the `text.runs` reference posture): a long document windows by **block ranges** through the identical affordance group. Absent or non-object → ignored; the node renders exactly as today (malformed-input rule). |
@@ -614,7 +616,8 @@ the SSE-driven re-invalidation ([ADR-0039](https://github.com/stackumi/restactd/
 and the working fallback on servers that do not advertise `event-subscriptions`. A view whose
 freshness matters everywhere declares both.
 
-Since: v0 (`refresh`: v0.2; `subscribe`: v0.3; `compose`, `titleEdit`: v0.4; `pager`: v0.8).
+Since: v0 (`refresh`: v0.2; `subscribe`: v0.3; `compose`, `titleEdit`: v0.4; `pager`: v0.8;
+`invalidate` in `subscribe`'s invalidation set: v0.3 amendment, 2026-10-18).
 Status: provisional.
 
 ### `section`
@@ -739,7 +742,7 @@ A block of body text.
 | `style` | `"body"` \| `"muted"` \| `"heading"` \| `"pre"` | no (default `body`) | Strict whitelist: any other value — absent, non-string, or unrecognized (including multi-token strings) — MUST fall back to `body`, and the raw value MUST never reach a class name or attribute (text rule). Unchanged in v0.4: `heading` remains a presentation style; document headings are the dedicated `heading` node. `pre` (Since v0.16) is pre-formatted **prose**: a client that consumes it MUST preserve every line break and every run of whitespace in the displayed text as rendered whitespace (whitespace-only lines are content and MUST NOT be collapsed), MUST wrap a line that overflows its container — never a horizontal scroll, never an overflow that widens the page — **including a single unbroken run of non-whitespace characters longer than the container, which MUST also wrap** (a client that preserves whitespace without also breaking long unbroken runs — a 400-character URL, a base64 blob — has not satisfied this obligation; T3-F6's 1,659 px line was exactly that), and renders in the body register, the same face and size as `body`, **not** monospace (a verbatim monospace block is `code`). The style applies to whichever text the node displays (`value`, or `runs` when consumed), and nothing in it is ever parsed as markup. A pre-v0.16 client falls back to `body` by this same row: the words render, the line structure collapses — lost layout, never lost content. |
 | `runs` | entry[] | no | Inline rich text. Each entry is `{text, marks?, view?}`. Present and non-empty **after per-entry validation** → `runs` supersedes `value` for display; otherwise the node renders `value` as above. Per entry: `text` — the run's content, as text (text rule; a nullish `text` drops the entry); `marks` — array of mark tokens from the closed set `"b"` \| `"i"` \| `"code"` \| `"link"`, each consumed iff exactly a member (strict whitelist; unknown or non-string tokens are ignored individually and MUST never reach a class name, attribute, or markup; non-array → no marks); `view` — consumed iff the entry's marks include `link` **and** it passes the route rule, making the run an activation target exactly like a `link` node (pointer + keyboard activation, validated before any fetch); a `link` mark without a valid `view` renders the run as plain text (inert). Marks compose (a run may be bold **and** code). **Nothing in a run is ever parsed as markup** — a run's `text` containing `**` or `<b>` renders those characters literally. Non-array `runs` → absent (malformed-input rule). |
 | `markdown` | string | no | Since v0.18. It is consumed iff it is a non-empty string and the client implements the [contract](#markdown-rendering-contract-since-v018). When consumed it supersedes `runs` and `value` for display. `style` applies only as `body`/`muted` register (`heading` and `pre` fall back to `body`). Nullish or non-string → absent (malformed-input rule). With `edit`, `edit.value` is the markdown source, and edit capture stays plain text. |
-| `edit` | edit facet | no | Per the **`edit` facet contract**. Authors pair it with `runs` by supplying the stored rich-text source as `edit.value`; the client never parses or serializes any markup shorthand except display rendering of `markdown` per the [contract](#markdown-rendering-contract-since-v018) — parsing is server-side (see [`../presentation-verbs.md`](../presentation-verbs.md) §4). |
+| `edit` | edit facet | no | Per the **`edit` facet contract**. Authors pair it with `runs` by supplying the stored rich-text source as `edit.value`; the client never parses or serializes any markup shorthand except display rendering of `markdown` per the [contract](#markdown-rendering-contract-since-v018) — parsing is server-side (see [`../draft-byrd-restact-presentation-00.md`](../draft-byrd-restact-presentation-00.md) §The component catalog). |
 | `move` / `remove` | move/remove facets | no | Per the **`move` and `remove` facet contracts**. |
 
 Authoring guidance: a verb emitting `runs` SHOULD also emit `value` as the plain-text flattening —
@@ -761,14 +764,13 @@ A chip.
 | `edit` | edit facet | no | Per the **`edit` facet contract**; a component carrier has no canonical display string, so an `edit` whose `value` is absent is **ignored** (see "Component carriers" in the facet contracts). |
 | `move` / `remove` | move/remove facets | no | Per the **`move` and `remove` facet contracts**. |
 
-**The untoned treatment (Since v0.15).** With no consumed `tone` a badge renders as it always has:
-this registry does not constrain that treatment, and a client MAY derive it from the label
-(deriving a hue by hashing the label is one shipped choice) or use a single neutral chip. What the
-registry does now say is that a treatment derived from the label MUST NOT be applied when `tone`
-is consumed — a label-derived hue is arbitrary with respect to meaning, so "out of stock" can
-otherwise render in a client's success color. Authors who need the meaning carried supply `tone`;
-a pre-v0.15 client ignores it (unknown-field rule) and renders the untoned treatment, which is
-exactly today's rendering.
+**The untoned treatment.** With no consumed `tone` the badge renders the untoned treatment. The
+registry does not constrain that treatment, and a client MAY derive it from the label (deriving a
+hue by hashing the label is one shipped choice) or use a single neutral chip. A treatment derived
+from the label MUST NOT be applied when `tone` is consumed: a label-derived hue is arbitrary with
+respect to meaning, so "out of stock" could otherwise render in a client's success color. Authors
+who need the meaning carried supply `tone`; a client that does not implement `tone` ignores it
+(unknown-field rule) and renders the untoned treatment.
 
 Since: v0 (`edit`, `move`, `remove`: v0.8 amendment, 2026-07-30; `tone`: v0.15). Status: provisional.
 
@@ -1042,13 +1044,18 @@ the capability is absent.
 Behavior: activation with no file selected is a no-op (no `PUT`, no notification, control stays
 enabled). On activation with a file selected, the client `PUT`s the raw bytes to `/v1/{path}`
 (same-origin) with `Content-Type` = the file's reported MIME type when it is a well-formed media
-type matching `^(image|audio|video|text|application)/[A-Za-z0-9.+\-]+$`, else
-`application/octet-stream`; on 2xx it invokes `then.verb` with input `{path, contentType, bytes}`
-(Since v0.16; `{path}` before it): `path` is the string path, no leading `/v1/`; `contentType` is
-**the exact `Content-Type` string the client sent on that `PUT`**, after the gate above (so
-`application/octet-stream` when the file's reported type failed it), never the picker's unfiltered
-report; `bytes` is the number of bytes the client transferred in that `PUT`'s body, as a JSON
-number. Both are what the client *did*, not what the file *is* — the server's stored
+type matching `^(image|audio|video|text|application)/[A-Za-z0-9.+\-]+$` and is not a JSON-family
+type, else `application/octet-stream`. The JSON-family types are `application/json`, `text/json`,
+and any type whose subtype ends in `+json`, compared case-insensitively. A server reads a JSON body
+on a data-plane `PUT` as the object's properties, and a server that lets a writer set `$policy`
+takes it from that same body, so a file sent under its JSON type would become the object's
+properties instead of its stored bytes, and could rewrite the object's policy. Sent as
+`application/octet-stream`, it is stored as bytes like any other file. On 2xx the client invokes
+`then.verb` with input `{path, contentType, bytes}` (Since v0.16; `{path}` before it): `path` is
+the string path, no leading `/v1/`; `contentType` is **the exact `Content-Type` string the client
+sent on that `PUT`**, after the gate above (so `application/octet-stream` when the file's reported
+type failed it or was JSON-family), never the picker's unfiltered report; `bytes` is the number of
+bytes the client transferred in that `PUT`'s body, as a JSON number. Both are what the client *did*, not what the file *is* — the server's stored
 `Content-Type` and length are the facts of record, and a registering verb that must be certain
 reads the object. They are additive input keys (a verb reading only `path` is unaffected), and the reverse holds:
 a `then` verb invoked by a **pre**-v0.16 client receives `{path}` only and MUST tolerate their
@@ -1058,8 +1065,8 @@ rule (`ok` + re-render / `err` + re-enable). A non-2xx `PUT` (including the host
 surfaces `err` and re-enables. In flight, the control is disabled. Exactly one file per activation
 unless `multiple` is consumed (above).
 
-Since: v0.2 (`then.emphasis`, `multiple`, and the `contentType`/`bytes` input keys: v0.16). Status:
-provisional.
+Since: v0.2 (`then.emphasis`, `multiple`, and the `contentType`/`bytes` input keys: v0.16; the
+JSON-family rule: an amendment of 2026-10-20). Status: provisional.
 
 ### `slideshow`
 
@@ -1662,8 +1669,12 @@ Since: v0.13. Status: provisional.
 
 The catalog's **single code-bearing exception** ([ADR-0091](https://github.com/stackumi/restactd/blob/main/spec/decisions/0091-ui-catalog-v014-sandbox-iframe.md)):
 author-supplied code (D3/WebGL/canvas — content the typed vocabulary cannot express) running in
-an **opaque-origin** `<iframe>`, contained so completely that the exception buys no capability
-beyond "display isolated content in a box." Every other node keeps the text rule and the
+an **opaque-origin** `<iframe>`. The envelope below keeps that code out of the embedding
+document: it cannot read the embedder's DOM, storage, cookies or bearer, submit a form, open a
+popup or navigate the top window, and the only server authority it holds is the scope's
+read-only sub-token. The envelope does **not** confine the frame's network reach: unless
+the client confines it (**Network reach**, below), the code can send what it reads to any
+origin. Every other node keeps the text rule and the
 external-link rule absolutely; nothing in this entry licenses any other node to emit markup,
 load a remote URL, or run code. The framed payload never enters the *embedding* document's DOM
 as markup — it becomes a separate opaque-origin document — so the embedder-side "no raw-HTML
@@ -1695,6 +1706,31 @@ contents, or DOM references. The frame fetches its scoped data cross-origin (`Or
 under that credential. The node is renderable **only** where such a credential is obtainable
 (`path-scoped-tokens` advertised and the mint succeeds); otherwise it renders inert. There is
 **no** posture where the frame runs on the embedder's primary bearer.
+
+**Network reach.** No `sandbox` token restricts the requests a frame makes. Under the envelope
+above the payload can still reach any origin with `fetch`, `XMLHttpRequest`, a `WebSocket`,
+`sendBeacon`, or an image, media, stylesheet or prefetch load. Left that way, a payload can send
+what its sub-token reads, or the sub-token itself (usable until it expires), to a party of its
+author's choosing. That party may hold less authority than the person viewing the frame, so the
+viewer's read grant becomes the author's.
+
+A client SHOULD give the framed document a Content Security Policy that keeps its requests on the
+server's own origin: `default-src 'none'`; `script-src` and `style-src` set to `'unsafe-inline'`,
+so that the payload's own inline script and style still run (the policy limits where the frame can
+send, not what it runs); `connect-src` (and `img-src` and `media-src` where the payload needs
+them) naming that origin explicitly, because `'self'` is not a reliable name for it inside an
+opaque-origin document; and `frame-src` and `worker-src` set to `'none'` so that no nested context
+escapes the policy. A `srcdoc` or `blob:` document inherits the
+embedding document's policy and also enforces any policy declared in its own markup; each policy
+can only narrow the other. A client can therefore confine the frame by putting
+`<!doctype html>`, a `<meta charset>` element and a `<meta http-equiv="Content-Security-Policy">`
+element ahead of the payload. The doctype goes first; otherwise the payload's own doctype is
+discarded and the document renders in quirks mode. The payload cannot loosen a policy applied this
+way. By the same rule the embedder's own policy binds the payload too, so an embedding document
+that refuses inline script refuses it inside the frame as well. A policy narrows the channel but
+does not close it: some requests, DNS prefetch among them, fall under no CSP directive. A server
+limits what a leaked sub-token is worth by keeping its lifetime short (the protocol draft's
+[path-scoped tokens](../draft-byrd-restact-protocol-00.md) section).
 
 **Facets.** None minted at registration — no node-level `edit`, `move`, or `remove` (it joins
 neither carrier set; the `diffView` facetless posture). An embedding application's block

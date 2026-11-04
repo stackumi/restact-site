@@ -4,7 +4,7 @@
  *
  *   renderDraft()    the Internet-Draft, a kramdown-rfc file: front matter, `--- abstract|middle|back`,
  *                    {#anchor} headings, {{xref}} references, definition lists, the BCP 14 boilerplate
- *   renderPlain()    plain Markdown (presentation-verbs.md and the registries)
+ *   renderPlain()    plain Markdown (the registries)
  *   featureTokens()  the rows of registries/feature-tokens.md
  *   witSummary()     the interface and world lists of the draft's WIT appendix
  *
@@ -46,6 +46,7 @@ export const readSpec = (name: string): string => {
   return text;
 };
 export const DRAFT_FILE = 'draft-byrd-restact-protocol-00.md';
+export const PV_FILE = 'draft-byrd-restact-presentation-00.md';
 export const DRAFT_PATH = '/spec/draft/';
 export const PV_PATH = '/spec/presentation-verbs/';
 export const REGISTRIES_PATH = '/spec/registries/';
@@ -93,6 +94,10 @@ const RFC_TITLES: Record<string, string> = {
   RFC7240: 'Prefer Header for HTTP',
   RFC7519: 'JSON Web Token (JWT)',
   RFC7636: 'Proof Key for Code Exchange by OAuth Public Clients',
+  RFC6454: 'The Web Origin Concept',
+  RFC6901: 'JavaScript Object Notation (JSON) Pointer',
+  RFC7396: 'JSON Merge Patch',
+  RFC7493: 'The I-JSON Message Format',
   RFC8126: 'Guidelines for Writing an IANA Considerations Section in RFCs',
   RFC8174: 'Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words',
   RFC8252: 'OAuth 2.0 for Native Apps',
@@ -100,6 +105,7 @@ const RFC_TITLES: Record<string, string> = {
   RFC8288: 'Web Linking',
   RFC8615: 'Well-Known Uniform Resource Identifiers (URIs)',
   RFC8693: 'OAuth 2.0 Token Exchange',
+  RFC8785: 'JSON Canonicalization Scheme (JCS)',
   RFC9110: 'HTTP Semantics',
   RFC9111: 'HTTP Caching',
   RFC9457: 'Problem Details for HTTP APIs',
@@ -195,7 +201,7 @@ export function rewriteHref(href: string, opts: { file?: string; idPrefix?: stri
   if (abs) {
     const fragPart = frag ? `#${frag}` : '';
     if (abs === DRAFT_FILE) return DRAFT_PATH + fragPart;
-    if (abs === 'presentation-verbs.md') return PV_PATH + fragPart;
+    if (abs === PV_FILE || abs === 'presentation-verbs.md') return PV_PATH + fragPart;
     if (abs === 'registries/README.md') return `${REGISTRIES_PATH}#registries`;
     const reg = abs.match(/^registries\/(.+)\.md$/);
     if (reg && REGISTRY_FILES.some((r) => r.slug === reg[1])) return `${REGISTRIES_PATH}#${reg[1]}${frag ? `-${frag}` : ''}`;
@@ -210,6 +216,7 @@ export function rewriteHref(href: string, opts: { file?: string; idPrefix?: stri
 /** The text a link to a vendored file shows when the source wrote the file name as a code span. */
 const DOC_LABELS: Record<string, string> = {
   [DRAFT_FILE]: 'draft',
+  [PV_FILE]: 'presentation draft',
   'presentation-verbs.md': 'Presentation verbs',
   'registries/README.md': 'Registries',
   'registries/feature-tokens.md': 'Feature Tokens',
@@ -526,13 +533,15 @@ export interface DraftDoc extends Rendered {
   markdown: string;
 }
 
-let draftCache: DraftDoc | undefined;
+const draftCache = new Map<string, DraftDoc>();
 
-export function renderDraft(): DraftDoc {
-  if (draftCache) return draftCache;
-  const { front, plan, markdown } = prepareDraft(readSpec(DRAFT_FILE));
+/** A kramdown-rfc draft (the protocol draft by default, or PV_FILE) rendered to HTML. */
+export function renderDraft(file: string = DRAFT_FILE): DraftDoc {
+  const cached = draftCache.get(file);
+  if (cached) return cached;
+  const { front, plan, markdown } = prepareDraft(readSpec(file));
   const sections = new Map(plan.map((p) => [p.id, p]));
-  const { marked, finish } = engine({ file: DRAFT_FILE, plan, refs: front.refs, sections });
+  const { marked, finish } = engine({ file, plan, refs: front.refs, sections });
   const r = finish(marked.parse(markdown, { async: false }) as string);
 
   const refList = (kind: Ref['kind']) =>
@@ -554,8 +563,9 @@ export function renderDraft(): DraftDoc {
     { depth: 3, slug: 'informative-references', text: 'Informative references' },
   );
 
-  draftCache = { ...r, front, sections: plan, refsHtml, markdown };
-  return draftCache;
+  const doc: DraftDoc = { ...r, front, sections: plan, refsHtml, markdown };
+  draftCache.set(file, doc);
+  return doc;
 }
 
 /** The text of one draft section (from its heading to the next heading of the same or higher level). */

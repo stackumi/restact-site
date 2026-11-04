@@ -8,8 +8,8 @@ const EXPIRES = '2027-10-31T00:00:00.000Z';
 export const GET: APIRoute = ({ site }) =>
   new Response(
     [
-      'Contact: mailto:security@restact.org',
       `Contact: ${GITHUB.restactd}/security/advisories/new`,
+      'Contact: mailto:security@restact.org',
       `Expires: ${EXPIRES}`,
       'Preferred-Languages: en',
       `Canonical: ${new URL('/.well-known/security.txt', site)}`,
