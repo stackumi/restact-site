@@ -27,7 +27,7 @@ const sourceShell = term(`
 $ git clone https://github.com/stackumi/restactd
 $ cd restactd
 $ rustup toolchain install       ⟨# the toolchain pinned in rust-toolchain.toml⟩
-$ cargo install cargo-component --locked
+$ cargo install cargo-component --locked --version 0.21.1
 $ make build-js-runner           ⟨# the JavaScript verb tier⟩
 $ cargo run -p restactd          ⟨# serves http://127.0.0.1:8080⟩
 `);
@@ -51,8 +51,8 @@ $ curl 'localhost:8080/v1/greeter¦hello?input=Ada'
 
 const visitJs = `// visit.js
 function invoke(input) {
-  const n = Number(obj.get("visits") ?? 0) + 1;
-  obj.set("visits", String(n));
+  const n = (obj.get("visits") ?? 0) + 1;
+  obj.set("visits", n);
   return { visits: n };
 }`;
 
@@ -64,7 +64,7 @@ $ curl -X POST localhost:8080/v1/pages/home¦visit
 $ curl -X POST localhost:8080/v1/pages/home¦visit
 «{"visits":2}»
 $ curl localhost:8080/v1/pages/home
-«{"visits":"2"}»
+«{"visits":2}»
 `);
 
 const spinShell = term(`
@@ -156,8 +156,7 @@ const next = [
             </Fragment>
           </Tabs>
           <p>
-            In a second terminal, confirm the server is up. Startup prints <span class="code-inline">warning:</span> lines
-            for example verbs that are not built, which is expected.
+            In a second terminal, confirm the server is up.
           </p>
           <CodeBlock variant="terminal" html={health} />
           <Callout tone="warn" title="The default server is open">
@@ -191,8 +190,8 @@ const next = [
           <h2>Bind an action to every page</h2>
           <p> <span class="code-inline">pages/{'{id}'}</span> binds the verb to every object under <span class="code-inline">pages/</span>. Inside the verb, <span class="code-inline">obj</span> is the object the
             URL names, and its writes are that object’s data, readable with a plain GET. <span class="code-inline">-g</span> stops
-            curl from expanding <span class="code-inline">{'{id}'}</span>. Object properties are stored as strings, so the verb
-            returns the number 2 and the object holds "2".
+            curl from expanding <span class="code-inline">{'{id}'}</span>. Property values are typed: a number stays a number, so
+            the object holds 2.
           </p>
           <CodeBlock lang="js" code={visitJs} label="visit.js" />
           <CodeBlock variant="terminal" html={visitShell} />

@@ -40,7 +40,7 @@ Four rules apply to every verb, and a server that skips one is not conformant.
 
 ### Capabilities are an import list
 
-Because the manifest is the import list of the component, it can be read from the uploaded bytes without running them. The standard interfaces are `host` (logging), `identity` (a read-only view of the caller), `object`, `compose` and `event`; the last three are gated and a server grants them by policy. The package `rest-act:plugin` only grows. A new capability is a new interface, or a new method with its own feature token, so a component built against an earlier set keeps linking, and a client can read the discovery document before upload to learn whether a component's imports are all supported.
+Because the manifest is the import list of the component, it can be read from the uploaded bytes without running them. The standard interfaces are `host` (logging), `identity` (a read-only view of the caller), `object`, `compose`, `event` and `llm`; the last four are gated and a server grants them by policy. The package `rest-act:plugin` only grows. A new capability is a new interface, or a new method with its own feature token, so a component built against an earlier set keeps linking, and a client can read the discovery document before upload to learn whether a component's imports are all supported.
 
 ## Whose authority a verb carries
 

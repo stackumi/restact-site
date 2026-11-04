@@ -1,7 +1,7 @@
 # restact.org · restact.dev
 
 The REST:ACT website: a static Astro site (no adapter, no server runtime). Pages: the home page,
-How it works, Security, Compare, Presentation verbs, Get started, the specification hub and the
+How it works, Security, Compare, Presentation verbs, restactd, Get started, the specification hub and the
 rendered specification documents under `/spec/`, and a 404 page. The docs routes are listed in
 `DOCS_NAV` in `src/site.config.ts`.
 
@@ -44,10 +44,10 @@ corepack pnpm sync:spec [path-to-spec-checkout]   # default ../restact-specs
 corepack pnpm verify
 ```
 
-and commits the result. The sync keeps only the `ins:` line of the draft's `author:` list (any
-other key there is dropped), stops with an error if the draft has no front matter, and scans every
+and commits the result. The sync vendors both drafts (the protocol draft and the presentation draft) and keeps only the `ins:` line of each draft's `author:` list (any
+other key there is dropped), stops with an error if a draft has no front matter, and scans every
 copied file for an email address, deleting its output and failing if it finds one. No address
-enters this repository. `src/lib/specmd.ts` turns the kramdown-rfc draft and the plain
+enters this repository. `src/lib/specmd.ts` turns the kramdown-rfc drafts and the plain
 Markdown files into HTML (section numbering, `{#anchor}` ids, `{{xref}}` links, references,
 BCP 14 keywords). `src/lib/spec-map.ts` holds the hand-written gists and core/optional tags for the
 section map on `/spec/`; the build fails if the draft gains a top-level section with no entry.
@@ -55,7 +55,7 @@ section map on `/spec/`; the build fails if the draft gains a top-level section 
 ### The restactd documentation, at /docs
 
 `/docs/` is the restactd documentation (Astro Starlight), built in the restactd repository and
-committed here as static files under `public/docs/` (stackumi/restactd#901). The build there bakes
+committed here as static files under `public/docs/`. The build there bakes
 `https://restact.org` and `/docs` into every link. To update it, a person runs
 
 ```sh
@@ -83,7 +83,7 @@ the site keeps its own.
 | `src/layouts/Base.astro` | document shell: head, theme script, header, tagline bar, footer. Props `title`, `description`, `wide` |
 | `src/layouts/Docs.astro` | docs page: side nav, article, on-this-page list, prev/next |
 | `src/layouts/MdPage.astro` | maps MDX frontmatter onto `Docs.astro` |
-| `src/components/` | Shell: Header, Tagline, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
+| `src/components/` | Shell: Header, Tagline, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, InRestactd, ReaderGroups, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
 | `src/pages/spec/` | the specification hub, the draft, presentation verbs and registries pages |
 | `scripts/` | `sync-spec.mjs` (vendor the specification sources), `sync-docs.mjs` (vendor the restactd docs), `check-site.mjs` (content checks), `vendored.mjs` (their shared scans) |
 | `src/lib/term.ts` | markup helper for hand-coloured terminal and JSON blocks |

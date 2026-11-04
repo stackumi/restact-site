@@ -1,32 +1,88 @@
-# Presentation verbs and the `application/vnd.restact.ui+json` media type
+---
+title: "REST:ACT Presentation Verbs"
+abbrev: "REST:ACT Presentation Verbs"
+docname: draft-byrd-restact-presentation-00
+category: exp
+submissiontype: independent
+ipr: trust200902
+area: "Applications"
+keyword:
+  - REST
+  - user interface
+  - media type
+  - server-driven UI
+stand_alone: yes
+pi: [toc, sortrefs, symrefs, comments]
+author:
+  -
+    ins: N. Byrd
+normative:
+  RESTACT:
+    title: "The REST:ACT Protocol: Invoking Sandboxed Functionality over REST"
+    author:
+      -
+        ins: N. Byrd
+        name: Nathan Byrd
+    date: 2026-10
+    seriesinfo:
+      Internet-Draft: draft-byrd-restact-protocol-00
+    target: https://github.com/stackumi/restact/blob/main/draft-byrd-restact-protocol-00.md
+informative:
+  RFC8126:
 
-*This document specifies the `application/vnd.restact.ui+json` media type and the
-presentation-verb contract. Status: **normative**, tracked by
+--- abstract
+
+This document specifies an optional extension to REST:ACT, the protocol for invoking sandboxed
+verbs over HTTP. A presentation verb is a REST:ACT function that returns a declarative
+user-interface document: a JSON tree of nodes drawn from a closed catalog, which a trusted, generic
+client renders. The catalog has no node that carries markup or script, and the client escapes every
+string, so an untrusted verb can change what a client displays without the client trusting the
+verb. This document defines presentation verbs, the `application/vnd.restact.ui+json` media type,
+the client conformance requirements for rendering it, and the REST:ACT UI Catalog Node Types
+registry that holds the node vocabulary. A server advertises support with the `presentation-verbs`
+feature token.
+
+--- middle
+
+# Introduction {#introduction}
+
+REST:ACT {{RESTACT}} lets an untrusted client change an application's **functionality** by uploading
+a sandboxed verb. It has no equivalent for **presentation**: a verb can transform the data a client
+displays, but cannot add a field, add a view, or reshape a layout — the client owns rendering.
+Presentation verbs close that gap **without a protocol change**: a verb returns a *declarative UI
+document* drawn from a fixed **component catalog** that a trusted, generic client renders. Because
+the catalog is closed and the client escapes everything, an untrusted verb can shape presentation
+without the client trusting it.
+
+The decision records for this document are
 [ADR-0056](https://github.com/stackumi/restactd/blob/main/spec/decisions/0056-presentation-verbs.md) and
-[ADR-0114](https://github.com/stackumi/restactd/blob/main/spec/decisions/0114-presentation-verbs-normative.md). The key words "MUST", "MUST NOT",
-"SHOULD", "SHOULD NOT", and "MAY" are to be interpreted as described in
-[RFC 2119](https://www.rfc-editor.org/info/rfc2119) and
-[RFC 8174](https://www.rfc-editor.org/info/rfc8174) when, and only when, they appear in all
-capitals.*
+[ADR-0114](https://github.com/stackumi/restactd/blob/main/spec/decisions/0114-presentation-verbs-normative.md)
+in the reference implementation.
 
-## 1. Problem
+## Relationship to REST:ACT {#relationship}
 
-REST:ACT lets an untrusted client change an application's **functionality** by uploading a sandboxed
-verb. It has no equivalent for **presentation**: a verb can transform the data a client displays, but
-cannot add a field, add a view, or reshape a layout — the client owns rendering. Presentation verbs
-close that gap **without a protocol change**: a verb returns a *declarative UI document* drawn from a
-fixed **component catalog** that a trusted, generic client renders. Because the catalog is closed and
-the client escapes everything, an untrusted verb can shape presentation without the client trusting it.
+This document is a REST:ACT extension, as described in the "Extension specifications" section of
+{{RESTACT}}. It changes no behavior that {{RESTACT}} requires of a conformant server or client, and
+it redefines no token, field or media type defined there. The server requirements in this document
+are gated on the `presentation-verbs` feature token: they apply to a server that advertises the
+token in `service.features`, and a client does not assume them of a server that does not advertise
+it. The requirements {{client-conformance}} places on a client apply to every
+`application/vnd.restact.ui+json` document a client renders, whether or not the server that
+returned it advertises the token.
 
-## 2. A presentation verb
+The key words in this document are used as in {{RESTACT}}:
+
+{::boilerplate bcp14-tagged}
+
+# A presentation verb {#presentation-verb}
 
 A **presentation verb** (informally a *view verb*) is an ordinary REST:ACT verb with three properties:
 
 1. **`kind=function`** — GET-safe, cacheable, side-effect-free (it is invoked with `GET /v1/<obj>:<verb>`).
 2. **`produces=application/vnd.restact.ui+json`** — declared at deploy (`POST /v1/modules?…&produces=…`).
-3. Its body returns a **UI document** (§4): a JSON tree of catalog nodes. It typically reads the bound
+3. Its body returns a **UI document** ({{catalog}}): a JSON tree of catalog nodes. It typically reads the bound
    object's data via the gated `object` capability ([ADR-0023](https://github.com/stackumi/restactd/blob/main/spec/decisions/0023-object-data-capability.md)),
-   exactly like [`examples/render-html`](https://github.com/stackumi/restactd/tree/main/examples/render-html).
+   exactly like [examples/render-html](https://github.com/stackumi/restactd/tree/main/examples/render-html).
 
 Nothing else is special. A view verb links against only the already-frozen `object` (+ `log`)
 interfaces; `wit/world.wit` is unchanged. It runs under the same sandbox, fuel/epoch/memory limits,
@@ -42,7 +98,7 @@ Naming convention (non-normative, but used by the reference implementations):
   dispatch ([ADR-0031](https://github.com/stackumi/restactd/blob/main/spec/decisions/0031-object-policy-inheritance-accessors.md)): `GET /v1/<obj>` returns
   the UI document. This is optional; a distinctly named view is the simpler default.
 
-## 3. The media type
+# The media type {#media-type}
 
 `application/vnd.restact.ui+json` is a `+json` structured-syntax type: the payload is JSON. A view
 verb declares it via `produces`; the host stamps it as the response `Content-Type` and adds
@@ -50,24 +106,24 @@ verb declares it via `produces`; the host stamps it as the response `Content-Typ
 HTML-only Content-Security-Policy and `Content-Disposition: attachment` hardening do **not** apply —
 the browser never renders the payload; the trusted client fetches and interprets it.
 
-## 4. The component catalog (the trust boundary)
+# The component catalog (the trust boundary) {#catalog}
 
 A UI document is a tree of **nodes**. Every node is a JSON object with a `type` field naming a catalog
 component; the remaining fields are that component's properties. **All string fields are plain text**
 (the client escapes them at render) — except a field the registry declares as **markdown source**,
 which a client renders only under the registry's
-[*markdown rendering contract*](registries/ui-catalog-nodes.md#markdown-rendering-contract-since-v018),
+[markdown rendering contract](registries/ui-catalog-nodes.md#markdown-rendering-contract-since-v018),
 never as HTML. There is **no node that carries raw HTML or script.**
 
-The node vocabulary is defined by the **REST:ACT UI Catalog Node Types registry**
-([`registries/ui-catalog-nodes.md`](registries/ui-catalog-nodes.md)). The registry is
+The node vocabulary is defined by the
+[REST:ACT UI Catalog Node Types registry](registries/ui-catalog-nodes.md). The registry is
 **additive-only**: a registered node type is never removed or redefined, and new capability enters
 the catalog only as new node types or new optional fields. Each registry entry states the fields a
 conforming client consumes and the client's obligation for each — including degradation for absent
 or malformed values; the registry owns that per-node detail, and where this document and the
 registry both speak, they agree.
 
-### Conformance requirements
+## Conformance requirements {#client-conformance}
 
 - A client MUST create text content only via text nodes (no `innerHTML`-family API on any
   catalog-rendering path).
@@ -130,7 +186,7 @@ registry both speak, they agree.
 
 `link.view` and `action.verb`/`form.submit.verb` are **verb routes** the client resolves against the
 discovery document / data plane; a route is *unresolvable* when it cannot be resolved against that
-discovery document / data plane (§5). The `field` node is the unit of "add a field to the UI": a view
+discovery document / data plane ({{discovery}}). The `field` node is the unit of "add a field to the UI": a view
 that adds one `field` to a `fieldList` surfaces a new datum with no client change.
 
 Authoring note (v0.4 rich text): a view emitting `runs` on a `text`/`heading`/`quote` node SHOULD
@@ -138,14 +194,14 @@ also emit the node's `value` as the plain-text flattening — a pre-v0.4 client 
 renders `value`, so the words never disappear; a v0.4 client ignores `value` when `runs` is
 consumed.
 
-### Security model
+## Security model {#security-model}
 
 The catalog is closed and the client is trusted; therefore:
 
 - An untrusted verb composes **only** from the catalog. It cannot emit `<script>`, inline event
   handlers, `javascript:` URLs, or arbitrary tags — there is no node for them.
 - The client **escapes every string** and **scheme-checks every URL** (any URL-valued field is
-  restricted to safe schemes), exactly as [`render-html`](https://github.com/stackumi/restactd/tree/main/examples/render-html) sanitizes its
+  restricted to safe schemes), exactly as [render-html](https://github.com/stackumi/restactd/tree/main/examples/render-html) sanitizes its
   output.
 - Markdown source is parsed to a closed element set with no raw-HTML path; raw HTML inside it
   renders as literal text.
@@ -157,12 +213,11 @@ The catalog is closed and the client is trusted; therefore:
 - A view runs **run-as-caller**, so it can place in the document only data the caller may read; the
   document cannot become a data-exfiltration channel past the object ACLs.
 
-The **conformance reference implementation** is the tabularasa client (`client/src/render.ts` in `stackumi/stackumi`);
-[`demo/tabularasa/ui/app.js`](https://github.com/stackumi/restactd/blob/main/demo/tabularasa/ui/app.js) is the
-minimal single-file example. The contract is this document plus the registry, not either
+On the server side, restactd implements this extension and advertises it with the
+`presentation-verbs` feature token. The contract is this document plus the registry, not any
 implementation.
 
-## 5. Discovery
+# Discovery {#discovery}
 
 A host advertises support additively (frozen contract preserved):
 
@@ -185,7 +240,7 @@ catalog's first feature-gated node, and the pattern generalizes: a node whose be
 an optional server feature is gated on that feature's discovery token and degrades to
 inert-with-notice when the token is absent — the node is known, the capability is not.
 
-## 6. Relationship to other REST:ACT features
+# Relationship to other REST:ACT features {#related-features}
 
 - **`render-html` ([ADR-0023](https://github.com/stackumi/restactd/blob/main/spec/decisions/0023-object-data-capability.md))** is the precedent: a pure
   function reading object data and returning a typed body. A presentation verb differs only in
@@ -198,8 +253,8 @@ inert-with-notice when the token is absent — the node is known, the capability
   (registry, v0.3) is the push mechanism. The view declares the object paths whose events
   should invalidate the rendered document; a client that consumes the field (gated on the
   `event-subscriptions` discovery token, ignored entirely when absent) subscribes to each
-  path's SSE stream and, on any data-plane lifecycle event (`onCreate`/`onChange`/`onDelete`)
-  or `gap`, re-invokes the current view. It is an invalidation signal only: event names and
+  path's SSE stream and, on any data-plane lifecycle event (`onCreate`/`onChange`/`onDelete`),
+  `gap`, or `invalidate`, re-invokes the current view. It is an invalidation signal only: event names and
   payloads MUST NOT be interpreted or rendered. `page.refresh` (registry, v0.2) remains the
   time-based mechanism — client-side re-invocation on a fixed interval with a normative ≥ 5 s
   floor, paused while the document is hidden — and is the working fallback on servers that do
@@ -208,23 +263,43 @@ inert-with-notice when the token is absent — the node is known, the capability
   Authoring guidance: event topics are exact-match object paths, so a collection view cannot
   hear member writes directly. Designate a seeded **anchor object** for the collection, declare
   `subscribe` with the anchor's path, and have the application's action verbs — granted the
-  `event.publish` capability — publish an event named `onChange` to the anchor topic after
+  `event.publish` capability — publish an event named `invalidate` to the anchor topic after
   mutating any member (a detail view needs no pattern: subscribing to the object itself hears
-  the auto-published lifecycle events directly). Publishing under a lifecycle name is an
-  ordinary use of the arbitrary-name publish capability; it never fires the object's lifecycle
-  hooks (hooks fire on data-plane mutation, not on published events). Like any published
+  the auto-published lifecycle events directly). A verb cannot publish under a lifecycle name or
+  `gap`, because {{RESTACT}} keeps those names for the server, so the anchor idiom has a name of
+  its own. Publishing an event never fires the object's lifecycle hooks (hooks fire on
+  mutation, not on published events). Like any published
   event, it is delivered to any registered topic subscription bound to the anchor, under the
   server's existing rate-limit and quota bounds.
 - **Native verbs + embedding ([ADR-0052](https://github.com/stackumi/restactd/blob/main/spec/decisions/0052-native-verbs-and-embedding-api.md))**: the
   demo client is served by an embedding binary; the demo's book data and views are seeded over the
   ordinary HTTP surface, so the whole demo is standard REST:ACT.
 
-## 7. Out of scope
+# Out of scope {#out-of-scope}
 
 - `Accept`-negotiated representation from *uploaded* verbs (native-only today,
   [ADR-0053](https://github.com/stackumi/restactd/blob/main/spec/decisions/0053-data-plane-enablers-query-negotiation-binary.md)); a gated `request` WIT
   interface is deferred.
-- A `catalogVersion` field in discovery remains deferred. (The versioned catalog registry itself
-  exists: [`registries/ui-catalog-nodes.md`](registries/ui-catalog-nodes.md).)
+- A `catalogVersion` field in discovery remains deferred. (The [versioned catalog registry](registries/ui-catalog-nodes.md)
+  itself exists.)
 - Structurally reshaping fixed third-party clients (e.g. stock Mastodon apps) — impossible without a
   client extension point; views target catalog-aware clients.
+
+# Security Considerations {#security}
+
+The security model of this extension is in {{security-model}}, and the client requirements that
+enforce it are in {{client-conformance}}. The security considerations of {{RESTACT}} apply
+unchanged.
+
+# IANA Considerations {#iana}
+
+This document requests the following registrations (details to be completed in a later revision).
+
+* **Media type** `application/vnd.restact.ui+json` for presentation-verb UI documents
+  ({{media-type}}).
+* A **"REST:ACT UI Catalog Node Types"** registry for the presentation-verb component catalog
+  ({{catalog}}; initial entries in `registries/ui-catalog-nodes.md`), registration policy
+  Specification Required {{RFC8126}}, additive-only: a registered node type is never removed or
+  redefined.
+* The **`presentation-verbs`** entry ({{discovery}}) in the "REST:ACT Feature Tokens" registry of
+  {{RESTACT}}, listed in `registries/feature-tokens.md`.

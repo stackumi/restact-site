@@ -1,17 +1,19 @@
 # REST:ACT registries
 
-The IANA-style registries requested by the Internet-Draft's IANA Considerations
-([`../draft-byrd-restact-protocol-00.md`](../draft-byrd-restact-protocol-00.md) §IANA). They are
-maintained here in the repository ahead of any formal IANA action; on publication these tables
-become the initial contents of the corresponding IANA registries.
+The IANA-style registries requested in the IANA Considerations of the protocol draft
+([`../draft-byrd-restact-protocol-00.md`](../draft-byrd-restact-protocol-00.md) §IANA) and of REST:ACT
+Presentation Verbs ([`../draft-byrd-restact-presentation-00.md`](../draft-byrd-restact-presentation-00.md)
+§IANA Considerations), which requests the UI Catalog Node Types registry. They are maintained here
+in the repository ahead of any formal IANA action; on publication these tables become the initial
+contents of the corresponding IANA registries.
 
 | Registry | File | Referenced by |
 |---|---|---|
 | REST:ACT Verb Property Names | [`verb-property-names.md`](verb-property-names.md) | draft §Verb properties; `x-restact-verb.properties` |
 | REST:ACT Capability Interfaces | [`capability-interfaces.md`](capability-interfaces.md) | draft §Capability Model; `x-restact-verb.capabilities.interfaces`; the frozen `wit/world.wit` |
 | REST:ACT Source Languages | [`source-languages.md`](source-languages.md) | draft §Verb code; `x-restact-verb.sourceMediaType` |
-| REST:ACT UI Catalog Node Types | [`ui-catalog-nodes.md`](ui-catalog-nodes.md) | [`../presentation-verbs.md`](../presentation-verbs.md); `application/vnd.restact.ui+json` documents |
-| REST:ACT LLM Providers | [`llm-providers.md`](llm-providers.md) | [ADR-0095](https://github.com/stackumi/restactd/blob/main/spec/decisions/0095-typed-connectors-llm.md); a `kind:"llm"` connector object's `provider` member (accepted 2026-09-02) |
+| REST:ACT UI Catalog Node Types | [`ui-catalog-nodes.md`](ui-catalog-nodes.md) | [`../draft-byrd-restact-presentation-00.md`](../draft-byrd-restact-presentation-00.md); `application/vnd.restact.ui+json` documents |
+| REST:ACT LLM Providers | [`llm-providers.md`](llm-providers.md) | [ADR-0095](https://github.com/stackumi/restactd/blob/main/spec/decisions/0095-typed-connectors-llm.md); a `kind:"llm"` connector object's `provider` member |
 | REST:ACT Feature Tokens | [`feature-tokens.md`](feature-tokens.md) | draft §Conformance, §Discovery; `service.features`; the `featureToken` enum in [`openapi/x-restact-extension.schema.json`](https://github.com/stackumi/restactd/blob/main/openapi/x-restact-extension.schema.json) |
 
 ## Registration policy

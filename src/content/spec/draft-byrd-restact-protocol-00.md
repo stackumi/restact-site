@@ -29,6 +29,15 @@ normative:
   RFC5234:
   RFC3986:
   RFC8615:
+  RFC8785:
+  RFC6901:
+  RFC7493:
+  JSON-SCHEMA:
+    title: "JSON Schema: A Media Type for Describing JSON Documents (draft 2020-12)"
+    target: https://json-schema.org/draft/2020-12/json-schema-core
+  JSON-SCHEMA-VALIDATION:
+    title: "JSON Schema Validation: A Vocabulary for Structural Validation of JSON (draft 2020-12)"
+    target: https://json-schema.org/draft/2020-12/json-schema-validation
 informative:
   RFC8126:
   RFC7519:
@@ -36,6 +45,7 @@ informative:
   RFC8252:
   RFC7636:
   RFC9700:
+  RFC7396:
   OIDC:
     title: "OpenID Connect Core 1.0"
     target: https://openid.net/specs/openid-connect-core-1_0.html
@@ -72,6 +82,23 @@ informative:
   HTMLIFRAME:
     title: "HTML: the iframe element (WHATWG Living Standard)"
     target: https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element
+  FETCH:
+    title: "Fetch (WHATWG Living Standard)"
+    target: https://fetch.spec.whatwg.org/
+  FETCH-METADATA:
+    title: "Fetch Metadata Request Headers (W3C Working Draft)"
+    target: https://www.w3.org/TR/fetch-metadata/
+  RFC6454:
+  RESTACT-PRESENTATION:
+    title: "REST:ACT Presentation Verbs"
+    author:
+      -
+        ins: N. Byrd
+        name: Nathan Byrd
+    date: 2026-10
+    seriesinfo:
+      Internet-Draft: draft-byrd-restact-presentation-00
+    target: https://github.com/stackumi/restact/blob/main/draft-byrd-restact-presentation-00.md
 
 --- abstract
 
@@ -218,6 +245,23 @@ to defined verbs) is independent of whether the server stores object data. This 
 default (`implicit`) **object-binding** mode ({{object-binding}}); a server MAY instead couple the
 two planes — treating the object as the entity that owns its verbs — and advertise the coupling.
 
+## Extension specifications {#extensions}
+
+A REST:ACT **extension** is a separate specification that adds optional behavior on top of this
+document. An extension:
+
+* registers each feature token it defines in the REST:ACT Feature Tokens registry
+  ({{iana}}), and any other registry entries it needs, under the registries' Specification
+  Required policy;
+* MUST NOT change the behavior this document requires of a conformant server or client, and MUST
+  NOT redefine a token, field or media type defined here;
+* is OPTIONAL, and a server that implements it advertises its feature token(s) in discovery like
+  any other feature; a client MUST NOT assume an extension that is not advertised.
+
+Known extensions (informative): REST:ACT Presentation Verbs {{RESTACT-PRESENTATION}}, which defines
+presentation verbs, the `application/vnd.restact.ui+json` media type, and the UI catalog node
+registry, advertised by the `presentation-verbs` feature token.
+
 # Addressing {#addressing}
 
 ## Grammar
@@ -243,7 +287,12 @@ property state) that is NOT a client-addressable object, and MUST reject a clien
 path contains a segment beginning with `@` (the reference returns `400 invalid-input`; a server MAY
 instead treat it as `404`), so a client can never name internal storage directly and bypass the
 declaring property's ACL. (`$`-prefixed names are likewise reserved for system fields,
-{{representations}}.)
+{{representations}}.) A `name` is never `.` or `..`. A client removes such dot segments before it
+sends a request ({{RFC3986}} §5.2.4), so an object named that way could not be addressed. A server
+MUST reject an object path with a `.` or `..` segment, whether written literally or percent-encoded
+(`%2E`, `%2E%2E`, in either case), with `400 invalid-input`. The rule applies to the decoded segment.
+An object path a verb names is never percent-decoded, so there a literal `.` or `..` segment is
+refused and `%2E%2E` is an ordinary name.
 
 **Concrete paths vs. definition patterns.** The grammar above is for a **concrete** request path; a
 concrete `name` never contains an unescaped `{` or `}`. A verb **definition pattern** (used when
@@ -300,7 +349,7 @@ the discovery document.
 
 # HTTP Method Semantics
 
-## Object data (the noun)
+## Object data (the noun) {#object-noun}
 
 The standard HTTP methods on an object path have their usual {{RFC9110}} meanings and follow the
 standard-method conventions of {{AIP122}}: `GET` retrieves the representation (or, on a collection,
@@ -314,10 +363,42 @@ not support them on the data plane directly returns `405` (and a client uses a d
 below, or `PUT`). These operations are gated by the object's authorization policy
 ({{representations}}, the `$policy` system field): `GET` by `read`, `PUT`/`PATCH`/`POST` by `write`
 (for every member; a declared member must also satisfy its own ACL, {{data-properties}}, which can only narrow this gate),
-and `DELETE` by `delete`. A server MAY instead mediate any of these methods through a defined
+and `DELETE` by `delete`. A refused write or delete is `403` (`forbidden`) to a caller who may read
+the object; one who may not gets the answer an absent object would get ({{non-reader}}). A server MAY instead mediate any of these methods through a defined
 accessor verb ({{active-properties}}), in which case the accessor's `execute` policy governs. Under a coupled object-binding mode ({{object-binding}}),
 `DELETE` on an object also removes the verbs bound to that object (the object owns its verbs); under
 the default `implicit` mode it removes only the object's stored data and leaves its verbs in place.
+
+**Removing a property (OPTIONAL, feature `put-null-removes`).** On a server that advertises
+`put-null-removes`, a `PUT` body member whose value is JSON `null` removes that property, the
+meaning a JSON merge patch gives `null` {{RFC7396}}; every other member keeps its rule
+({{representations}}). The property then reads as one that was never set: absent, or, for an
+`inherit` property, the inherited value or the declared `default` ({{data-properties}}). A `null`
+member is authorized exactly as a write of that member would be, by the object's `write` policy,
+the member's `acl` and the credential's own bounds ({{path-scoped-tokens}}, {{delegated-tokens}}),
+and it gets any refusal such a write would get. A `null` for a `final` member that is set MUST be
+refused with `409` (`property-final`). The server MUST decide that authority before it checks
+`final` or a precondition ({{consistency-txn}}), and {{non-reader}} applies unchanged.
+
+A `PUT` remains one write however its members mix sets and removals. The server authorizes and
+applies it as a whole, and it is one mutation for events and lifecycle hooks ({{events}}) and for
+provenance ({{provenance-facet}}). If any member is refused, the server MUST refuse the whole `PUT`
+and MUST NOT write any of it. A `null` for a property that is not set changes nothing for that
+property, but the `PUT` around it is still a write: it needs write authority, as a `PUT` that
+changes no value does, and once admitted it is handled as such a `PUT` is. A `PUT` whose members
+are all `null`, sent to a path that holds no object, creates an empty object as `PUT {}` would,
+under the same creation rules ({{object-policy-inheritance}}, {{object-binding}}) and with the same
+answers to a caller who may not create it ({{non-reader}}). A removal never deletes the object, even
+when it removes the last data member: the object keeps its `$owner`, and only `DELETE` deletes it.
+The native representation ({{representations}}) gives the rules for a `null` system field and for
+a server that does not advertise `put-null-removes`.
+
+On a secrets-mount path ({{secrets-mount}}) the mount's reserved members keep their rules: a server
+MUST refuse `"value": null` with `400` (`invalid-input`), `version` stays refused on every client
+write, `null` included, and a server MUST refuse a `PUT` that carries `value` together with a `null`
+member. A request that a server dispatches to an accessor verb ({{active-properties}}) passes its
+body to the verb as it arrived, `null` members included; this rule governs only the server's own
+handling of `PUT`.
 
 ## Object collection listing {#object-listing}
 
@@ -342,11 +423,28 @@ is); a server exposing it to untrusted callers SHOULD require authentication and
 A server that advertises the `object-query` token MAY further accept a `filter` parameter
 ({{AIP160}}) and a `read_mask` parameter ({{AIP161}}) on the listing. The `filter` restricts the
 result to objects matching the expression — at minimum a single `key=value` property equality — and
+a `key=value` literal matches a stored string byte-for-byte, and any other stored value whose canonical
+form {{RFC8785}} equals the literal parsed as JSON (so `n=3` matches `"3"` and `3`).
 `read_mask` is a comma-separated set of property names whose values are projected into a `values`
 member on each entry. Both MUST operate over only the caller-readable members: a property the caller
 cannot read MUST NOT match a `filter` and MUST NOT be projected by `read_mask`, so neither parameter
 reveals a value the caller could not already read with `GET` on the object. A malformed `filter`
 SHOULD be rejected with a `400` problem rather than answered with an empty result.
+
+A server that advertises the `object-listing-prefix` token accepts a `prefix` parameter on the
+listing. Its value, decoded as `application/x-www-form-urlencoded` (so `+` is a space and `%2B` a
+literal `+`), is either empty, which is the same as no `prefix`, or ends in `/`. The server MUST then
+list only objects whose path begins with that value, compared code point by code point,
+case-sensitive and with no normalization: `ws/1/` lists every object below `ws/1` and not `ws/1`
+itself. The prefix only narrows the listing; authorization, `filter`, `read_mask`, pagination and
+any page-size limit apply exactly as without it. A server MUST reject with a `400` problem
+(`invalid-input`) a non-empty prefix that does not end in `/`, and a prefix that no object path can
+begin with: one that begins with `/`, contains `//`, or has a segment beginning with `@`. It MAY
+reject a prefix holding a character it cannot store in the same way. The trailing `/` keeps a timed
+probe to whole path segments ({{security}}). A `pageToken` is bound to the prefix it was issued
+under, and the server MUST reject it with a `400` problem (`invalid-input`) when it arrives with a
+different prefix or none. A server that does not advertise the token may ignore the parameter, so a
+client MUST NOT send it unless the token is advertised.
 
 ## Verb invocation (the bare verb) {#taxonomy}
 
@@ -358,7 +456,9 @@ Invoking a verb uses the bare `:verb` form. The method MUST follow the function/
   response be cached by a SHARED cache and replayed to a different caller: it marks such a response
   `Cache-Control: private` (or `no-store`) and `Vary: Authorization`. A response a server can prove is
   caller-independent MAY be marked publicly cacheable. A weak `ETag` over the output SHOULD be emitted
-  so a client revalidates with `If-None-Match`. A server MUST NOT permit a `GET` invocation to mutate
+  so a client revalidates with `If-None-Match`. A server evaluates a precondition on a function
+  against that output tag ({{RFC9110}}, Section 13): a matching `If-None-Match` yields `304`, and a
+  failed `If-Match` yields `412`. A server MUST NOT permit a `GET` invocation to mutate
   observable state. A server enforces this at runtime over the whole call tree: a function — whether
   the request root or composed beneath one (a function may compose only functions, see
   {{composition}} rule 5) — that attempts an observable side effect (writing object data via the
@@ -408,9 +508,10 @@ mandatory. An implementation MAY expose none, some, all, or additional verb prop
 restrict the methods available on a property (for example, accepting `PUT …/code` while never
 serving `GET …/code`). Reserved property names are managed by the registry in {{iana}};
 implementation-defined verb properties are permitted but MUST NOT use a registered name for a
-different purpose. A client MUST discover supported properties and methods via `OPTIONS`
-({{discovery}}) rather than assuming them. Access to each property is governed by the verb's policy
-({{authz}}) using property-specific actions (e.g. `read-code`, `write-code`).
+different purpose. A client MUST discover which verb properties the server supports, and the methods
+each accepts, with `OPTIONS` on the property's own path ({{discovery}}) rather than assuming them.
+Access to each property is governed by the verb's policy ({{authz}}) using property-specific actions
+(e.g. `read-code`, `write-code`).
 
 **Deployment history and rollback (OPTIONAL, feature `verb-history`).** `history` and `rollback`
 are a further pair of registered property names, reserved for the OPTIONAL Deployment History and
@@ -435,8 +536,13 @@ path hierarchy: it searches the target object, then each ancestor in turn up to 
 the first object on which the verb is defined. The verb executes **with `this` set to the target
 object** (the object named before the colon in the request), regardless of which ancestor defined
 it. A verb observes `this` only if it imports the object-access capability ({{capabilities}}); a
-pure-compute verb that imports nothing does not observe `this`. If no definition is found, the
-server MUST return `404`. An **unbound** verb (`/:verb`) is resolved only at the service root, with
+pure-compute verb that imports nothing does not observe `this`. Resolution depends only on the
+deployed definitions, never on the target object's stored data or on whether the caller may read it.
+If no definition is found, the server MUST return `404`; a server that advertises the
+`verb-not-deployed` feature MUST answer an invocation of that route with `restact_code`
+`verb-not-deployed` ({{errors}}). Whether a verb is listed in a caller's discovery
+document ({{discovery}}) does not affect resolution: a server MUST NOT answer an invocation of a
+deployed verb, direct or composed, as for an absent verb because the caller may not see it. An **unbound** verb (`/:verb`) is resolved only at the service root, with
 no ancestor walk, and executes with `this` set to the root.
 
 A verb is defined on a **path pattern** whose segments are each either a literal object name or a
@@ -444,9 +550,13 @@ single-segment **wildcard** `{id}` that matches any one concrete segment (a *bou
 {{terminology}}). One level of the hierarchy MAY therefore hold more than one matching definition:
 for a request on `/counters/2`, both a literal definition on `counters/2` and a wildcard definition
 on `counters/{id}` match at the same level. When several definitions match at the same level, the
-server MUST select the **most specific** — comparing the candidate patterns segment by segment, a
-literal segment is more specific than a wildcard, so the candidate with the most literal segments
-wins (`counters/2` overrides `counters/{id}`). This selection MUST NOT depend on the order in which
+server MUST select the **most specific** — comparing the candidate patterns segment by segment from
+the left: at the first segment where one candidate has a literal and the other a wildcard, the
+candidate with the literal is more specific (`counters/2` overrides `counters/{id}`, and
+`ws/1/{id}/{id}` overrides `ws/{id}/pages/{id}`). Two distinct patterns of one length that match the
+same path always differ in this way at some segment, so the order is total. This holds for the two
+segment kinds defined here, a literal and a single-segment wildcard; a new kind of wildcard would need
+the rule revisited. This selection MUST NOT depend on the order in which
 definitions were created or stored. The ancestor walk still dominates the tiebreak: a definition on a
 longer (more deeply nested) path always takes precedence over one on a shorter path, even when the
 deeper definition is a wildcard and the shorter one is a literal; specificity orders only the
@@ -471,8 +581,9 @@ properties whose value is shared across instances, write-once, or access-control
 A verb is always *bound to* an object — the object named before the colon in its definition path. How
 that binding relates to the **existence** of the object varies by deployment: in a function-as-a-
 service style, a verb is a free-standing program and the object is merely an addressing handle; in an
-object-oriented style (the MOO lineage, {{terminology}}), the object is a first-class entity that must
-exist before a verb can be defined on it, and it *owns* its verbs. Rather than prescribe one, this
+object-oriented style (the MOO lineage, after which {{simple-profile}} is named), the
+object is a first-class entity that must exist before a verb can be defined on it, and it *owns* its
+verbs. Rather than prescribe one, this
 document defines a vocabulary of **object-binding modes** and requires a server to advertise the one
 it enforces in discovery ({{discovery}}). This is server policy, not a per-verb declaration; a server
 MUST NOT advertise a mode it does not enforce.
@@ -499,18 +610,50 @@ wildcard (`counters/{id}:verb`) tests its concrete collection ancestor (`counter
 verb (`/:verb`) binds to no concrete object and is exempt. A verb whose binding path *begins* with a
 wildcard (`{id}:verb`) has no concrete ancestor yet binds to every entity; under a coupled mode a
 server MUST refuse it (it owns no object), rather than treat it as exempt. Existence is tested against
-the server's object registry, not against per-property read authorization, so a caller's inability to
-read an object's data does not make it appear absent.
+the server's object registry, not against the caller's read authorization: an object the caller may not
+read still exists for this test, so a coupled mode never creates it again or binds a verb to it for
+that caller. Only the answer such a caller receives differs ({{non-reader}}).
 
 Under a coupled mode, because the object owns its verbs, a server MUST require that the caller is
 authorized to **write** the object before defining, replacing, or removing a verb on an object that
 already exists — whether the verb is created by upload or by writing its `code`/`policy` property
 ({{verb-properties}}). Defining a verb on an object owned by another principal MUST be refused
-(`403`), and the existence rule above applies equally to these property writes (a `strict` server MUST
+(`403`, or, to a caller who may not read the object, the answer an absent object would get,
+{{non-reader}}), and the existence rule above applies equally to these property writes (a `strict` server MUST
 NOT let `PUT …:verb/code` shadow a verb onto a non-existent object). Creating the first verb on a
 not-yet-existing object under `auto-create` makes the caller its owner. This keeps every verb on an
 object within the authority of that object's owner, so the cascading `DELETE` above can never remove a
 verb the caller could not have removed directly.
+
+**Ancestor creation.** Under a coupled mode, or on a server that advertises
+`object-policy-inheritance`, an object's ancestors carry authority over it: definitions bound on
+an ancestor resolve for it ({{resolution}}), lifecycle hooks bound there observe its writes
+({{events}}), and a governing anchor governs its policy ({{object-policy-inheritance}}). Such a
+server, when it has authentication configured, MUST refuse a write that would create an object
+while any object stored below the new object's path is owned by a principal other than the
+principal the write would record as the new object's owner, with `409` (`ancestor-claim`). An
+object with no recorded owner is owned by no principal, and so is foreign to every writer, as is
+an object owned by the anonymous identity. The refusal MUST NOT identify the object below or its
+owner, and SHOULD state that resubmitting the request unchanged will not succeed. A server
+evaluates this rule after every other check that would refuse the write (authentication, the
+creation rule of a governing anchor, and write authorization); a write refused for another
+reason receives that refusal. A server MAY bound the work it spends on this check. A creating
+write whose check reaches the bound is refused as if such an object existed, and the refusal's
+status, code and detail MUST NOT reveal which of the two occurred. The rule applies to every
+interface that can create an object, including a verb's object writes and the object an
+`auto-create` deployment would create; a deployment whose object creation the rule refuses MUST
+itself be refused. For a write a verb performs, a server reports the refusal to the verb as that
+write's error with this code where it can decide it at the write; a refusal it can decide only
+when the invocation's writes commit discards them as {{consistency-txn}} specifies. A server MAY
+exempt the operator subjects named in its configuration, under the restrictions of
+{{admin-reown}} (never a role, group, scope, claim, `public` or `owner` matcher, never the
+anonymous identity, a path-scoped sub-token or a delegated request), for requests whose write the
+server performs itself rather than through a verb (including an accessor) or hook, and MUST NOT
+extend that exemption to a write performed by a verb or hook. The rule governs creation only: it
+does not remove, re-own or refuse objects or verbs that already exist, and does not restrict
+creating an object below an existing one. A server with authentication configured that enforces
+it advertises the `ancestor-creation-guard` feature token, and MUST do so whenever its advertised
+object-binding mode is `auto-create` or `strict`, or it advertises `object-policy-inheritance`.
 
 Object **deletion** is symmetric with the mode. Under a coupled mode, `DELETE` on an object removes
 the object together with the verbs bound *exactly* to it (not those merely inherited from an ancestor
@@ -519,8 +662,9 @@ verbs declared; under `implicit`, `DELETE` removes only the object's stored data
 in place. The cascade MUST be **fail-closed**: a server MUST refuse the object `DELETE` (rather than
 remove anything) unless the caller is authorized to delete *every* verb the cascade would remove — the
 same authority a direct `DELETE /obj:verb/code` requires — so the cascade can never remove a verb the
-caller could not have removed directly. Removing a verb (`DELETE /obj:verb/code`) never deletes the
-object in any mode.
+caller could not have removed directly. A coupled `DELETE` also removes every definition whose
+binding path's deepest concrete ancestor is the deleted object, under the same fail-closed precheck.
+Removing a verb (`DELETE /obj:verb/code`) never deletes the object in any mode.
 
 The mode governs **deployment and deletion** only; it does not change **invocation**. A deployed verb
 is still invoked on any concrete object the resolution rules ({{resolution}}) match — including an
@@ -533,11 +677,20 @@ existence, exactly as under `implicit`.
 
 The native representation of object data is a JSON object {{RFC8259}} whose members are the
 object's user-defined data; its media type is `application/restact+json` (a server MAY serve it as
-`application/json`). In this version a user-data member VALUE is a **UTF-8 string** (matching the
-`set`/`set-at` capability encoding, {{capabilities}}); richer JSON value types (numbers, booleans,
-nested objects/arrays) are a reserved increment, and a server MAY reject a write whose member value is
-not a string with `422 invalid-input` rather than coercing it silently. User data MUST NOT use
-`$`-prefixed member names, which are reserved for the server-managed system fields below. A server **MAY** surface these system fields in the
+`application/json`). A user-data member VALUE is any JSON value except a top-level `null`: a string, a number,
+a boolean, an array or an object (nested `null`s are ordinary data). A server that supports this
+advertises `typed-values`; one that does not MAY refuse a non-string member, and returns only
+strings. A stored string MUST read back as the same string. A number MUST be finite, and an integer
+MUST lie within ±(2^53−1) ({{RFC7493}}), else the write is refused with `400` (`invalid-input`); a
+server MUST normalize an integral double to an integer and `-0` to `0`. A `PUT` member replaces the
+whole value of its property, and the property remains the unit of authorization: scope, `final`,
+ACLs and policy apply to the whole value, and there are no ACLs on a path inside a value. A location
+inside a value, for a future sub-path write, is a JSON Pointer {{RFC6901}}. JSON `null` is never a
+value: a server MUST NOT store a `null` member, or a string made from it such as `"null"`, as a
+property value. A server that advertises `put-null-removes` reads a `null` member of a `PUT` as a
+removal ({{object-noun}}), and any other server MUST refuse it with `invalid-input`. User data MUST NOT use
+`$`-prefixed or `@`-prefixed member names: `$` names are reserved for the server-managed system
+fields below, and `@` names for the server's internal storage. A server **MAY** surface these system fields in the
 representation (each `$`-prefixed); they are OPTIONAL, so a minimal server MAY return only the
 user-data members. The defined system fields are:
 
@@ -549,7 +702,7 @@ user-data members. The defined system fields are:
 | `$links` | a HATEOAS link object (at minimum a `self` link) |
 | `$verbs` | a map of the object's *effective* (post-resolution) verb names — those for which the caller has `execute` permission — to the URL of each verb's `meta` (the defining object's, when inherited) |
 | `$owner` | the subject recorded as the object's owner (first-writer-owns), backing the `owner` matcher in object and property authorization. Ownership is **fixed** ({{ownership}}): no write changes it. A `PUT` MAY carry `$owner` only to restate the current owner, which only that owner may do and which changes nothing; any other `$owner` member is refused `403` (`forbidden`). Only an operator's recovery act reassigns it ({{admin-reown}}) |
-| `$policy` | OPTIONAL object-level authorization policy (feature `object-policy`): `{ read, write, delete }`, each a list of authorization subjects ({{authz}}). It gates the object as a whole — `read` gates retrieval (a denied read behaves as not-found), `write` gates writes to every member (a declared member's `acl` can only narrow it, never widen it, {{data-properties}}), `delete` gates removal. An omitted policy defaults to `read: [public]`, `write: [owner]`, `delete: [owner]`. A server MAY allow the owner to set it (the reference host accepts it as a writable `$`-member on `PUT`); it is not returned in the representation |
+| `$policy` | OPTIONAL object-level authorization policy (feature `object-policy`): `{ read, write, delete }`, each a list of authorization subjects ({{authz}}). It gates the object as a whole — `read` gates retrieval (a denied read behaves as not-found), `write` gates writes to every member (a declared member's `acl` can only narrow it, never widen it, {{data-properties}}), `delete` gates removal (a write or delete refused to a caller who may not read the object is answered as for an absent object, {{non-reader}}). An omitted policy defaults to `read: [public]`, `write: [owner]`, `delete: [owner]`. A server MAY allow the owner to set it (the reference host accepts it as a writable `$`-member on `PUT`); it is not returned in the representation |
 
 A server that implements object-level policy advertises the `object-policy` feature. Because `$policy`
 is not part of the representation, a server MAY additionally offer a read-back through a metadata channel
@@ -564,6 +717,98 @@ response (no existence or authorization oracle), consistent with the object read
 representation (they are authorization metadata, read back only through the gated channel above).
 Servers MAY additionally convey links via the HTTP `Link` header field {{RFC8288}}. Concurrency metadata (e.g.
 `ETag`) is carried in HTTP headers rather than the body (see {{consistency-txn}}).
+
+**A `null` system field (feature `put-null-removes`).** On a server that advertises
+`put-null-removes`, `"$policy": null` in a `PUT` removes the object's own policy, and the object
+falls back to its governing anchor's policy ({{object-policy-inheritance}}) or to the defaults
+above. Since that can widen access, the removal needs exactly the authority that writing `$policy`
+needs there. Removing a governing anchor's own policy changes, in the same way, the effective policy
+of every descendant that stores no policy of its own. A server MUST refuse the removal where it
+requires an object to carry a policy of its own, since the removal would leave an object the server
+would not let anyone create:
+
+* on a secrets-mount path ({{secrets-mount}}), with `422` (`invalid-input`);
+* under a prefix where the server requires a connector to be born governed ({{mediated-egress}}),
+  with the refusal it gives a creating write there that carries no `$policy`;
+* on a server advertising `governed-creation`, at a path no governing anchor reaches, with that
+  feature's `403`.
+
+The server decides these refusals after the authority decision, so a caller without that authority
+gets only the authority answer ({{non-reader}}), and it decides them on the path and on the policy
+the write would leave, whatever is stored there. At a path that holds no object there is no policy
+to remove: a `PUT` whose only member is `"$policy": null` is `PUT {}` and gets that request's answer
+there, and a `null` `$policy` never counts as a creating write's own `$policy`
+({{object-policy-inheritance}}).
+
+On the same server, `"$owner": null` MUST be refused with `400` (`invalid-input`). Ownership is
+fixed ({{ownership}}) and no request removes it; this refusal depends on nothing stored, so it
+takes the place of the `403` that {{ownership}} gives other `$owner` members. A `null` for any other
+`$`-prefixed name MUST be refused with `400` (`invalid-input`).
+
+### Refusing a caller who may not read {#non-reader}
+
+A caller **may read** an object when the object-level `read` decision admits it: the object's own
+`$policy`, else a governing anchor's ({{object-policy-inheritance}}), else the default, evaluated for
+the caller's principal and credential exactly as for a data-plane `GET`, which then returns the
+object rather than not-found.
+
+When a server refuses a request on an object that exists because the caller lacks the authority it
+needs, and the caller may not read that object, the server MUST answer it as it would answer the
+same request if no object were stored at that path. The rule covers a write (a data-plane `PUT`,
+including one with `null` members ({{object-noun}}), `PATCH` or `POST`, or the `object` capability's
+`set`, `set-at`, `set-at-if`, `remove` or `remove-at`, {{object-data}}), a
+`DELETE`, and, under a coupled object-binding mode ({{object-binding}}), defining, replacing or
+removing a verb bound to the object. It holds whichever authority is missing: the object's `write` or
+`delete` policy, a declared member's `acl` ({{data-properties}}), the owner's sole right to restate
+`$owner` ({{ownership}}), a coupled `DELETE`'s authority over the verbs it would remove, or a coupled
+mode's authority over the object's verbs. A caller who may read the object receives `forbidden`
+(`403`). The rule governs only how a refusal is answered: a request the caller is authorized to make
+proceeds whether or not the caller may read the object.
+
+For a path that holds no object, the answers are:
+
+* a `DELETE`: not-found, which is `404` with `restact_code` `not-found` at HTTP;
+* a `remove` or `remove-at` of an `instance`-scoped or undeclared property: an `invocation-error`
+  with code `not-found`, since a removal never creates an object. A data-plane `PUT` whose members
+  are `null` is a write, and gets the answer of the next item;
+* any other write: the answer of the creation rules ({{object-policy-inheritance}}), since the write would
+  create the object. They refuse it as not-found where a governing anchor's `write` policy refuses
+  the caller and its `read` policy does too, as `forbidden` (`403`) where that anchor's `read` policy
+  admits the caller, and, on a server advertising `governed-creation`, with its `403` where no anchor
+  reaches the path and the write does not carry a `$policy` of its own. At the verb tier the same
+  refusal is an `invocation-error`, with code `not-found` or `forbidden`;
+* a verb definition, or a write to a verb's `code` or `policy` property, under `strict`: `409`
+  (`object-binding`).
+
+Where the request would succeed at a free path, the server cannot give that answer: it would have to
+create an object that already exists. That is a write the creation rules admit (no governing anchor reaches
+the path and first-writer-owns applies, or an anchor's `write` policy admits the caller) and a deploy
+under `auto-create`, which creates the object. The server MUST then refuse the request as not-found,
+and MUST NOT create the object or define the verb. The caller learns that the path is taken, as in
+any namespace where the first to claim a name holds it, and learns nothing else about the object.
+
+The answer MUST NOT depend on anything stored with the object. Its status, its problem body or error
+message, and its header fields MUST be those the server gives the same request at a path that holds
+no object, or, in the case of the previous paragraph, those of its not-found answer for such a path.
+The server MUST decide the authority it needs over the object (the `write` or `delete` policy, or a
+coupled mode's check on the object's verbs) before it evaluates a precondition ({{consistency-txn}})
+or a compare-and-swap's expected value, checks a `final` member or the object's size limit, or calls
+a backend. A caller who lacks that authority and may not read the object then gets no other answer
+first, and the response falls in one timing class whatever is stored, apart from the cost of the
+authorization decision itself.
+
+A refusal that does not depend on what is stored at the path is not changed by this rule: a
+malformed body or a member no client may write there, an unsupported method or media type, a
+function's side effect ({{taxonomy}}), an anonymous caller's `401` ({{authz}}), or a credential's
+own bounds ({{path-scoped-tokens}}, {{delegated-tokens}}). A server MUST give such a refusal the same
+way whether or not the object exists, so it takes precedence over the answer this rule sets.
+
+The rule holds at every consistency level ({{consistency-txn}}). Where a write is buffered to commit
+with the invocation (a bound-object `set` or `remove`, or any write under `atomic-invocation`), the
+answer is the one the call returns, decided by the same authorization check as an unbuffered write.
+
+The rule governs an object that exists. A request to a path that holds no object gets the answers
+listed above, from the `DELETE` semantics, the creation rules and the object-binding mode.
 
 ### Prefix-inherited object policy {#object-policy-inheritance}
 
@@ -586,7 +831,8 @@ governing anchor MUST be admitted by the anchor's `write` policy before first-wr
 `$owner` (a denied create behaves as not-found when the creator also cannot read the location, else
 as forbidden); and **descendant-policy management** — writing a descendant's own `$policy` (including
 the `{}` opt-out) under a governing anchor is a **manage** act that MUST require the anchor's owner,
-not mere `write` access. An object's own declared-member ACLs, and the rule that ownership is fixed
+not mere `write` access. Creating an object is also subject to the ancestor-creation rule
+({{object-binding}}). An object's own declared-member ACLs, and the rule that ownership is fixed
 ({{ownership}}), are unchanged by inheritance. When the feature is enabled, `?meta=policy` gains an additive
 `source` member — `"self"`, `"default"`, or the governing anchor's path — reporting where the
 effective policy came from; the `raw=1` view is unchanged (the object's own stored record, including
@@ -659,8 +905,8 @@ them faithfully in discovery ({{discovery}}); a deployer and a second implementa
 declare them identically. These declarations are part of a verb's authoritative `meta`
 ({{verb-properties}}). The reference deployment profile (`POST /v1/modules`) carries them as query
 parameters on the upload — `verb` (the route id), `kind`, `calls`, the limits `fuel`/`mem_mb`/`wall_ms`,
-the per-capability grant flags (`compose`/`object`/`event`, each set to `deny` to WITHHOLD an otherwise
-granted import), `exec` (the `execute`-action shorthand, below), `produces`, and the source `lang` —
+the per-capability grant flags (`compose`/`object`/`event`/`llm`, each set to `deny` to WITHHOLD an
+otherwise granted import), `exec` (the `execute`-action shorthand, below), `produces`, and the source `lang` —
 alongside the code body; a server MAY offer an
 equivalent manifest form, but MUST document a profile through which every declaration above is
 expressible, so a verb's deployment is portable rather than reference-only.
@@ -686,9 +932,41 @@ refuse a description over that bound rather than truncate it. A replacement of t
 (`PUT …:verb/code`, or a rollback, {{verb-history}}) preserves the description; a deployment through a
 profile that declares the verb's properties re-declares it. The reference profile carries it as the
 `description` query parameter of `POST /v1/modules`. A description is disclosed wherever discovery
-is, including to unauthenticated callers, and it is authored by whoever deployed the verb: a client
+is, to every caller who may see the verb ({{discovery}}), and it is authored by whoever deployed the verb: a client
 that presents it to a model SHOULD attribute it to the verb's deployer and treat it as untrusted
 input, like any other deployer-authored data.
+
+**Input and output schemas (OPTIONAL, feature `verb-schemas`).** A deployment MAY also declare an
+**input schema** and an **output schema**: JSON Schema documents ({{JSON-SCHEMA}},
+{{JSON-SCHEMA-VALIDATION}}, draft 2020-12) describing, respectively, the verb's input when that
+input is a JSON document (the request body, or a function's `?input=` value, {{taxonomy}}) and
+its invocation response when that response is a JSON document. Like a description, a schema is
+documentation, not a declaration of behavior: a server does not validate invocations or responses
+against it, it has no effect on invocation, authorization, or any other property, and a verb MUST
+still treat its input as untrusted. A server that advertises the `verb-schemas` feature token
+MUST accept both through the reference profile, as the `input_schema` and `output_schema` query
+parameters of `POST /v1/modules`, each carrying the schema's JSON text {{RFC8259}}; an empty value
+declares none. It MUST refuse the deployment (`400`, `invalid-input`), deploying nothing, when a
+value is not JSON; is neither a JSON object nor a boolean; carries `$schema` other than at its
+root, or with a value other than `https://json-schema.org/draft/2020-12/schema`; contains `$id`,
+`$anchor`, `$dynamicAnchor`, `$dynamicRef` or `$vocabulary`; or contains a `$ref` that is not `#`
+or a JSON Pointer fragment ({{RFC6901}}) resolving, within the same document, to a subschema (a value in a
+schema position of a keyword in {{JSON-SCHEMA}}), not to a value under an unknown keyword or a data
+keyword. These rules keep a schema self-contained, so a consumer can embed it in another document
+(an OpenAPI operation, a tool definition) by rewriting its references mechanically, and so no
+consumer is led to fetch a URL the deployer chose. A server SHOULD also refuse a schema that is
+invalid against the draft 2020-12 meta-schema, and MAY bound a schema's size and nesting depth,
+refusing one over a bound rather than altering it. A server MAY also refuse a schema containing a cycle of `$ref` references that never applies another keyword to a different instance location ({{JSON-SCHEMA}}, Section 9.4.1), which a consumer cannot evaluate. A server reflects each declared schema in the
+verb's discovery entry and `meta` ({{discovery}}, {{verb-properties}}) as the member `inputSchema`
+or `outputSchema`, with the same JSON value it accepted as I-JSON {{RFC7493}} reads it (member
+order and number spelling aside), and omits a member that was not declared. The description's
+lifecycle applies to both: a replacement of the verb's code alone (`PUT …:verb/code`, or a
+rollback, {{verb-history}}) preserves them, and a deployment through a profile that declares the
+verb's properties re-declares them. A server that does not advertise the token may ignore these
+parameters, so a client MUST NOT send them to such a server expecting them to be honored. Schemas
+are disclosed wherever discovery is, to every caller who may see the verb ({{discovery}}), and are authored by
+the verb's deployer: a client that presents one to a model SHOULD attribute it to that deployer
+and treat it, including every `title` and `description` inside it, as untrusted input.
 
 **Born policy.** A verb created through a deployment profile is born with a policy ({{authz}})
 whose owner is the deployer. On a server that does not advertise the `verb-private-default`
@@ -699,8 +977,8 @@ advertises it, the born policy admits only the `owner` matcher for every action 
 apart only through the token. The reference profile's `exec` parameter is a shorthand for the `execute`
 action alone. On a server that advertises `verb-private-default`, `exec` MUST accept exactly `public` or `owner`, MUST refuse any other
 value, including an empty one, with `400` (`invalid-input`), and sets `execute` to that single
-matcher without touching any other action. The born policy governs who may invoke the verb and
-read its properties ({{verb-properties}}); it does not by itself withdraw the verb from discovery.
+matcher without touching any other action. The born policy governs who may invoke the verb,
+read its properties ({{verb-properties}}) and see it in discovery ({{discovery}}).
 
 **Replacement.** A route on which a verb is already defined (on the same path pattern)
 identifies an existing resource: registering a verb at it through any deployment interface
@@ -841,7 +1119,10 @@ grants per policy:
   {{caller-identity}}) suitable for most verbs;
 * a "world" interface providing object-graph access (reading and writing the bound object's data,
   traversing ancestors, listing children, and invoking other verbs) for environment-grade use;
-* domain-specific interfaces (e.g. scoped key-value storage, allow-listed outbound HTTP).
+* domain-specific interfaces (e.g. scoped key-value storage, or a typed call the server makes
+  through a governed connector object, such as a model completion, {{llm}}). A verb never gets raw
+  network access: an outside service is reached only through an interface that names the
+  operation.
 
 On upload, a server MUST reject a component that imports an interface the server does not permit
 (for example, raw network or filesystem access), returning `403`. The set of permitted interfaces
@@ -890,28 +1171,52 @@ bound to, through a gated `object` capability interface the verb imports:
   `function` verb MAY call it.
 * `get(name) -> option<string>` reads a property of the bound object. A property the caller is not
   permitted to read (per its ACL, {{data-properties}}) is indistinguishable from an absent one
-  (both return none).
+  (both return none). A value is a `property-value`: `text` carries a stored string raw, and `json`
+  carries any other JSON value as JSON text in the RFC 8785 canonical form {{RFC8785}} (feature
+  `typed-values`; top-level `null` is not a value). A write of `json` whose text is invalid, breaks
+  the number rule ({{representations}}) or is `null` fails with `invalid-input`, and a `json` that
+  parses to a string is stored as that string. The same type is used by `set`, `get-at`, `set-at`
+  and `set-at-if` (including its `expected`), and in the `query` row.
 * `set(name, value) -> result<_, error>` writes a property of the bound object. A write the caller
-  is not permitted to make returns `forbidden`; a write to an already-set write-once (`final`)
-  property returns `property-final`.
+  is not permitted to make returns `forbidden`; when the caller may not read the object it returns
+  what a write to an absent object would (`not-found`, or the creation refusal, {{non-reader}}). A
+  write to an already-set write-once (`final`) property returns `property-final`.
 * `get-at(path, name) -> option<string>` reads a property of another object (an ancestor on the
   inheritance chain, or any other path), gated by that object's `read` policy and the property's read ACL — both must allow. As with
   `get`, a read-denied property is indistinguishable from an absent one.
 * `set-at(path, name, value) -> result<_, error>` writes a property of another object by path. The
   write is permitted only where the **runs-as-caller** principal could have written it directly (the
   cross-object write-policy intersection), so a verb is never a confused deputy; the same
-  `forbidden`/`property-final` rules as `set` apply, and the reserved (`@`/`$`) namespaces and
-  `shared`-scoped properties are refused.
+  `forbidden`/`not-found`/`property-final` rules as `set` apply (as they do to `set-at-if`), and the
+  reserved (`@`/`$`) namespaces and `shared`-scoped properties are refused. `set-at-if` compares its
+  `expected` value with the stored value by stored form: a string byte-for-byte, any other value by
+  its canonical form, and a string never equals a non-string.
+* `remove(name) -> result<_, error>` removes a property of the bound object (OPTIONAL feature, token
+  `object-remove`). Afterwards the property reads as one that was never set: absent, or, for an
+  `inherit` property, the inherited value or the declared `default` ({{data-properties}}). It is
+  authorized exactly as a `set` of the same name, and a `shared`-scoped property is removed from the
+  state of its declaration, where `set` writes it. Removing a property that is not set succeeds and
+  changes nothing.
+* `remove-at(path, name) -> result<_, error>` removes a property of another object by path (token
+  `object-remove`), under the same cross-object write-policy intersection as `set-at`: it is
+  permitted only where the **runs-as-caller** principal could have written that property directly,
+  so a verb is never a confused deputy. It returns `not-found` when no object is stored at `path`,
+  since a removal never creates an object, and it refuses the reserved (`@`/`$`) namespaces and
+  `shared`-scoped properties as `set-at` does. A `remove-at` of the verb's own bound object is
+  equivalent to `remove`.
 * `shape() -> object-shape` and `shape-at(path) -> object-shape` enumerate an object's shape — the
   `properties` it exposes (readable property names), its direct `children` (readable child object
   paths), and the `verbs` invokable on it — each ACL-filtered against the runs-as-caller principal
-  (verb names follow the public discovery document). `shape` reflects committed state.
+  (verb names follow the runs-as-caller principal's discovery listing ({{discovery}})). `shape` reflects committed state.
 * `query(prefix, order-by, descending, predicate, limit, cursor) -> query-page` reads a PAGE of the
   objects under a path prefix — each row carrying the object's path and its caller-**readable**
   property map — in ONE call, rather than one `get-at` per property per object (OPTIONAL feature,
-  token `verb-object-query`). Ordering is lexicographic over the named property's string value
-  (`order-by` absent = path order); `predicate` is a single `key == value` equality applied to the
-  **readable** value, so a property the caller may not read never matches and the filter is no
+  token `verb-object-query`). Rows order by the named property's type first (strings and absent, then numbers,
+  booleans, arrays, objects), then within a type: strings bytewise, numbers numerically, `false`
+  before `true`, arrays and objects unordered, with the path breaking ties (`order-by` absent = path
+  order); a string orders as it always did. `predicate` is a single `key == literal` equality, the
+  literal being a string that matches a stored string byte-for-byte and any other stored value whose
+  canonical form equals the literal parsed as JSON, applied to the **readable** value, so a property the caller may not read never matches and the filter is no
   information-leak oracle; `cursor` is an opaque keyset continuation the caller threads back
   unmodified. A server MUST bound the page: it MUST clamp `limit` to a server-chosen maximum and
   MUST NOT interpret any `limit` as unbounded, so a guest cannot force an unbounded result set into
@@ -924,8 +1229,8 @@ Access is evaluated against the **runs-as-caller** principal ({{authz}}): a verb
 property only where the caller could on the data plane — where the object's own policy allows it **and** the property's ACL allows it. The capability is gated
 exactly like composition — a server MUST link it only for components that import it, and a server
 that does not support the feature MUST refuse to deploy such a component (`501`). Property storage
-semantics (scope `instance`/`shared`, `final`, ACL) are those of {{data-properties}}; the value
-encoding in this increment is a UTF-8 string.
+semantics (scope `instance`/`shared`, `final`, ACL) are those of {{data-properties}}; a value is a
+`property-value` as above.
 
 Whether mutations are durable, and their consistency across a composition tree, follow the server's
 advertised consistency level ({{consistency-txn}}); a server advertising only `conditional` MAY treat a
@@ -933,10 +1238,46 @@ verb's writes as last-writer-wins per property rather than as one atomic invocat
 to a foreign object commits at the call rather than as part of the verb's bound-object transaction —
 so on a server advertising only `conditional`, a foreign `set-at` is NOT rolled back if the invoking
 verb later traps; only the verb's OWN bound-object writes (buffered and committed on success) are
-atomic with the invocation. An action's `If-Match` precondition therefore applies to the bound object
-only and does not extend to foreign objects a `set-at` touches. A server providing a transactional
+atomic with the invocation. An action's writes are therefore not one step that a precondition could
+guard, so a server MUST refuse an action request that carries `If-Match` or `If-None-Match` with
+`400` (`invalid-input`) rather than ignore it, and the verb does not run. A verb that needs a
+lost-update-free write makes it through its object capability instead (`object-cas`,
+{{consistency-txn}}). A server providing a transactional
 consistency level MAY make the whole tree atomic. Binary (non-UTF-8) property values are a reserved
 increment of the same interface.
+
+A server MUST evaluate a `remove` or `remove-at` call in the following order and return the error
+of the first step that fails. A call that fails removes nothing.
+
+1. The verb has been granted the `object` capability; else `forbidden`.
+2. The verb is not a `function` ({{taxonomy}}); else `forbidden-side-effect`.
+3. The name, and for `remove-at` the path, pass the checks `set` and `set-at` make, with the same
+   `forbidden` refusals: no name in the reserved `@` or `$` namespaces, so no verb removes `$policy`
+   or `$owner`; no path that is not client-addressable ({{addressing}}); no member the server
+   reserves at that path, such as `value` and `version` on a secrets-mount path ({{secrets-mount}});
+   and, for `remove-at`, no `shared`-scoped name. The credential's own bounds
+   ({{path-scoped-tokens}}, {{delegated-tokens}}) are checked at this step too: they do not depend
+   on what is stored, so their refusal is the same whether or not an object exists ({{non-reader}}).
+4. For an `instance`-scoped or undeclared name, an object is stored at the target, as the
+   invocation sees it with its own buffered writes applied; else `not-found`. The target is the
+   bound object for `remove` and `path` for `remove-at`, even when the property is declared on
+   another object. A `remove` of a `shared`-scoped name skips this step, since the state of a
+   declaration is not an object and need not exist.
+5. The caller has the authority a `set` of the same name needs: the object's `write` policy and the
+   property's write `acl` ({{data-properties}}), or, for a `shared`-scoped name, that `acl` alone,
+   as for `set`. A refused caller who may read the object gets `forbidden`, and one who may not
+   gets `not-found` ({{non-reader}}).
+6. A `final` property that is set gives `property-final`.
+7. The removal is recorded with the invocation's writes ({{consistency-txn}}): a `remove` with the
+   bound object's buffered writes, and a `remove-at` at the call, as a `set-at` commits. Whether the
+   property is set is decided against the state the removal commits to. A property that is not set
+   there is left alone, and the call still succeeds.
+
+Authority is decided before `final` and before the property's presence, so a caller who lacks it
+learns neither. The two functions are bound to the `object-remove` feature token
+({{wit-contract}}). A server that advertises `object-data-access` but not `object-remove` MUST
+refuse at upload a component that imports either function, with `403` (`disallowed-import`), as it
+refuses any import it does not support.
 
 ## Caller Identity {#caller-identity}
 
@@ -948,6 +1289,9 @@ verb, through an `identity` capability interface the verb imports (OPTIONAL feat
 * `is-anonymous() -> bool` — true when there is no authenticated subject.
 * `roles() -> list<string>` and `scopes() -> list<string>` — the caller's roles and scopes (the same
   sets the authorization subject matchers consult, {{authz}}); empty when none.
+* `groups() -> list<string>` — the caller's group memberships (the set the `group:` authorization
+  subject matcher consults, {{authz}}); empty when none. OPTIONAL: available only where the server
+  advertises the feature token `caller-groups`, so a client can probe before depending on it.
 * `claim(name) -> option<string>` — a single scalar token claim by name, or none if absent.
 
 Unlike composition and object-data access, this capability is **ambient**: it conveys no authority
@@ -969,6 +1313,270 @@ another owner's authority-switched frames and hooks when delegated work reaches 
 this value and the explicitly granted frame originator, a server MUST NOT expose through this
 interface any identity other than the request's runs-as-caller principal. A verb still imports the interface to use it, so it remains visible in the verb's
 capability manifest.
+
+## Model Completion (OPTIONAL, feature `llm-connector`) {#llm}
+
+A server MAY let a verb ask a language model for a completion through an `llm` capability interface
+the verb imports. The verb never reaches the network. It names a governed **connector** object, and
+the server makes the call itself under the rules of the mediated outbound call
+({{mediated-egress}}), placing the connector owner's credential from the secrets mount
+({{secrets-mount}}) into the request and returning a typed result. The verb sees no socket, no
+request or response on the wire, and never the credential. The interface has one operation:
+
+* `complete(request) -> result<completion, invocation-error>` performs one bounded, non-streaming,
+  text-only completion. The request carries `connector` (the connector's object path), an optional
+  `system` prompt, `messages` (each a `role`, `user` or `assistant`, and a string `content`), and
+  an optional `model`, `max-output-tokens` and `temperature`. The completion carries the model's
+  `text`; a `stop-reason` normalized to `end`, `max-tokens`, `stop-sequence` or `other`; the `model`
+  the provider reports having used; and `usage`: input, output and cache-read token counts, an
+  optional `estimated-usd-micros`, and the `meter-tier` that produced them ({{llm-budget}}).
+
+Every refusal is an `invocation-error` carrying a stable code ({{llm-discovery}}), never a trap, so
+a verb can degrade.
+
+The capability is gated the same way as composition and object-data access: a server links it only
+for a component that imports it, a deployment MAY withhold it from a verb that declares it
+({{deployment}}), and it is attenuated down a composition tree, so a called verb never holds it when
+its caller's frame does not ({{composition}}). A call from a verb that does not hold it is refused
+with `forbidden`.
+
+**Purity.** `complete` is effectful by construction: it spends money, its result is not
+deterministic, and the prompt leaves the server for a third party. A `function` ({{taxonomy}}) MUST
+NOT call it; a server refuses the call with `403` `forbidden-side-effect`. A server MUST also reject
+at deployment, with `400` `forbidden-side-effect`, a `function` whose component imports `llm`,
+wherever the verb's own imports are known to it. A source-language verb whose runner serves every
+verb of its language ({{languages}}) has no imports of its own, so for it the runtime refusal is the
+only one. A completion that has been sent is an external effect outside the invocation's atomic
+write set ({{consistency-txn}}): a later trap rolls back the verb's object writes but not the spend,
+which the budget ledger records regardless. A connector's `purity` member (below) cannot make
+`complete` safe.
+
+**The connector.** A connector used through `llm` is a connector of {{mediated-egress}}, under every
+rule there for its own `$policy`, its owner-only `write` and `delete`, reach, TLS, redirects and
+bounds, with these members in addition (string values, JSON-encoded where structured):
+
+* `kind` (required): `"llm"`. A call naming a connector of another kind is refused
+  (`connector-kind-mismatch`).
+* `provider` (required): a registered, versioned identifier from the REST:ACT LLM Providers
+  registry ({{iana}}), such as `anthropic-messages/v1`. The registry row fixes the wire format, the
+  request path under the connector's `destination`, the request header that carries the
+  credential, and how the provider's usage and stop reason map onto `usage` and `stop-reason`. An
+  unregistered or unversioned value makes the connector invalid. A server MAY decline to implement
+  a registered provider, and then refuses a connector that names it (`llm-provider-unsupported`).
+* `secretRefs` (required): exactly one reference, whose value the server places in the header the
+  provider's row names. A typed connector MUST NOT carry `splice`: the registry row fixes where the
+  credential goes, so there is no owner-written template and nothing a caller could collide with.
+* `budget` (required): the path of a budget root ({{llm-budget}}) whose `state` object has the same
+  stored `$owner` as the connector, so that nobody bills a ceiling someone else owns.
+* `models` (optional): `{"default": "<id>", "allowed": ["<id>", …]}`. A request naming a model
+  outside `allowed`, when `allowed` is present, is refused, and so is a request that names no model
+  to a connector with no `default` (`llm-model-not-allowed`). A request naming none otherwise uses
+  `default`.
+* `pricing` (optional): `{"inputPerMTok", "outputPerMTok", "cacheReadPerMTok"}`, the owner's
+  statement of the provider's prices in US-dollar micros per million tokens, used to reconcile at
+  tier 2.
+* `meterTier` (optional): `"0"`, `"1"` or `"2"` ({{llm-budget}}); absent is `"0"`.
+* `estimateUsdMicrosPerCall` (required at tier 1 or 2): the conservative amount reserved per call.
+* `purity` (optional): `"safe"` or `"effectful"`, absent meaning `"effectful"`. A server only ever
+  narrows with it: an operation the server knows to be effectful stays effectful whatever the member
+  says. It exists for later typed interfaces whose operations can be safe.
+
+**Authorization.** The server evaluates the use-grant for the principal the calling frame runs as
+({{exec-identity}}): `read` in the connector's own `$policy`, and `read` on the secret reference,
+which MUST be mount-resident and MUST name the connector in its own `connectors` member
+({{mediated-egress}}). An anonymous principal and a path-scoped sub-token
+({{path-scoped-tokens}}) are refused. Under an authority switch the use-grant is evaluated for the
+owner's frame while the spend is billed to the real caller ({{llm-budget}}), so a verb that runs as
+its owner and imports `llm` spends its owner's connector for every principal its `execute` policy
+admits. That policy, not the connector's `read` list, is then the effective spend policy, and an
+owner SHOULD narrow it to the principals meant to use the credential.
+
+**Bounds.** A server MUST hold every call within these ceilings. A server MAY apply lower bounds
+that a connector's `limits` ({{mediated-egress}}) names; nothing raises them.
+
+* At most 64 `messages`, and at most 64 KiB of serialized request (`llm-request-too-large`).
+* `max-output-tokens` clamped to at most 4096, never raised; absent, the connector's or the
+  server's default applies.
+* At most 4 calls per invocation tree, counted across the whole composition tree under its one
+  shared budget ({{composition}}), every attempt included (`llm-calls-exceeded`). The cap is fixed,
+  not configurable, so no configuration turns a bounded tree into an agent loop.
+* The wall-clock bound of a mediated call ({{mediated-egress}}). The call also counts against
+  the server's limit on mediated calls in flight.
+
+Text is the only content. Images, documents, tool definitions and tool results, structured-output
+schemas, streaming, and multi-turn continuation handles are not part of `complete`; each would be a
+new method or a new interface ({{wit-contract}}), never an overload of this one.
+
+**Output.** The completion `text` is opaque, untrusted data to the verb and to everything
+downstream. The server never interprets, parses or executes it, and a verb that renders it does so
+under the same rules as any other string. Text a verb stores carries no mark of where it came from,
+so an application that needs to tell model output apart keeps that record itself. An error answered
+by the provider is returned as `llm-upstream-error`, carrying the provider's status
+and a bounded excerpt scrubbed as {{mediated-egress}} recommends.
+
+**Execution locus.** A credentialed call runs only in the server process. A server that runs a
+verb's frame in a separate worker process ({{security}}) MUST NOT resolve a secret value in that
+worker. It refuses `complete` there with `typed-call-unavailable-under-isolation` before any policy
+read, budget reservation or network I/O, rather than handing the credential to a weaker locus.
+
+### The budget {#llm-budget}
+
+Every `llm` connector names a budget, and the server meters every call against it. A budget is two
+kinds of ordinary governed object under a root path `<b>`: `<b>/state`, the aggregate, and
+`<b>/ledger/<seq>`, one row per charge. An application that also spends on the owner's behalf
+(its own model calls, for example) keeps its spend in the same budget, so one ceiling covers both.
+
+The owner creates `<b>/state`; the server never does, and refuses a call whose budget state is
+absent (`budget-unconfigured`). `<b>/state` MUST carry its own `$policy` whose `write` and `delete`
+lists are exactly `["owner"]`; otherwise the server refuses to use it (`budget-ungoverned`), since a
+principal able to write it could raise the ceiling. The calling principal needs no authority over
+the budget: its authority is `read` on the connector.
+
+**Metering tiers.** The connector's `meterTier` decides how a call is costed.
+
+| Tier | Source of the figure | What it bounds |
+|---|---|---|
+| `0` | what the server observes: calls, bytes, wall time | Safety: the call ceiling and the principal's quota. Needs nothing from the provider and records no dollar figure. |
+| `1` | the connector's `estimateUsdMicrosPerCall` | A spending cap applied before dispatch: each call reserves the estimate and settles at it. |
+| `2` | the provider's reported token usage times the connector's `pricing` | Accuracy: the reconciled figure, rounded up to the micro, replaces the estimate. |
+
+Bounds never depend on the provider's cooperation; only accuracy does. Every dollar figure a server
+records is an estimate built from the provider's reported usage and the owner's stated prices, and
+is marked as one; the server never knows what is really billed. At tiers 1 and 2 a server MUST
+reserve before it sends and reconcile afterwards: the estimate is debited before the request leaves
+and the real figure replaces it after, so the next call is gated on what was spent, and a crash in
+between leaves a conservative reservation rather than an unrecorded spend.
+
+**`<b>/state`.** Members the owner decides on are top-level, written only by the owner through the
+data plane, and never written by the server:
+
+| Member | Meaning |
+|---|---|
+| `ceilingUsdMicros` | The period's ceiling for the whole root. |
+| `ceilingCalls` | The period's call ceiling, which also bounds a tier-0 connector. |
+| `periodSeconds` | The period length. |
+| `subCeilings` | JSON `{"<principal>": {"ceilingUsdMicros": "<n>"}, …}`. A principal absent from it is bounded by the root ceiling only. |
+| `totals` | The accrual envelope below, and the only member the server writes. |
+
+Members that change when money is spent live inside `totals`, one JSON-encoded property, because a
+compare-and-swap of a single property (`set-at-if`, {{object-data}}, or a conditional `PUT`) is the
+only atomic write available to an application sharing the budget. Values are decimal-integer
+strings unless noted.
+
+| Sub-member | Meaning |
+|---|---|
+| `periodStart` | The start of the current period, in epoch milliseconds. |
+| `spentUsdMicros`, `calls` | The period's running totals. |
+| `reservedUsdMicros` | Open reservations. Written by the server only. |
+| `lastPeriodSpentUsdMicros` | The previous period's spend. |
+| `bySubject` | An object `{"<principal>": {"spentUsdMicros", "reservedUsdMicros", "calls"}}`, an entry created at zero when first touched. Only the server writes `reservedUsdMicros`. |
+| `nextLedgerSeq` | The key of the next ledger row, taken and incremented in the same write. |
+| `openReservations`, `foldedReservations` | The server's record of reservations in flight and of expired ones (below). Written by the server only. |
+
+A server refuses a `state` whose `totals` is absent, is not a JSON object, or lacks a usable
+`periodStart` or `nextLedgerSeq`, and one that carries `periodStart`, `spentUsdMicros`, `calls` or
+`bySubject` at the top level instead of inside `totals` (`budget-unconfigured`). It never defaults
+`periodStart` or `nextLedgerSeq`: a default would invent a period or renumber a ledger.
+
+**Every writer carries through what it does not own.** A writer that rewrites `totals` MUST read
+it, change only the sub-members it is entitled to, and write back every other sub-member, and
+every other key inside a `bySubject` entry, unchanged. A writer that rebuilt the envelope from a
+fixed list of keys would erase the other writer's members: an application that erased a server
+reservation would over-admit, and a server that erased an application's member would lose its data.
+A writer admitting its own spend MUST compare the ceiling against `spentUsdMicros +
+reservedUsdMicros` plus the new charge, never against `spentUsdMicros` alone. Inside `totals` the
+server writes only the sub-members above; outside it, only ledger rows.
+
+**Write authority.** The server's budget writes pass through the same policy gate as any data-plane
+write, evaluated as the stored `$owner` of `<b>/state`, and each is one conditional write of
+`totals` (`If-Match` on the representation just read, {{consistency-txn}}) retried from a fresh
+read on `412`. An application writes as the owner in the same way, so the two writers are
+serialized by the ordinary conditional-write mechanism.
+
+**Reserve.** Before any I/O the server reads `state`, settles expired reservations and rolls the
+period over if it has ended (below). It then refuses `budget-exhausted`, naming the ceiling that
+bound, when `calls + 1` exceeds `ceilingCalls`; or, at tier 1 or 2, when `spentUsdMicros +
+reservedUsdMicros` plus the estimate exceeds `ceilingUsdMicros`; or, where `subCeilings` names the
+billed principal, when that principal's own spent and reserved figures plus the estimate exceed
+its ceiling. Otherwise, in one conditional write, it adds the estimate to `reservedUsdMicros`,
+increments `calls` (and both for the principal in `bySubject`), takes `nextLedgerSeq` as the row key
+and increments it, and records the reservation; then it creates the ledger row. A row the policy
+gate refuses is `budget-ungoverned`, and the server releases the reservation before refusing.
+
+**Reconcile, release and expiry.** After the call the server replaces the reservation with the
+actual figure: at tier 2 the reported usage times `pricing`; at tier 1, or at tier 2 when the
+response has no usage, the estimate; at tier 0, zero. A call that failed after the request was sent
+and reported no usage settles at the estimate, never at zero. A failure after the reservation but
+before any byte is sent is released instead: the row is written terminal with no spend, and the
+reservation and its count in `calls` are removed. A reservation still open three times the
+mediated-call wall-clock bound after it was made is presumed lost to a crash and is folded into
+`spentUsdMicros` at its estimate; a reconcile that arrives later corrects that figure once. A ledger
+row becomes terminal at most once and is never rewritten afterwards.
+
+**Rows.** Every row carries `kind`, `principal` (the billed subject), `usdMicros`, `calls`,
+`estimate` (whether the figure is an estimate), `reservedAt` (epoch milliseconds) and optionally
+`connector`. A row the server writes has `kind` `"verb-llm"` and also carries `verb`, `meterTier`
+and, at tier 2, the token counts. A row is created with the `$owner` of `<b>/state` and an explicit
+`$policy` whose `read` list is that of `state` at the time and whose `write` and `delete` lists are
+`["owner"]`: whoever may read the aggregate may read its rows, and only the owner edits history. A
+server places no meaning on a `kind` it did not write. No row carries the prompt or the completion.
+
+**Rollover.** The server, on every reserve, and an application, on each of its own writes to
+`totals`, that finds `now ≥ periodStart + periodSeconds × 1000` MUST, in the same write and before
+its own changes, set `lastPeriodSpentUsdMicros` to `spentUsdMicros`; set `spentUsdMicros`, `calls`,
+and each `bySubject` entry's `spentUsdMicros` and `calls` to zero; and set `periodStart` to the
+start of the period that contains `now` on the owner's grid,
+`periodStart + ⌊(now − periodStart) / (periodSeconds × 1000)⌋ × periodSeconds × 1000`, not to `now`
+itself, which would lengthen every quiet period by the gap. Reservations, `nextLedgerSeq` and the
+server's reservation records carry over. Rollover happens lazily, on the first of those writes that
+finds the period over, needs no timer, and is idempotent.
+
+**Billing.** The billed principal is always the real caller, also under an authority switch
+({{exec-identity}}): a row's `principal` and the sub-ceiling consulted are the caller's, as for
+quota.
+
+**Out of scope.** A server does not create `state`, prune the ledger (deleting rows is the owner's
+business), reconcile rows it did not write, convert currencies, know real prices, or enforce one
+ceiling across several budget roots.
+
+### Codes and discovery {#llm-discovery}
+
+The codes a refusal of `complete` carries, with the HTTP status class of each, are:
+
+| Code | Status | Meaning |
+|---|---|---|
+| `forbidden` | 403 | the verb does not hold the `llm` capability |
+| `forbidden-side-effect` | 403 | a `function` called `complete` |
+| `connector-kind-mismatch` | 422 | the connector's `kind` is not `llm` |
+| `llm-provider-unsupported` | 422 | the connector names a registered provider the server does not implement |
+| `llm-model-not-allowed` | 403 | the model is outside `models.allowed`, or none was named and the connector has no default |
+| `llm-request-too-large` | 413 | too many messages, or too many request bytes |
+| `llm-calls-exceeded` | 429 | the invocation tree has used its calls |
+| `budget-unconfigured` | 422 | the connector has no budget, or its `state` is absent, malformed or owned by someone else |
+| `budget-ungoverned` | 403 | the budget's `state` is writable by someone other than its owner, or its ledger refuses the owner's row |
+| `budget-exhausted` | 429 | a root or per-principal ceiling would be exceeded; the detail names which. Transient: the caller backs off, and the server does not retry |
+| `typed-call-unavailable-under-isolation` | 503 | the frame runs where no secret may be resolved |
+| `llm-upstream-error` | 502 | the provider answered with an error |
+
+A refusal under a rule this section takes from {{mediated-egress}} (authorization, destination
+affinity, reach, or bounds) carries the code the server uses for that rule on a mediated call.
+
+A server SHOULD audit every call as {{mediated-egress}} describes, adding the connector's kind and
+provider, the model, the metering tier, the token counts, and the reconciled figure with its
+estimate flag. Neither an audit record nor a ledger row ever carries the prompt or the completion:
+they record that a call happened and what it cost, not what was said.
+
+**Discovery.** A server that implements the `llm` interface and can place a mediated credential (a
+secrets mount in service and a destination allowlist configured, {{mediated-egress}}) MUST advertise
+`llm-connector`. The token is independent of `mediated-egress`: a server can offer the mediated call
+without linking `llm`, and a server that links `llm` advertises its token whether or not it offers
+the mediated call to embedders. A server that refuses `complete` in worker processes still
+advertises it, since the interface links; the refusal is per call. A component that imports `llm` on
+a server without the token is refused at upload ({{wit-contract}}). A verb that holds the capability
+reports `networkAccess` `"outbound"` in its descriptor ({{discovery}}), which here means outbound
+calls the server itself makes through connector objects, never a socket the verb holds, and lists
+`rest-act:plugin/llm` among its `interfaces`. Its reported `world` MAY be the one it would target
+without `llm`.
 
 # Resource Limits {#limits}
 
@@ -1020,6 +1628,15 @@ server that permits composition MUST enforce all of the following:
    these rules, an action MAY compose actions — for example, a `set` accessor composing child `set`
    accessors.
 
+**Absent targets.** A server that advertises the `verb-not-deployed` feature MUST report a composed
+call whose target resolves to no definition ({{resolution}}) to the calling verb as
+`verb-not-deployed`. It checks the declared call graph (rule 1) first, and answers a target whose
+object path is not addressable ({{addressing}}) as `not-found`, never as `verb-not-deployed`. The
+code describes only the route the calling verb named: when a verb that ran returns
+`verb-not-deployed`, or passes it up from a call it made, the server MUST answer that verb's caller
+`not-found` instead. A calling verb can therefore treat `verb-not-deployed`, and only that code, as
+"no verb is deployed there".
+
 Composition MAY cross servers: invoking a verb on a remote REST:ACT server is itself a REST:ACT
 request, and the same rules apply at each server boundary. A cross-server hop starts a fresh budget
 and call stack on the remote server, so the intra-server cycle and depth bounds (rules 4–5) do NOT
@@ -1063,7 +1680,11 @@ order and dispatching to the first one defined:
 A server that dispatches the `set` (`PATCH`) and `list` (`GET`-collection) accessors in addition to
 `get`/`update`/`create`/`delete` advertises the `set-list-accessors` feature; the `get`→`list` and
 `set`→`update` fall-throughs make the extension backward-compatible (an object defining only the latter
-four behaves unchanged). The accessor's result and errors propagate to the outer response. Because the dispatched verb is
+four behaves unchanged). The accessor's result and errors propagate to the outer response. A data method that a `set`,
+`update`, `create` or `delete` accessor serves is an action, so a server MUST refuse it with `400`
+(`invalid-input`) when it carries `If-Match` or `If-None-Match`, and the accessor does not run
+({{object-data}}). A `get` or `list` accessor is a function, and a precondition on it is evaluated
+against its output tag, as for any function ({{taxonomy}}). Because the dispatched verb is
 invoked through the ordinary invocation path, its own `execute` policy governs the request — so an
 accessor's policy is the object-level authorization for that operation, layered above the baseline
 object policy ({{representations}}) that applies when no accessor is defined. Accessor verbs resolve
@@ -1076,7 +1697,9 @@ dispatched to a defined accessor verb is a server-selected behavior: a server MA
 MAY serve stored representations by default, or MAY make it configurable, and a server that dispatches
 MUST advertise it in discovery ({{discovery}}, the `bare-path-accessor-dispatch` feature and the
 `accessorDispatch` flag). When dispatch is enabled but no accessor is defined for the request, the
-server serves the stored representation unchanged. Whether an accessor wraps underlying storage or
+server serves the stored representation unchanged. A bare-path request names no verb, so it is never
+answered `verb-not-deployed`; an explicit accessor invocation such as `GET /pet/dog:get` is an
+ordinary invocation. Whether an accessor wraps underlying storage or
 computes a purely virtual representation is determined solely by the capabilities granted to the verb
 ({{capabilities}}); this document defines no separate mechanism for it.
 
@@ -1089,7 +1712,8 @@ below). A server that does SHOULD advertise `data-properties` in discovery, and 
 object's declarations.
 
 A **declaration** has a `name` (a data-property name; user data MUST NOT use a `$`-prefixed name,
-which is reserved for system fields), an optional advisory `type`, an optional `default` value, and
+which is reserved for system fields, or an `@`-prefixed name, which is reserved for the server's
+internal storage), an optional advisory `type`, an optional `default` value, and
 the following modifiers:
 
 - **`scope`** — `instance` (default) or `shared`. An `instance` property's value is stored on the
@@ -1099,8 +1723,10 @@ the following modifiers:
   the inheritance walk, {{resolution}}), so every instance observes and updates one common value. A
   global counter is a `shared` property; the absence of a declaration MUST NOT be treated as shared.
 
-- **`final`** — when true, the property is write-once: a write to a value that is already set MUST
-  fail with `property-final` (409) and MUST NOT mutate state.
+- **`final`** — when true, the property is write-once: a write to a value that is already set, and a
+  removal of a value that is already set ({{object-noun}}, {{object-data}}), MUST fail with
+  `property-final` (409) and MUST NOT mutate state. Removing a `final` property that is not set
+  changes nothing.
 
 - **`inherit`** — when true (default false), value inheritance is enabled: reading a concrete object
   that has no locally-stored value for the property returns the value stored on the **nearest
@@ -1111,6 +1737,10 @@ the following modifiers:
   `shared` declaration. Inheritance MUST be applied identically whether the property is read through
   the object data plane or through a verb's object-data capability ({{capabilities}}), and is gated by
   the property's read `acl` exactly as a local read is, so it never reveals more than a direct read.
+  For an inherited value that `acl` is evaluated against the ancestor that holds the value, not the
+  object being read: `owner` matches that ancestor's `$owner` and `prop:` reads that ancestor's
+  stored values ({{authz}}), so a value reaches a principal through a descendant only if the
+  principal could read it on the ancestor directly.
 
 - **`acl`** — an optional `{ read, write }` pair, each a list of authorization subjects ({{authz}}:
   `public`, `owner`, `sub:`, `role:`, `group:`, `scope:`, `claim:`). A read or write is permitted only if the
@@ -1124,7 +1754,8 @@ the following modifiers:
   undeclared member); and a server MUST NOT let a property ACL admit a principal the object's policy
   refuses. A `shared` property is state of its declaration, not of an object: its writes are gated by
   its ACL and `final`; a read of it through an object path additionally needs that object's `read`. A denied read behaves as if the property is
-  absent; a denied write MUST fail with `forbidden` (403) and MUST NOT mutate state. This version
+  absent; a denied write MUST fail with `forbidden` (403), or as for an absent object when the caller
+  may not read the object ({{non-reader}}), and MUST NOT mutate state. This version
   defines exactly the two property actions `read` and `write`; finer per-property actions (e.g. a
   separate `manage`, or distinct code-vs-value actions) are a reserved increment, and a server MUST
   reject an `acl` naming an unknown action with `400 invalid-input` rather than silently ignoring it.
@@ -1147,12 +1778,16 @@ verb property ({{verb-properties}}); a server MAY instead derive them from the o
 A client authenticates with an OAuth 2.0 {{RFC6749}} bearer token {{RFC6750}}, typically an OIDC
 {{OIDC}} ID token or access token carrying a subject and OPTIONAL scopes and claims (a JWT
 {{RFC7519}}). Requests without acceptable credentials for a protected operation MUST receive `401`;
-authenticated requests lacking permission MUST receive `403`.
+authenticated requests lacking permission MUST receive `403`, except where this document answers a
+refusal as it would answer for an absent resource, so that it does not reveal whether the resource
+exists (among them a denied read of an object, {{representations}}, and a refused write, delete or
+verb definition by a caller who may not read the object, {{non-reader}}).
 
 ## Authorization policy
 
 Authorization is governed by a **policy** attached to an object or verb: a set of allow/deny rules.
-Each rule has an effect (`allow` or `deny`), a set of subject matchers, and a set of actions.
+Each rule has an effect (`allow` or `deny`; `deny` rules are OPTIONAL, {{simple-profile}}), a set
+of subject matchers, and a set of actions.
 Subject matchers bind directly to the authenticated token:
 
 | Matcher | Matches | Bound to |
@@ -1164,7 +1799,7 @@ Subject matchers bind directly to the authenticated token:
 | `group:<g>` | a group claim | a member of the `groups` claim (a JSON array of strings) |
 | `scope:<s>` | a token bearing OAuth scope `<s>` | a member of the space-delimited `scope` claim ({{RFC6749}}) |
 | `claim:<k>=<v>` | a token whose claim `<k>` equals `<v>` | the scalar claim named `<k>` |
-| `prop:<name>` | the subject named by THIS object instance's `<name>` property value (OPTIONAL, feature `prop-matchers`) | the principal's `sub` equals the concrete object's stored value for `<name>` |
+| `prop:<name>` | the subject named by THIS object instance's `<name>` property value (OPTIONAL, feature `prop-matchers`) | the principal's `sub` equals the concrete object's stored value for `<name>` (for an inherited value, the stored value on the ancestor that holds it, {{data-properties}}) |
 | `readers:<path>` | any principal that may `read` the object at `<path>` (OPTIONAL, feature `readers-matchers`; verb policy only) | the object-level `read` decision for the concrete object at `<path>`, evaluated per request |
 
 The bound claim names are fixed so two implementations evaluate a policy identically; a server MAY
@@ -1172,7 +1807,8 @@ map a differently-named identity-provider claim onto these at the authentication
 matcher vocabulary above is normative.
 
 **Per-instance matchers.** `prop:<name>` is OPTIONAL (advertised as the `prop-matchers` feature)
-and resolves against the concrete object the access targets, so one declaration on a collection
+and resolves against the concrete object the access targets (for a value inherited through
+`inherit`, the ancestor that holds the value, {{data-properties}}), so one declaration on a collection
 gates each instance by that instance's own value (e.g. a letter's `body` readable only by the
 subject its `for` property names). It is meaningful only where an instance exists: a server
 supporting it MUST evaluate it in per-property ACLs and object-level policy, MUST treat a missing
@@ -1222,6 +1858,19 @@ Actions include `read` (with `read-data` / `read-code` refinements), `write`, `e
 granted only if at least one `allow` rule matches and no `deny` rule matches; with no matching rule,
 access is denied.
 
+**Attenuation never escapes a `deny` rule.** Several mechanisms in this document run code under an
+authority derived from a principal by keeping only its subject and dropping its roles, groups,
+scopes, and claims: a server-initiated invocation under its registrant ({{events}}), which includes
+lifecycle hooks, schedules, and verb subscriptions ({{verb-subscriptions}}); a verb that runs as its
+owner ({{exec-identity}}); and a path-scoped sub-token ({{path-scoped-tokens}}). On a server that
+accepts `deny` rules, dropping those attributes could widen access, because a `deny` rule keyed on a
+matcher the attenuated principal no longer carries would stop matching. Such a server MUST treat
+every `deny` rule whose matcher depends on a role, group, scope, or claim as matching every
+attenuated principal, wherever that principal is evaluated, including the read gates evaluated
+against it, so that attenuation only narrows. A server that does not accept `deny` rules
+({{simple-profile}}) is unaffected. Delegated tokens ({{delegated-tokens}}) are not
+attenuated in this sense; their bounds are additional denials.
+
 ## The simple (MOO-style) profile {#simple-profile}
 
 A compact profile expresses the common case — an owner plus per-action public flags:
@@ -1256,10 +1905,13 @@ any matcher matches, else deny" — exactly the OR-list evaluation a simple-prof
 Rendering back to the profile is the inverse and is defined only for a canonical policy of this
 deny-free, one-allow-rule-per-action shape; any other canonical policy has no profile form.
 
-A server that implements only the deny-free simple subset MUST advertise that it does not accept
-`deny` rules (rejecting a canonical policy that carries one with `400` `invalid-input`), so a client
-knows a deny-bearing policy will not be honored. An implementation MAY accept and present only the
-simple profile and store canonical rules internally.
+**Deny rules (OPTIONAL, feature `policy-deny-rules`).** A server that accepts and enforces `deny`
+rules advertises `policy-deny-rules` ({{discovery}}). A client MUST NOT send a canonical policy that
+carries a `deny` rule to a server that does not advertise it. Such a server MUST reject the policy
+with `400` `invalid-input`, and MUST NOT store it in any form, with or without the `deny` rule, so a
+deny-bearing policy is never silently weakened to its `allow` rules. A server that implements only
+the deny-free simple subset does not advertise the token. An implementation MAY accept and present
+only the simple profile and store canonical rules internally.
 
 ## Ownership is fixed {#ownership}
 
@@ -1272,8 +1924,13 @@ delegated request ({{delegated-tokens}}), and not a verb. Specifically:
 * A data-plane write carrying `$owner` is admitted only when the caller is the object's current
   owner (for this rule, and for a `$policy` write, an object with no recorded owner is treated as owned by the anonymous identity) AND the value equals
   that owner; the member then changes nothing. Any other `$owner` member MUST be refused `403`
-  (`forbidden`), and the write MUST change nothing. A caller that is not the owner receives that
-  refusal whatever value it sends.
+  (`forbidden`; to a caller who may not read the object, the answer for an absent object,
+  {{non-reader}}), and the write
+  MUST change nothing. A caller that is not the owner receives that
+  refusal whatever value it sends. The exception is a `null` `$owner`. On a server that advertises
+  `put-null-removes` it MUST be refused `400` (`invalid-input`) whoever sends it
+  ({{representations}}), and on any other server it is refused as any `null` member is. Either
+  refusal depends on nothing stored, so it takes the place of the `403` ({{non-reader}}).
 * A `PUT …:verb/policy` follows {{simple-profile}}: an `owner` equal to the current owner is a
   no-op, and any other `owner` is refused.
 * No deployment, replacement, rollback, or verb-property write changes a verb's owner
@@ -1285,7 +1942,8 @@ owner when they run. If ownership could be reassigned, whoever wrote such code c
 principal as its owner and then trigger it, and that principal's authority would back code it never
 chose. The owner-made opt-in rule forbids exactly that. Sharing is unaffected: an owner lends access
 through policies ({{authz}}) without moving the owner identity. Deleting a resource lets anyone
-create a new one at its path, which inherits nothing of the old one's ownership or code.
+create a new one at its path, subject to the ancestor-creation rule ({{object-binding}}), which
+inherits nothing of the old one's ownership or code.
 
 Because nothing can change hands, a resource whose owner can no longer authenticate cannot be
 managed by anyone else. A server MAY offer the operator recovery act of {{admin-reown}}, which is
@@ -1832,16 +2490,21 @@ claim a level it does not provide. From weakest to strongest:
 * **eventual** — operations are subject only to the guarantees of the backing store; a read may not
   immediately reflect a prior write.
 * **conditional** — single-resource operations are immediately consistent and support optimistic
-  concurrency: a representation carries an `ETag` {{RFC7232}}, a mutating request (`PUT`, `PATCH`,
-  `DELETE`, or an action) MAY carry `If-Match` / `If-None-Match`, and a precondition failure results
-  in `412`. At this level the precondition is **best-effort**: the check and the write are not
+  concurrency: a representation carries an `ETag` {{RFC7232}} (a strong tag over the RFC 8785 canonical form
+  {{RFC8785}} of the caller-readable member map), a data-plane write (`PUT`, `PATCH` or
+  `DELETE`) MAY carry `If-Match` / `If-None-Match`, and a precondition failure results in `412`. A
+  precondition on an action, including a data method an accessor action serves, is refused instead
+  ({{object-data}}, {{active-properties}}). At this level the precondition is **best-effort**: the check and the write are not
   guaranteed to be one atomic compare-and-swap, so two concurrent writers MAY both pass `If-Match` and
   the later write wins (last-writer-wins under the precondition). A guaranteed atomic CAS — where at
   most one of two concurrent conditional writers succeeds — otherwise requires the **transactional**
   level, **unless the server advertises the `atomic-conditional` feature** ({{discovery}}): a server
   advertising that token guarantees that a single-resource `If-Match` check-and-write is performed as
   one atomic compare-and-swap, so at most one of two concurrent conditional writers to the same
-  resource succeeds (the other receives `412`) even at the `conditional` level. A server that also
+  resource succeeds (the other receives `412`) even at the `conditional` level. The same guarantee
+  covers a create-only write (`If-None-Match: *`): the existence check and the write are one atomic
+  step, so of two concurrent create-only writers to the same resource at most one succeeds and the
+  other receives `412`. A server that also
   advertises the `object-cas` feature additionally exposes this guarantee to verb code as a
   per-property compare-and-swap on the object capability (a write conditioned on the property's
   current value), letting a verb run a lost-update-free read-modify-write loop; both features are
@@ -1858,6 +2521,18 @@ claim a level it does not provide. From weakest to strongest:
   atomic, serializable transaction (mirroring the single shared budget); a conflict between
   concurrent invocations is resolved by aborting and optionally retrying one, and an unresolved
   conflict fails with `409`.
+
+A removal of a property, whether a `null` member of a data-plane `PUT` ({{object-noun}}) or a call
+to the `object` capability's `remove` or `remove-at` ({{object-data}}), is a write. It joins the
+write set exactly as a write of the same property would: a `remove` commits with the invocation's
+other writes to its bound object, a `remove-at` commits at the call as a `set-at` does, and at
+`atomic-invocation` both join the invocation's write set, which commits on return or is discarded
+as a whole. Unlike the compare-and-swap, `remove` and `remove-at` are admitted at every level. The
+invocation's own later reads see a removal and answer as for a property that was never set, and
+of a `set` and a `remove` of the same property, the later call wins. A removal is decided against
+the state it commits to: a property that is not set there is left alone, a server that re-checks a
+buffered write at commit re-checks a removal the same way, and an object deleted while the
+invocation ran is not a refusal, since there is nothing left to remove.
 
 A server advertises the highest level it guarantees; a verb MAY declare a minimum level it requires
 ({{conformance}}), and a server that cannot meet it MUST refuse the verb. These levels describe
@@ -1929,8 +2604,9 @@ reusing existing constructs:
   section, advertised by the `lifecycle-hooks` feature token. A server that advertises it MUST treat
   `onCreate`, `onChange`, and `onDelete` as reserved verb names that MUST be actions ({{taxonomy}}), and
   MUST, after a data-plane mutation on an object path commits, invoke that object's matching hook if
-  one resolves: `PUT` fires `onCreate` when the object did not previously exist and `onChange` when it
-  did, and `DELETE` fires `onDelete` (after the delete). The hook runs through the ordinary invocation
+  one resolves and its registrant may read the object (below): `PUT` fires `onCreate` when the
+  object did not previously exist and `onChange` when it did, and `DELETE` fires `onDelete` (after
+  the delete). The hook runs through the ordinary invocation
   path under **registrant authority**: as the principal who registered the hook (its owner), charged to
   that owner's quota and bound by the same limits and the hook's own `execute` policy — NOT as the
   caller who triggered it. The triggering caller's identity is conveyed to the hook only as
@@ -1938,9 +2614,23 @@ reusing existing constructs:
   write from acting with that writer's identity (reading the writer's data or claims and exfiltrating
   them). Firing is **best-effort**: a hook error or trap does not roll back or fail the mutation (the
   mutation is the client's authoritative intent). A hook paused by an operator's ownership recovery
-  is not invoked ({{admin-reown}}). A server MUST bound a hook→write→hook chain (e.g. a
-  maximum hook-firing depth). To bound fan-out further, a server MAY restrict this subset to fire only
-  on the data plane and not on accessor-mediated or capability-mediated writes.
+  is not invoked ({{admin-reown}}). Nor is a hook whose registrant may not read the object: before
+  it invokes a hook, on every mutation that fires one, a server MUST evaluate whether the hook's
+  registrant, attenuated as for any server-initiated invocation, is authorized to read the object
+  ({{authz}}). For `onCreate` and `onChange` the gate is evaluated against the object as the
+  mutation left it. For `onDelete` it is evaluated against the authorization the object had
+  immediately before its removal, as for a deletion delivered over SSE ({{event-sse}}). If the
+  registrant may not read the object, or the server cannot establish that it may, the server MUST
+  NOT invoke the hook, and MUST NOT invoke a hook resolved further up the inheritance chain in its
+  place. Such a skip is final, is not charged to the registrant, and MUST NOT be observable to the
+  registrant. A server SHOULD record it in an operator-facing log; that record MUST NOT carry the
+  hook's payload or the triggering principal, and SHOULD name the hook by its deployed route rather
+  than by the mutated object's path. Without this gate a hook
+  defined on an ancestor would learn the path, time, and author of every mutation beneath it,
+  including mutations of objects whose own policy shuts the hook's owner out. A server MUST bound a
+  hook→write→hook chain (e.g. a maximum hook-firing depth). To bound fan-out further, a server MAY
+  restrict this subset to fire only on the data plane and not on accessor-mediated or
+  capability-mediated writes.
 * **Subscriptions** bind a topic to a target verb. A subscription is an ordinary resource, created
   and removed with the standard methods; a server that supports eventing invokes the target verb
   when a matching event is published. A subscription is **read-gated** like an SSE stream
@@ -1961,7 +2651,7 @@ bounded by the usual limits ({{limits}}) and, for fan-out, by the composition ru
 The **event-publish capability** is a gated host capability ({{capabilities}}), granted to a verb the
 same way as composition and object-data access (deny-by-default; a deployment MAY withhold it from a
 verb that declares it). It exposes one operation, `publish(topic, name, data)`, which appends an
-event (a name and an opaque payload) to the named topic's event log. The topic MUST be a
+event (a name and a payload) to the named topic's event log. The topic MUST be a
 client-addressable object path. Because publishing is an observable side effect, a **function MUST
 NOT publish** ({{taxonomy}}); a server MUST refuse a publish attempt by a function with `403`
 `forbidden-side-effect`. A server MAY additionally **auto-publish** a system event to an object's
@@ -1971,6 +2661,44 @@ lifecycle hooks: `onCreate`, `onChange`, and `onDelete`. A server that supports 
 capability advertises it in discovery ({{discovery}}); a deployment MAY disable eventing entirely,
 in which case the capability and the SSE surface ({{event-sse}}) are both withdrawn and the
 discovery token is omitted.
+
+**Names and payloads.** An event name MUST be non-empty and MUST NOT contain a control character
+(U+0000 through U+001F, or U+007F), because it travels as a line of the SSE framing
+({{event-sse}}); a server MAY also bound its length, and documents the bound if it does. The `data`
+argument MUST be empty or the text of a single JSON object {{RFC8259}}; empty `data` stands for the
+empty object. That object MUST NOT have a top-level member whose name begins with `$`, since those
+names belong to the server (below). A server MUST fail a publish that breaks any of these rules
+with `invalid-input` and MUST NOT retain or deliver the event; a verb that returns that error
+surfaces as `422` ({{errors}}).
+
+**Names the server keeps.** The names `onCreate`, `onChange`, `onDelete`, and `gap` are reserved for
+events the server publishes itself. A server MUST refuse a verb's attempt to publish an event with
+one of these names with `403` `forbidden`, whether or not it auto-publishes lifecycle events, so
+that on every topic an event carrying one of them came from the server. A verb that wants clients
+to refresh what they show publishes an ordinary name; the presentation verbs extension
+{{RESTACT-PRESENTATION}} uses `invalidate` for that.
+
+**The publisher.** A server that supports eventing MUST add a `$publisher` member to the payload of
+every event it publishes. The server sets it; it is never taken from the publisher:
+
+* `{"kind": "host"}` for an event the server publishes itself: an auto-published lifecycle event,
+  an event on a reserved host topic (below), and the gap signal of {{event-sse}};
+* `{"kind": "verb", "verb": "<route>"}` for an event a verb publishes, where `<route>` is the route
+  of the verb definition whose invocation called `publish`, as deployed (its definition pattern,
+  {{resolution}}). It is never the concrete path the verb was invoked on, which could name an
+  object the topic's readers may not read. `<route>` travels as a JSON string: a server MUST
+  encode it with JSON's string escapes, never paste it into the payload text, because an object
+  path may contain `"` and `\`, and a pasted route could add members to `$publisher`, a second
+  `kind` among them.
+
+Apart from adding `$publisher`, the server MUST leave the payload as the publisher wrote it. A
+client MUST ignore members of `$publisher` it does not recognize, and MUST treat an event that has
+no `$publisher` member as unattested. The member identifies code, not a principal: it does not name
+the principal that invoked the verb, which a verb can put in its own payload if it chooses. A verb
+that publishes to a topic others can read therefore discloses its deployed route to them.
+`$publisher` tells a client that receives an event from the server who published it; it is not a
+credential. Input a verb receives, such as a hook's payload or a subscription delivery
+({{verb-subscriptions}}), can be supplied by any caller permitted to invoke that verb directly.
 
 **Reserved host topics.** A server MAY publish its own operational lifecycle events — a checkpoint
 starting and finishing, for instance — on topics in a **reserved namespace** of its own. Such a
@@ -1993,8 +2721,8 @@ form and the topics it publishes.
 
 A server that advertises the **`targeted-invalidation`** feature ({{discovery}}) MUST auto-publish
 the lifecycle event on every committed object mutation — a data-plane `PUT`/`DELETE` AND a verb's
-object capability (`set`/`set-at`, and delete where a deployment profile exposes one) alike, closing
-the base rule's data-plane-only scope for such a server. Its auto-published payload MUST be a JSON
+object capability (`set`/`set-at`, `remove`/`remove-at`, and delete where a deployment profile
+exposes one) alike, closing the base rule's data-plane-only scope for such a server. Its auto-published payload MUST be a JSON
 object carrying at least an `object` member (the mutated object's path — the target this feature
 turns on); a `subject` member (the triggering principal) MAY also be present. The event name is
 carried on the transport as usual ({{event-sse}}), never inside this payload as a separate
@@ -2002,12 +2730,24 @@ requirement. The payload MAY carry an `actor` member, and MUST carry one for a m
 delegation ({{delegated-tokens}}) on a server advertising `delegated-tokens` and
 `targeted-invalidation`.
 
+**Removals.** A removal of a property that was set, whether by a `null` member of a data-plane `PUT`
+({{object-noun}}) or by `remove` or `remove-at` ({{object-data}}), is a change of the object. Where
+a server fires a lifecycle hook or auto-publishes a lifecycle event for the write, the removal is
+`onChange`, never `onCreate` or `onDelete`, and the hook gates of {{events}} apply unchanged. A
+removal never deletes the object, even when it removes the last data member, so it never fires
+`onDelete`. Its event carries the members of any other change event, and like those it does not
+name the property; a subscriber that needs to know what changed reads the object again. A `remove`
+or `remove-at` that finds the property not set changes nothing and is not by itself a mutation of
+the object, while a data-plane `PUT` stays a write whatever its `null` members find
+({{object-noun}}).
+
 ### The read set of an invocation {#read-set-headers}
 
 The `targeted-invalidation` feature has a second, response-side half: scoped delivery is only useful
 to a client that knows **which objects a rendered view actually depends on**. A server that
 advertises the feature MUST report that dependency set on the response to an invocation whose
-representation is `application/vnd.restact.ui+json` (presentation verbs), using the response header
+representation is `application/vnd.restact.ui+json` (presentation verbs, {{RESTACT-PRESENTATION}}),
+using the response header
 
 ~~~
 Restact-Read-Set: <path>[, <path>]*
@@ -2080,6 +2820,11 @@ observed, and SHOULD coalesce or discard them rather than treating each as a dis
 Retention is bounded and server-defined; a server MAY drop the oldest events and SHOULD signal a gap to a
 lagging subscriber. A server MAY bound the number and lifetime of concurrent subscriptions.
 
+Each frame's data is the event's payload: a JSON object carrying the `$publisher` member of
+{{event-publish}}. A server signals a gap with an event named `gap`, whose payload carries
+`$publisher` with `kind` `host` and MAY carry a `missed` member giving the number of events the
+subscriber did not receive.
+
 A server that advertises **`targeted-invalidation`** MAY additionally accept a `?scope=subtree`
 parameter (or an equivalent mechanism) on the subscribe request: an opted-in connection additionally
 receives the lifecycle event for any committed mutation under the subscribed topic (not only the
@@ -2118,13 +2863,9 @@ The registrant chooses where the topic's events go, so the registrant's authorit
 them; a target's execution identity can also change after registration (a redeploy, or a more
 specific definition that later shadows a wildcard one, {{resolution}}).
 
-**Attenuation never escapes a `deny` rule.** On a server that accepts `deny` rules ({{authz}}),
-removing the registrant's roles, groups, scopes, or claims could otherwise widen what it may read: a
-`deny` rule keyed on a matcher the attenuated registrant no longer carries would stop matching. Such a
-server MUST treat every `deny` rule whose matcher depends on a role, group, scope, or claim as
-**matching** the attenuated registrant, both at registration and at every delivery, so that
-attenuation only narrows and never widens ({{path-scoped-tokens}}). A server that implements only the
-deny-free simple profile is unaffected.
+**Attenuation never escapes a `deny` rule.** The attenuated registrant is subject to the rule of
+{{authz}}: on a server that accepts `deny` rules, a `deny` keyed on a role, group, scope, or claim
+matches it, at registration and at every delivery.
 
 **At registration.** A server MUST refuse to create a subscription whose topic object the requesting
 principal is not authorized to read ({{authz}}), and MUST give an absent topic and an unreadable
@@ -2168,6 +2909,11 @@ A server that advertises `verb-subscriptions` MUST implement both gates and MUST
 `verb-subscriptions-read-gate` is talking to a server that predates this rule and MUST NOT assume
 that subscriptions are read-gated.
 
+The input a server passes to the target for an event MUST include the event's payload with its
+`$publisher` member ({{event-publish}}). It is informational: any principal that may invoke the
+target directly can supply the same input, so a target can rely on `$publisher` only when its
+execute policy admits no such caller.
+
 The wire representations of subscription and schedule resources (the request and response bodies
 binding a topic or a time to a target verb) are server-defined; a server that advertises
 `verb-subscriptions` or `schedules` MUST document their schemas.
@@ -2196,13 +2942,16 @@ e.g. `:summarize`). The defined `restact_code` values and their HTTP status code
 | `unsupported-consistency` | 501 | operation not admitted at the server's consistency level (e.g. `object-cas` under `atomic-invocation`) |
 | `conflict` | 409 | unresolved write conflict (transactional level) |
 | `precondition-failed` | 412 | an `If-Match`/`If-None-Match` precondition failed |
-| `property-final` | 409 | write to a write-once (`final`) data property |
+| `property-final` | 409 | write to a write-once (`final`) data property, or removal of one that is set |
 | `object-too-large` | 413 | object data exceeds a per-object size/key cap |
-| `not-found` | 404 | no such verb, object, or operation |
+| `not-found` | 404 | no such verb, object, or operation, or an object the caller may not read ({{representations}}, {{non-reader}}). On a server that advertises `verb-not-deployed`, an invocation or composed call of a route that resolves to no verb is answered with that code instead ({{composition}}) |
+| `verb-not-deployed` | 404 | the invoked route, or a composed call's target, resolves to no verb definition ({{resolution}}); no verb ran for that route. Answered only by a server that advertises the `verb-not-deployed` feature, and never passed up from a verb that ran ({{composition}}) |
 | `method-not-allowed` | 405 | the method does not match the verb kind, or is unsupported on a bare object |
-| `object-binding` | 409 | a coupled object-binding mode ({{object-binding}}) refused the deploy/bind |
+| `object-binding` | 409 | a coupled object-binding mode ({{object-binding}}) refused the deploy/bind: the object is absent, or the caller may not read it ({{non-reader}}) |
 | `invalid-filter` | 400 | a malformed collection/listing `filter` ({{object-listing}}) |
 | `invalid-component` | 400 | the uploaded bytes are not a valid Wasm component |
+| `ancestor-claim` | 409 | the object was not created because objects stored below its path might be owned by another principal ({{object-binding}}) |
+| `verb-unlinkable` | 500 | a stored verb no longer links against the host; the host never ran it |
 | `invalid-source` | 422 | source rejected by the runtime (parse/validation) |
 | `invalid-input` | 400/422 | malformed or rejected input |
 | `delegation-bound` | 403 | the credential is bound by delegation ({{delegated-tokens}}): a sub-token, a delegated token, or the actor of a live grant it has exchanged, on an act it may never perform; or a delegated request outside its grant's bounds |
@@ -2215,19 +2964,42 @@ members (the convention of {{JSONAPI}}). For gRPC interoperability a server MAY 
 
 # Discovery {#discovery}
 
-A server MUST support `OPTIONS` on object, verb, and verb-property paths, reporting the methods and
-properties it supports there. A conformant server MUST publish a discovery document at
-`/.well-known/restact` describing the **optional features it supports**, its **consistency
+A server MUST support `OPTIONS` on object, verb, and verb-property paths, reporting the methods it
+supports at that path in the `Allow` header field ({{RFC9110}}, Section 10.2.1). A verb property the
+server does not support is a resource that does not exist, so `OPTIONS` on its path answers `404`
+like any other request to it; a client learns a verb's properties by asking about each one. A
+conformant server MUST publish a discovery document at `/.well-known/restact` describing the **optional features it supports**, its **consistency
 level** ({{conformance}}, {{consistency-txn}}), and its **object-binding mode** ({{object-binding}}),
-and the available verbs — their kind (function/action), binding, declared capabilities and call
-graph, applicable limits, and accepted source languages. The document is a JSON object and, at a
-minimum, MUST carry:
+and the verbs available to the caller — their kind (function/action), binding, declared capabilities and call
+graph, and accepted source languages; it SHOULD also advertise the limits that apply to each verb
+(carried in the verb's `capabilities`, below). The document is a JSON object and, at a minimum,
+MUST carry:
 
-* a `service` object with a `features` array (the advertised feature tokens, from the registry in
-  {{iana}}), a `consistency` string, and the per-verb default `limits`; and
-* a `verbs` array, each entry naming a verb's `route` and a `verb` object giving its `kind`
-  (`function`/`action`), `binding`, declared `capabilities` (the interface ids) and `callGraph`, and
-  `limits`.
+* a `service` object with a `version` string (the version of the companion extension the document
+  targets), a `features` array (the advertised feature tokens, from the registry in {{iana}}), a
+  `consistency` string, and a `defaultCapabilities` object: the capability and resource envelope
+  applied to verbs that do not override it; and
+* a `verbs` array, each entry naming a verb's `route` and a `verb` object giving its `name` and
+  `kind` (`function`/`action`) and, where declared, its `binding`, `callGraph`, and a
+  `capabilities` object.
+
+**Per-caller listing.** The `verbs` array lists a verb only when its policy admits the caller
+for `read` or `execute`, or the caller is its owner ({{authz}}), decided against current state.
+A server authenticates a discovery request as it does any other request: with no credential the
+caller is anonymous, and a credential that fails verification is refused with `401`. A path-scoped
+sub-token ({{path-scoped-tokens}}) is listed no verbs. The `service` object does not depend on
+the caller. A server MUST NOT let a shared cache replay the document to a different caller: it
+marks a response computed for an authenticated caller `Cache-Control: private`, and every
+response `Vary` with the request header fields it reads identity from (at least
+`Authorization`). A verb missing from the document may still be deployed: a client MUST NOT
+infer from its absence that none is ({{resolution}}).
+
+A `capabilities` object (a verb's, or the service's `defaultCapabilities`) carries the capability
+envelope — `world` (the WIT world the component targets), `interfaces` (the imported capability interface ids), `networkAccess`
+(`none`/`outbound`/`full`) and `sideEffects` — and the resource limits ({{limits}}) as optional
+members: `maxDurationSeconds` (wall clock, seconds), `maxComputeUnits` (compute budget),
+`maxMemoryBytes`, `maxInputBytes` and `maxOutputBytes`. A server SHOULD advertise the limits it
+enforces. All members are optional.
 
 A server MAY add further fields; clients MUST ignore unknown ones. The full schema (including each
 optional feature's fields) is defined by the companion OpenAPI extension ({{iana}}), which extends
@@ -2238,14 +3010,15 @@ the discovery document's own URL, naming an OpenAPI document that describes the 
 (conventionally `/openapi.json`). A server that advertises it MUST also advertise the
 `openapi-document` feature token, and the referenced document SHOULD carry the companion extension's
 `x-restact` (service-wide) and `x-restact-verb` (per-operation) members so a generic OpenAPI client
-can recover the REST:ACT semantics. The document MUST NOT reveal more than the unauthenticated
-discovery document does. This lets a client discover the OpenAPI description from the server itself
+can recover the REST:ACT semantics. The document is computed for the caller under the same
+authentication and caching rules, and MUST NOT reveal more about deployed verbs than that
+caller's discovery document does. This lets a client discover the OpenAPI description from the server itself
 rather than being handed it out of band; it is a convenience, not a substitute for the discovery
 document or `OPTIONS`.
 
 These channels have defined roles: **`OPTIONS`** is authoritative for the capabilities of a
 specific path (mandatory, evaluated live); the **`/.well-known/restact`** document is the
-service-level manifest (and MAY be cached); the **`$verbs`** representation field
+service-level manifest and the caller's verb listing (and MAY be cached, as above); the **`$verbs`** representation field
 ({{representations}}) is a convenience link map into each verb's **`meta`** ({{verb-properties}}),
 which is the per-verb authoritative record.
 
@@ -2296,7 +3069,41 @@ part of the trusted computing base and adopt defense in depth.
   registrant at registration and at every delivery ({{verb-subscriptions}}); a gate at registration
   alone would let a revoked reader keep receiving a topic's events indefinitely, and a gate keyed to
   the target verb's execution identity would let any principal route a topic into a runs-as-owner
-  verb whose owner can read it.
+  verb whose owner can read it. A lifecycle hook is the same kind of channel, which is why it is
+  read-gated against its registrant ({{events}}).
+* **Forged events.** Publishing needs no authority over the topic, so any verb that may publish can
+  reach any topic it can address, and the topic's readers act on what arrives. A server therefore
+  keeps the lifecycle and gap names to itself and attests the publisher of every event
+  ({{event-publish}}). A client that acts on an event's content checks `$publisher` first, and a
+  verb that consumes events through its input remembers that its input can come from any caller
+  its execute policy admits.
+* **Optional calls.** A verb that calls another verb only when one is deployed (a veto, an extension
+  point) must treat only `verb-not-deployed` as absence; `not-found` can come from a deployed verb
+  that refused ({{composition}}). A guard must be executable by every caller it guards (an execute
+  refusal fails closed), and a calling verb that builds a target route
+  from input must validate that input, because a well-formed but wrong route is truthfully answered
+  as absent.
+* **Listing by prefix.** A listing narrowed by a client-chosen prefix ({{object-listing}}) still
+  reads, and then drops, each object in range that the caller cannot read, so its response time
+  grows with the number of such objects. Were any string accepted as a prefix, a caller could extend
+  it one character at a time toward whichever request ran slow and recover the names of paths it
+  cannot read. Requiring the prefix to end in `/` limits each probe to one whole guessed path
+  segment; timing still reveals whether unreadable objects sit below a guessed name, and roughly how
+  many. A server exposing the listing to untrusted callers SHOULD require authentication and SHOULD
+  rate-limit it.
+* **Existence of unreadable objects.** A caller who may not read an object gets the answer an
+  absent object would get from a read ({{representations}}), the listing ({{object-listing}}), the
+  policy read-back, and a refused write, delete or coupled-mode verb definition ({{non-reader}}).
+  Three limits remain. Where a request would succeed at a free path (a write the creation rules
+  admit, {{object-policy-inheritance}}, or a deploy under `auto-create`), the server refuses it as
+  not-found instead, so a caller that may create at a path learns whether the path is taken. Under a
+  coupled object-binding mode ({{object-binding}}) the discovery document lists the definition path of each verb the caller may see
+  ({{discovery}}), so an object with such a verb bound to it is known to that caller to exist. And the
+  time the authorization decision takes varies with the policy that governs the object.
+* **Verb routes are not secrets.** Discovery lists only the verbs a caller may see, but a caller who
+  names a route can still learn whether a verb is deployed there: `OPTIONS` answers without
+  credentials, and an invocation is refused rather than answered as absent ({{resolution}}). A verb
+  is protected by its policy, not by its name.
 * **Memory-unsafe source languages.** Compiling C/C++ to WebAssembly does not confer memory safety
   within the verb's own linear memory; servers handling security-sensitive verbs SHOULD prefer
   memory-safe languages or additional analysis.
@@ -2325,7 +3132,9 @@ part of the trusted computing base and adopt defense in depth.
   object it is bound under, so on a server with more than one authenticated principal any caller can
   bind a verb, a reserved accessor, a lifecycle hook or a property declaration on an ancestor of
   another principal's objects and act on their requests to it. Coupled modes tie each binding to
-  ownership of the bound object, and a coupled mode protects only ancestors that exist.
+  ownership of the bound object, and the ancestor-creation rule ({{object-binding}}) prevents a
+  principal from creating an ancestor above objects it does not own. Creating an object below an
+  existing one still accepts that ancestor's owner as an authority over it.
 * **Pushed authority (ownership reassignment).** Code that runs under its owner's authority, a
   lifecycle hook or a runs-as-owner verb, must run only as a principal that chose it. A server that
   let a resource's owner be reassigned would let any principal able to deploy code make another
@@ -2341,6 +3150,30 @@ part of the trusted computing base and adopt defense in depth.
   sessions on the grants API MUST apply its cross-site request forgery defense there, because a
   forged grant creation hands the forger a credential.
 
+* **CORS is not authorization.** Cross-Origin Resource Sharing ({{FETCH}}) decides only whether a
+  browser lets a page read a response, never whether the server accepts the request, so a server
+  MUST authorize every request it accepts as {{authz}} describes, whatever its CORS policy. A
+  REST:ACT client presents a bearer credential that the page attaches itself, so a server SHOULD NOT
+  send `Access-Control-Allow-Credentials`, and a server that allows cross-origin reads SHOULD name
+  the origins it allows.
+* **Cross-site requests.** CORS does not keep a request from reaching the server: a browser sends a
+  cross-origin `POST` with a form-encoded, multipart or `text/plain` body without a preflight. A
+  server SHOULD refuse with `403` (`forbidden`) a cross-origin request whose method is not safe
+  ({{RFC9110}}, Section 9.2.1), unless the request's origin is one the server names as allowed, or
+  the server allows every origin and the request is one a browser sends only after a successful
+  preflight (a method other than `GET`, `HEAD` or `POST`, or a single `Content-Type` other than
+  `application/x-www-form-urlencoded`, `multipart/form-data` or `text/plain`). A server that accepts
+  a credential the browser attaches on its own (a cookie, HTTP authentication, or an identity a
+  fronting proxy derives from one), or that lets an anonymous caller change state, MUST apply this
+  refusal. A request is cross-origin when its `Sec-Fetch-Site` header ({{FETCH-METADATA}}) is present
+  with a value other than `same-origin` or `none`, or, without that header, when its `Origin` header
+  ({{RFC6454}}) names a host and port other than the request's own authority. The origin `null` is
+  always cross-origin and never matches an origin the server names as allowed. A request carrying
+  neither header did not come from a page and is unaffected, and an `Authorization` header is no
+  evidence that a request is same-origin. Comparing the origin with the request's authority is
+  meaningful only for a name the server recognizes as its own, so a server SHOULD also refuse a
+  request whose `Host` it does not recognize, as a page reached through DNS rebinding presents one.
+
 Authentication and authorization are as described in {{authz}}; transport MUST be protected with
 TLS.
 
@@ -2349,8 +3182,6 @@ TLS.
 This document requests the following registrations (details to be completed in a later revision).
 
 * **Media type** `application/restact+json` for REST:ACT native representations.
-* **Media type** `application/vnd.restact.ui+json` for presentation-verb UI documents
-  (`presentation-verbs.md`).
 * A well-known URI {{RFC8615}} `restact` for the discovery document ({{discovery}}).
 * A **"REST:ACT Verb Property Names"** registry (initial entries `code`, `policy`, `meta`),
   registration policy Specification Required {{RFC8126}}.
@@ -2358,9 +3189,15 @@ This document requests the following registrations (details to be completed in a
   registration policy Specification Required.
 * A **"REST:ACT Source Languages"** registry mapping source media types to handling requirements
   ({{languages}}), registration policy Specification Required.
+* A **"REST:ACT LLM Providers"** registry of the versioned wire-protocol identifiers an `llm`
+  connector names in `provider` ({{llm}}), registration policy Specification Required; initial entry
+  `anthropic-messages/v1`, in `registries/llm-providers.md`. A row pins the provider's wire format
+  at a fixed API version, so a changed format is a new identifier, never an edit to a registered
+  one.
 * A **"REST:ACT Feature Tokens"** registry naming the optional-feature tokens a server advertises in
   discovery ({{conformance}}, {{discovery}}), registration policy Specification Required; initial
-  entries in `registries/feature-tokens.md`. A token names one independently-observable
+  entries in `registries/feature-tokens.md`, except the tokens an extension specification defines,
+  which that specification registers ({{extensions}}). A token names one independently-observable
   optional behavior, names are permanent, and a feature whose contract changes incompatibly takes a
   new token rather than redefining an existing one. This document deliberately does not restate the
   token list inline: the registry file is the single enumeration, mirrored machine-readably by the
@@ -2368,15 +3205,12 @@ This document requests the following registrations (details to be completed in a
 * A **"REST:ACT Error Codes"** registry for the `restact_code` tokens ({{errors}}), registration
   policy Specification Required, seeded with the values in the {{errors}} table (including
   `forbidden-side-effect`, `invalid-call-graph`, and the `invalid-input`/`invalid-filter`/
-  `object-binding`/`unsupported-feature` conditions).
+  `object-binding`/`unsupported-feature` conditions) and with the codes of {{llm-discovery}}.
 * The **`delegation-bound`** error code ({{errors}}), and the two provisional token-type URIs
   `urn:restact:params:oauth:token-type:grant` and
   `urn:restact:params:oauth:token-type:grant-secret` ({{delegated-tokens}}); and the reserved object
   paths `tokens/grants` (and everything beneath it) and `tokens/exchange` under `/v1/`
   ({{delegated-tokens}}).
-* A **"REST:ACT UI Catalog Node Types"** registry for the presentation-verb component catalog
-  (`presentation-verbs.md`; initial entries in `registries/ui-catalog-nodes.md`),
-  registration policy Specification Required, additive-only.
 
 If no registrations are ultimately required, this section will state that this document has no IANA
 actions.
@@ -2398,10 +3232,40 @@ component targets to declare its capability manifest. The package comprises:
   gated; deny-by-default per the declared call graph and {{composition}}).
 * `object` — the object-data capability (feature `object-data-access`, gated):
   `get`/`set`/`get-at`/`set-at`/`shape`/`shape-at`, plus the separately-advertised
-  `set-at-if` (feature `object-cas`), `query` (feature `verb-object-query`) and `path` (feature
-  `object-self-path`) ({{object-data}}).
+  `set-at-if` (feature `object-cas`), `query` (feature `verb-object-query`), `path` (feature
+  `object-self-path`) and `remove`/`remove-at` (feature `object-remove`) ({{object-data}}).
 * `event` — `publish(topic, name, data) -> result<_, invocation-error>` (feature
-  `event-subscriptions`, gated; {{event-publish}}).
+  `event-subscriptions`, gated; `data` is empty or a JSON object; {{event-publish}}).
+* `llm` — `complete(completion-request) -> result<completion, invocation-error>` (feature
+  `llm-connector`, gated; one bounded, text-only model completion through a connector object;
+  {{llm}}).
+
+The `object` interface declares the two removal functions as follows:
+
+~~~ wit
+/// Remove a data property of `this` (feature `object-remove`).
+/// Afterwards it reads as a property that was never set: none, or, for an
+/// `inherit` property, the inherited value or its default. Authorized
+/// exactly as `set` of the same name. Returns an error on a write-ACL denial
+/// (`forbidden`), a `final` property that is set (`property-final`), or an
+/// instance-scoped name on a `this` that holds no data (`not-found`). A
+/// `shared`-scoped name is removed from the verb's shared state, where
+/// `set` writes it. Removing a property that is not set succeeds and
+/// changes nothing. The host persists the removal only if the whole
+/// invocation succeeds.
+remove: func(name: string) -> result<_, invocation-error>;
+
+/// Remove a data property of ANOTHER object by path (feature
+/// `object-remove`), under the same cross-object write-policy intersection
+/// as `set-at`: permitted only if the caller could have removed it through
+/// the data plane, so a verb is never a confused deputy. Like `set-at`, it
+/// commits synchronously at the call (buffered at the `atomic-invocation`
+/// level), and a `remove-at` of the verb's OWN bound object is equivalent
+/// to `remove`. Returns `not-found` when no object is stored at `path`: a
+/// removal never creates one. Rejects the reserved `@`/`$` namespaces and
+/// `shared`-scoped properties.
+remove-at: func(path: string, name: string) -> result<_, invocation-error>;
+~~~
 
 Worlds compose these for a component to target, exactly as in `wit/*.wit`:
 
@@ -2411,6 +3275,8 @@ Worlds compose these for a component to target, exactly as in `wit/*.wit`:
 * `plugin-object` / `plugin-object-compose` — the object worlds; each adds `object` AND the ambient
   `identity` view (`plugin-object-compose` also has `compose`).
 * `plugin-object-event` / `plugin-object-compose-event` — add `event` to the two object worlds.
+* `plugin-llm` / `plugin-object-llm` / `plugin-object-compose-event-llm` — add `llm` to `plugin`,
+  `plugin-object` and `plugin-object-compose-event` respectively.
 
 The ambient `identity` interface is thus reachable from the `plugin-identity` and object worlds, not
 from bare `plugin`/`plugin-compose`, and the `event` capability extends only the two object worlds. New
@@ -2424,7 +3290,8 @@ A reference implementation (a Rust host on the Wasmtime engine) and a security-f
 have demonstrated the core execution and safety model: capability-denied execution, enforced
 wall-clock / compute / memory limits, an upload pipeline with import allow-listing and content
 addressing, and host-mediated composition with a declared call graph, cycle detection, and a shared
-budget. Observed behavior informed the default limits referenced in {{limits}}.
+budget. Observed behavior informed the kinds of limit {{limits}} requires. The values are each
+server's own and are advertised per verb in discovery ({{discovery}}).
 
 # Acknowledgments
 
