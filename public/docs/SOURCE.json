@@ -1,7 +1,7 @@
 {
   "repository": "stackumi/restactd",
-  "commit": "ce310e45de30b9639fe5648fead984436e2ea59f",
-  "date": "2026-11-02T19:51:17-06:00",
+  "commit": "bd8baf5fabba4a57d488cb4ab71ba86a2ef334d2",
+  "date": "2026-11-04T01:02:05-06:00",
   "built_for": "https://restact.org/docs/",
-  "tree_sha256": "c0c99d1315c93368a36506a09026ba8dc6ccd53a675bca77ff02178e7b4e40a6"
+  "tree_sha256": "776a11c99577c0ad5ddb8a1340f3f7a515e13d7bbd95cca1916c8cbb6a20e40d"
 }
