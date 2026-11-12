@@ -27,3 +27,8 @@ pmOnFail: ignore
 minimumReleaseAge: 1440
 allowBuilds:
   esbuild: false
+# @astrojs/astro2tsx pins @emnapi/core 1.11.3 but leaves @napi-rs/wasm-runtime's @emnapi/runtime
+# peer unmet, so pnpm auto-installs the 2.0 prerelease, which breaks `astro check`. Pin the stable
+# 1.x on that one path. Remove once astro2tsx moves off wasm-runtime 1.2.4.
+overrides:
+  '@napi-rs/wasm-runtime@1.2.4>@emnapi/runtime': 1.11.3

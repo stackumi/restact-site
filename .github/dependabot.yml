@@ -12,3 +12,10 @@ updates:
     # apply to security updates; pnpm's hold still does.
     cooldown:
       default-days: 1
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Same one-day hold as the npm entry; the workflow pins every action by commit SHA.
+    cooldown:
+      default-days: 1
