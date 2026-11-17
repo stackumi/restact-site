@@ -1,0 +1,15 @@
+---
+/**
+ * The one sentence that says how to comment on the draft: GitHub issues on the specification
+ * repository. The home page closes on it and the Introduction's "Reviewing the draft" section opens
+ * with it, so the channel is named in one place. Text in the slot follows the sentence in the same
+ * paragraph.
+ *
+ */
+import { GITHUB } from '../site.config';
+---
+
+<p>
+  The draft is open for review. To comment on it, <a href={GITHUB.specsNewIssue}>open an issue in the specification
+  repository</a> on GitHub.<slot />
+</p>

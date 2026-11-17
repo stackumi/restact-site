@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import AnatomyDemo from '../components/AnatomyDemo.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import ReaderGroups from '../components/ReaderGroups.astro';
+import Feedback from '../components/Feedback.astro';
 import { term } from '../lib/term';
 import { DRAFT, GITHUB, RESTACTD_DOCS, SITE } from '../site.config';
 
@@ -141,8 +142,6 @@ $ curl 'localhost:8080/v1/notes/42¦wordCount?input=one%20two%20three'
   more: { label: 'The same verb in JavaScript and Python', href: '/start/' },
 };
 
-/* The feedback channel is an open decision, so this note stays unlinked. */
-const feedback = 'The draft is open for review. A channel for comments has not been chosen yet.';
 
 /** Split a sentence so paths and identifiers render in monospace; the words are unchanged. */
 const CODEY = /(\/[A-Za-z0-9_.\-\/:]*[A-Za-z0-9_]|notes\/42:wordCount|notes\/42|restact_code)/g;
@@ -235,7 +234,7 @@ const jsonLd = {
   <section class="container sect last" aria-labelledby="paths">
     <h2 id="paths">{paths.heading}</h2>
     <ReaderGroups groups={paths.groups} />
-    <p class="feedback" id="feedback">{feedback}</p>
+    <div class="feedback"><Feedback /></div>
   </section>
 </Base>
 
@@ -367,7 +366,7 @@ const jsonLd = {
   .measure > p + p {
     margin-top: 12px;
   }
-  /* The comments note: the channel is undecided, so it is plain text under the reader groups. */
+  /* The comments note under the reader groups: how to comment on the draft (the Feedback component). */
   .feedback {
     max-width: 68ch;
     margin-top: 32px;
