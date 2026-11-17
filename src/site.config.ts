@@ -30,6 +30,8 @@ export const DRAFT = {
 
 export const GITHUB = {
   specs: 'https://github.com/stackumi/restact',
+  /** Where readers comment on the draft (the Feedback component links it). */
+  specsNewIssue: 'https://github.com/stackumi/restact/issues/new',
   restactd: 'https://github.com/stackumi/restactd',
   /** `restact mcp`, the MCP bridge in the restact command line (formerly verbsmith). */
   mcp: 'https://github.com/stackumi/restactd/blob/main/cli/docs/mcp/README.md',
