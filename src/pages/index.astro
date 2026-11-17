@@ -94,7 +94,7 @@ const core = {
   items: [
     { name: 'Addressing and verb invocation', body: 'A colon separates the object path from the verb name, as in /v1/notes/42:wordCount.', href: `${DRAFT_URL}#addressing` },
     { name: 'Capability confinement', body: 'A verb reaches only the host interfaces it imports. The server refuses an upload that imports one it does not grant.', href: `${DRAFT_URL}#capabilities` },
-    { name: 'Resource limits', body: 'Every call has wall-clock, compute and memory limits, answered with 408, 429 and 507.', href: `${DRAFT_URL}#limits` },
+    { name: 'Resource limits', body: 'Every call has wall-clock, compute and memory limits, answered with 504, 429 and 507.', href: `${DRAFT_URL}#limits` },
     { name: 'Runs as the caller', body: 'A verb acts with the caller’s authority, narrowed by what the verb declared and by the target’s policy.', href: `${DRAFT_URL}#exec-identity` },
     { name: 'Problem Details errors', body: 'Errors are RFC 9457 problem details carrying a restact_code.', href: `${DRAFT_URL}#errors` },
     { name: 'A discovery document', body: '/.well-known/restact lists the server’s features, limits and verbs.', href: `${DRAFT_URL}#discovery` },
