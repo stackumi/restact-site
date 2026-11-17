@@ -1,6 +1,8 @@
 # REST:ACT LLM Providers registry
 
-A typed `rest-act:plugin/llm` connector ([ADR-0095](https://github.com/stackumi/restactd/blob/main/spec/decisions/0095-typed-connectors-llm.md))
+A typed `rest-act:plugin/llm` connector (REST:ACT Connectors,
+[`../draft-byrd-restact-connectors-00.md`](../draft-byrd-restact-connectors-00.md) §Model Completion;
+[ADR-0095](https://github.com/stackumi/restactd/blob/main/spec/decisions/0095-typed-connectors-llm.md))
 names the wire protocol the host speaks to its destination through a **registered, versioned
 `provider` identifier**. The host implements each registered row as a fixed adapter — request
 serialization from the interface's `completion-request`, response parsing into `completion`, usage
@@ -31,7 +33,7 @@ never an edit to an existing one.
 
 | Provider | Wire shape (pinned) | Request path | Credential slot | Usage mapping | Stop-reason mapping | Status | Reference |
 |---|---|---|---|---|---|---|---|
-| `anthropic-messages/v1` | The Anthropic Messages API, request header `anthropic-version: 2023-06-01`; request body `{model, system?, messages[{role, content}], max_tokens, temperature?}`; response body `{content[{type:"text", text}], model, stop_reason, usage}`. Text content blocks only; any non-text block in a response is dropped from `text` and noted as a truncation. | `POST /v1/messages` (under the connector's `pathPrefixes[0]` when present) | `x-api-key` header | `usage.input_tokens` → `input-tokens`; `usage.output_tokens` → `output-tokens`; `usage.cache_read_input_tokens` (absent ⇒ 0) → `cache-read-tokens` | `end_turn` → `end`; `max_tokens` → `max-tokens`; `stop_sequence` → `stop-sequence`; anything else → `other` | provisional | [ADR-0095](https://github.com/stackumi/restactd/blob/main/spec/decisions/0095-typed-connectors-llm.md) D3 |
+| `anthropic-messages/v1` | The Anthropic Messages API, request header `anthropic-version: 2023-06-01`; request body `{model, system?, messages[{role, content}], max_tokens, temperature?}`; response body `{content[{type:"text", text}], model, stop_reason, usage}`. Text content blocks only; any non-text block in a response is dropped from `text` and noted as a truncation. | `POST /v1/messages` (under the connector's `pathPrefixes[0]` when present) | `x-api-key` header | `usage.input_tokens` → `input-tokens`; `usage.output_tokens` → `output-tokens`; `usage.cache_read_input_tokens` (absent ⇒ 0) → `cache-read-tokens` | `end_turn` → `end`; `max_tokens` → `max-tokens`; `stop_sequence` → `stop-sequence`; anything else → `other` | provisional | [draft-byrd-restact-connectors-00](../draft-byrd-restact-connectors-00.md) §IANA Considerations; [ADR-0095](https://github.com/stackumi/restactd/blob/main/spec/decisions/0095-typed-connectors-llm.md) D3 |
 
 ## Notes
 

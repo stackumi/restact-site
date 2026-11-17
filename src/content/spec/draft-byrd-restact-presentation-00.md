@@ -85,8 +85,8 @@ A **presentation verb** (informally a *view verb*) is an ordinary REST:ACT verb 
    exactly like [examples/render-html](https://github.com/stackumi/restactd/tree/main/examples/render-html).
 
 Nothing else is special. A view verb links against only the already-frozen `object` (+ `log`)
-interfaces; `wit/world.wit` is unchanged. It runs under the same sandbox, fuel/epoch/memory limits,
-and run-as-caller identity as any verb, so a view sees only what the caller may read.
+interfaces; `wit/world.wit` is unchanged. It runs under the same sandbox, resource limits and
+run-as-caller identity as any verb, so a view sees only what the caller may read.
 
 Naming convention (non-normative, but used by the reference implementations):
 
@@ -101,10 +101,11 @@ Naming convention (non-normative, but used by the reference implementations):
 # The media type {#media-type}
 
 `application/vnd.restact.ui+json` is a `+json` structured-syntax type: the payload is JSON. A view
-verb declares it via `produces`; the host stamps it as the response `Content-Type` and adds
-`x-content-type-options: nosniff` (as for any verb output). It is **not** `text/html`, so the host's
-HTML-only Content-Security-Policy and `Content-Disposition: attachment` hardening do **not** apply —
-the browser never renders the payload; the trusted client fetches and interprets it.
+verb declares it via `produces`, and the server sends it as the response `Content-Type`, with the
+headers {{RESTACT}} specifies for any verb output (`X-Content-Type-Options: nosniff` and a restrictive
+Content-Security-Policy; Security Considerations). The type is not script-capable, so it is served
+inline, without `Content-Disposition: attachment`. The browser
+never renders the payload; the trusted client fetches and interprets it.
 
 # The component catalog (the trust boundary) {#catalog}
 
@@ -139,7 +140,8 @@ registry both speak, they agree.
   `target`) against the
   registry's path grammar **before** issuing any fetch — for `page.subscribe`, before any event
   stream is opened — and MUST resolve a valid object path only against the **same-origin data
-  plane** (discovery base + `/v1/` + path). This is the sharpened form of the safe-schemes
+  plane** (the server's base URL + `/v1/` + path; the "Base URL" section of {{RESTACT}}). This is
+  the sharpened form of the safe-schemes
   requirement for path-valued fields: a valid object path is scheme-free by construction, so
   external URLs and `data:` URIs are unrepresentable. A facet `target` is never fetched by the
   client — it travels only as commit input — but is validated identically before the facet is
@@ -226,7 +228,8 @@ A host advertises support additively (frozen contract preserved):
   and its name is not a reserved accessor/lifecycle name. (`produces` itself already appears in the
   descriptor, so a client can key on either signal.)
 
-A client builds its UI **from discovery**: fetch `GET /.well-known/restact`, take every `role == "view"`
+A client builds its UI **from discovery**: fetch `GET /.well-known/restact` relative to the server's
+base URL, take every `role == "view"`
 verb, treat the untemplated ones as navigation and the templated ones as per-object views, and render
 each by invoking it and interpreting the returned document. The client needs **no built-in knowledge
 of the application's domain** — which is what lets a newly deployed view verb appear with no client
