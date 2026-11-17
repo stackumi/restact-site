@@ -31,7 +31,7 @@ export const SECTION_MAP: Record<string, { gist: string; tag: Tag }> = {
     tag: 'optional',
   },
   capabilities: { gist: 'Layered host interfaces, deny by default; the guest contract and the read-only caller identity.', tag: 'core + optional' },
-  limits: { gist: 'Wall-clock, compute and memory limits per invocation, answered with 504, 429 and 507.', tag: 'core' },
+  limits: { gist: 'Wall-clock and memory limits per invocation, and a recommended compute limit, answered with 504, 507 and 429.', tag: 'core' },
   composition: { gist: 'One verb calls another through the host, under a declared call graph and a shared budget.', tag: 'optional' },
   authz: {
     gist: 'Authentication mechanisms, policy matchers, the simple profile, fixed ownership and the execution identity.',
