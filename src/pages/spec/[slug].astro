@@ -1,0 +1,28 @@
+---
+import Docs from '../../layouts/Docs.astro';
+import SpecBody from '../../components/SpecBody.astro';
+import { renderDraft, EXTENSION_DRAFTS, SPECS_REPO } from '../../lib/specmd';
+
+export function getStaticPaths() {
+  return EXTENSION_DRAFTS.map((d) => ({ params: { slug: d.slug }, props: { file: d.file } }));
+}
+
+const { file } = Astro.props;
+const doc = renderDraft(file);
+const f = doc.front;
+const sourceUrl = `${SPECS_REPO}/blob/main/${file}`;
+---
+
+<Docs
+  title={f.title}
+  description={`${f.docname}, an extension draft of REST:ACT. It is optional, and each feature it defines has its own discovery token. This is the normative text, rendered from the Markdown source.`}
+  summary={`${f.title}: an optional extension draft of REST:ACT, normative text.`}
+  headings={doc.headings}
+  verbatimToc
+  chips={['Normative', 'Extension draft']}
+  editUrl={sourceUrl}
+  asideLinks={[{ label: 'The core draft', href: '/spec/draft/' }, { label: 'All specification documents', href: '/spec/#documents' }]}
+>
+  <SpecBody segments={doc.segments} />
+  <Fragment set:html={doc.refsHtml} />
+</Docs>

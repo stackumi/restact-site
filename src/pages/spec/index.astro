@@ -75,6 +75,42 @@ const wit = witSummary();
 const documents = [
   { name: 'The Internet-Draft', href: DRAFT_PATH, status: 'Normative', covers: 'The protocol: grammar, methods, capabilities, limits, discovery' },
   {
+    name: 'Objects and data',
+    href: '/spec/objects/',
+    status: 'Normative, extension draft',
+    covers: 'Listing and querying objects, property storage and access, inherited policy, accessor verbs, deployment history, JSON:API',
+  },
+  {
+    name: 'Events',
+    href: '/spec/events/',
+    status: 'Normative, extension draft',
+    covers: 'Lifecycle hooks, topic subscriptions, schedules, publishing events, delivery over Server-Sent Events',
+  },
+  {
+    name: 'Identity and delegation',
+    href: '/spec/delegation/',
+    status: 'Normative, extension draft',
+    covers: 'Ownership reassignment, path-scoped read-only sub-tokens, grants under which one principal acts for another',
+  },
+  {
+    name: 'Connectors',
+    href: '/spec/connectors/',
+    status: 'Normative, extension draft',
+    covers: 'Secrets mount, mediated outbound calls, model completion, signed webhook delivery',
+  },
+  {
+    name: 'Model Context Protocol facet',
+    href: '/spec/mcp/',
+    status: 'Normative, extension draft',
+    covers: 'Four MCP tools for invoking verbs and listing and reading objects',
+  },
+  {
+    name: 'HTTP verbs',
+    href: '/spec/http-verbs/',
+    status: 'Normative, extension draft',
+    covers: 'A verb reads declared request headers and sets its response status and headers; webhook signature verification before the verb runs',
+  },
+  {
     name: 'Presentation verbs',
     href: '/spec/presentation-verbs/',
     status: 'Normative, extension draft',

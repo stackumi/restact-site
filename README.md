@@ -33,7 +33,8 @@ the hub, the page descriptions) is still checked. Meta descriptions are always c
 
 ## The specification pages
 
-`/spec/`, `/spec/draft/`, `/spec/presentation-verbs/` and `/spec/registries/` are rendered at build
+`/spec/`, `/spec/draft/`, the extension drafts (`/spec/objects/`, `/spec/events/`, `/spec/delegation/`,
+`/spec/connectors/`, `/spec/mcp/`, `/spec/http-verbs/` and `/spec/presentation-verbs/`) and `/spec/registries/` are rendered at build
 time from copies of the sources in `stackumi/restact` (the specification repository), committed
 under `src/content/spec/` (the Cloudflare build needs no sibling checkout).
 `SOURCE.json` there records the source commit. When the specification changes, a person runs
@@ -43,7 +44,7 @@ corepack pnpm sync:spec [path-to-spec-checkout]   # default ../restact
 corepack pnpm verify
 ```
 
-and commits the result. The sync vendors both drafts (the protocol draft and the presentation draft) and keeps only the `ins:` line of each draft's `author:` list (any
+and commits the result. The sync vendors all eight drafts (the protocol draft and the seven extension drafts) and keeps only the `ins:` line of each draft's `author:` list (any
 other key there is dropped), stops with an error if a draft has no front matter, and scans every
 copied file for an email address, deleting its output and failing if it finds one. No address
 enters this repository. `src/lib/specmd.ts` turns the kramdown-rfc drafts and the plain
@@ -83,7 +84,7 @@ the site keeps its own.
 | `src/layouts/Docs.astro` | docs page: side nav, article, on-this-page list, prev/next |
 | `src/layouts/MdPage.astro` | maps MDX frontmatter onto `Docs.astro` |
 | `src/components/` | Shell: Header, Tagline, ThemeToggle, Footer. Building blocks: CodeBlock, Tabs, Callout, MethodTag, InRestactd, ReaderGroups, SpecBody, SpecSideNav. Figures and demos: AnatomyDemo, Venn, BudgetFigure, UiMock, UiDocumentDemo, NodeFamilies, ResolutionWalk |
-| `src/pages/spec/` | the specification hub, the draft, presentation verbs and registries pages |
+| `src/pages/spec/` | the specification hub, the draft, the extension drafts and registries pages |
 | `scripts/` | `sync-spec.mjs` (vendor the specification sources), `sync-docs.mjs` (vendor the restactd docs), `check-site.mjs` (content checks), `vendored.mjs` (their shared scans) |
 | `src/lib/term.ts` | markup helper for hand-coloured terminal and JSON blocks |
 | `src/lib/shiki-theme.mjs` | the highlighting theme, built from the CSS tokens |

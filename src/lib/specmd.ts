@@ -49,6 +49,22 @@ export const DRAFT_FILE = 'draft-byrd-restact-protocol-00.md';
 export const PV_FILE = 'draft-byrd-restact-presentation-00.md';
 export const DRAFT_PATH = '/spec/draft/';
 export const PV_PATH = '/spec/presentation-verbs/';
+
+/** The extension drafts and the page each one renders at. Each is a file in the specification repository. */
+export const EXTENSION_DRAFTS = [
+  { slug: 'objects', file: 'draft-byrd-restact-objects-00.md', label: 'Objects draft' },
+  { slug: 'events', file: 'draft-byrd-restact-events-00.md', label: 'Events draft' },
+  { slug: 'delegation', file: 'draft-byrd-restact-delegation-00.md', label: 'Delegation draft' },
+  { slug: 'connectors', file: 'draft-byrd-restact-connectors-00.md', label: 'Connectors draft' },
+  { slug: 'mcp', file: 'draft-byrd-restact-mcp-00.md', label: 'MCP facet draft' },
+  { slug: 'http-verbs', file: 'draft-byrd-restact-http-verbs-00.md', label: 'HTTP verbs draft' },
+].map((d) => ({ ...d, path: `/spec/${d.slug}/` }));
+/** A draft file in the specification repository to its on-site page. */
+const DRAFT_PAGES = new Map<string, string>([
+  [DRAFT_FILE, DRAFT_PATH],
+  [PV_FILE, PV_PATH],
+  ...EXTENSION_DRAFTS.map((d) => [d.file, d.path] as [string, string]),
+]);
 export const REGISTRIES_PATH = '/spec/registries/';
 export const SPECS_REPO = 'https://github.com/stackumi/restact';
 
@@ -88,6 +104,10 @@ const RFC_TITLES: Record<string, string> = {
   RFC2119: 'Key words for use in RFCs to Indicate Requirement Levels',
   RFC3986: 'Uniform Resource Identifier (URI): Generic Syntax',
   RFC5234: 'Augmented BNF for Syntax Specifications: ABNF',
+  RFC6234: 'US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)',
+  RFC6266: 'Use of the Content-Disposition Header Field in the Hypertext Transfer Protocol (HTTP)',
+  RFC8187: 'Indicating Character Encoding and Language for HTTP Header Field Parameters',
+  RFC9421: 'HTTP Message Signatures',
   RFC6749: 'The OAuth 2.0 Authorization Framework',
   RFC6750: 'The OAuth 2.0 Authorization Framework: Bearer Token Usage',
   RFC7232: 'Hypertext Transfer Protocol (HTTP/1.1): Conditional Requests',
@@ -184,10 +204,19 @@ function parseFront(text: string): FrontMatter {
 // Link policy
 // --------------------------------------------------------------------------------------------
 
+/** A link to a draft file in the specification repository on GitHub, as its on-site page and fragment, or null. */
+export function draftPageFor(url: string): string | null {
+  const m = url.match(new RegExp(`^${SPECS_REPO.replace(/[.]/g, '\\.')}/blob/main/(draft-byrd-restact-[a-z-]+-00\\.md)(#.*)?$`));
+  const page = m && DRAFT_PAGES.get(m[1]);
+  return page ? page + (m[2] ?? '') : null;
+}
+
 /** Rewrites a link found in a vendored file. Returns null to drop the link and keep its text. */
 export function rewriteHref(href: string, opts: { file?: string; idPrefix?: string } = {}): string | null {
   if (href.startsWith('#')) return opts.idPrefix ? `#${opts.idPrefix}${href.slice(1)}` : href;
   if (/^https?:/.test(href)) {
+    const onSite = draftPageFor(href);
+    if (onSite) return onSite;
     // The reference host's decision records and spec directory are not public pages yet.
     if (/^https:\/\/github\.com\/stackumi\/restactd\/(?:blob|tree)\/main\/spec(?:\/|$)/.test(href)) return null;
     return href;
@@ -203,8 +232,9 @@ export function rewriteHref(href: string, opts: { file?: string; idPrefix?: stri
   }
   if (abs) {
     const fragPart = frag ? `#${frag}` : '';
-    if (abs === DRAFT_FILE) return DRAFT_PATH + fragPart;
-    if (abs === PV_FILE || abs === 'presentation-verbs.md') return PV_PATH + fragPart;
+    const page = DRAFT_PAGES.get(abs);
+    if (page) return page + fragPart;
+    if (abs === 'presentation-verbs.md') return PV_PATH + fragPart;
     if (abs === 'registries/README.md') return `${REGISTRIES_PATH}#registries`;
     const reg = abs.match(/^registries\/(.+)\.md$/);
     if (reg && REGISTRY_FILES.some((r) => r.slug === reg[1])) return `${REGISTRIES_PATH}#${reg[1]}${frag ? `-${frag}` : ''}`;
@@ -220,6 +250,7 @@ export function rewriteHref(href: string, opts: { file?: string; idPrefix?: stri
 const DOC_LABELS: Record<string, string> = {
   [DRAFT_FILE]: 'draft',
   [PV_FILE]: 'presentation draft',
+  ...Object.fromEntries(EXTENSION_DRAFTS.map((d) => [d.file, d.label.toLowerCase()])),
   'presentation-verbs.md': 'Presentation verbs',
   'registries/README.md': 'Registries',
   'registries/feature-tokens.md': 'Feature Tokens',
@@ -384,7 +415,7 @@ function engine(opts: EngineOpts) {
           const sec = opts.sections?.get(key);
           if (sec) return `<a href="${opts.xrefBase ?? ''}#${sec.id}" title="${esc(sec.title)}">${sec.label}</a>`;
           const ref = opts.refs?.find((r) => r.key === key);
-          if (ref) return `[<a href="${esc(ref.target)}">${esc(key)}</a>]`;
+          if (ref) return `[<a href="${esc(draftPageFor(ref.target) ?? ref.target)}">${esc(key)}</a>]`;
           if (/^RFC\d+$/.test(key)) return `[<a href="${rfcUrl(key)}">${key}</a>]`;
           throw new Error(`specmd: unresolved reference {{${key}}} in ${opts.file}`);
         },
@@ -553,7 +584,7 @@ export function renderDraft(file: string = DRAFT_FILE): DraftDoc {
       .sort((a, b) => a.key.localeCompare(b.key, 'en', { numeric: true }))
       .map(
         (x) =>
-          `<dt id="ref-${esc(x.key)}">[${esc(x.key)}]</dt><dd>${esc(x.title)}${/^RFC\d+$/.test(x.key) ? `, RFC ${x.key.slice(3)}` : ''}. <a href="${esc(x.target)}">${esc(x.target.replace(/^https?:\/\//, ''))}</a></dd>`,
+          `<dt id="ref-${esc(x.key)}">[${esc(x.key)}]</dt><dd>${esc(x.title)}${/^RFC\d+$/.test(x.key) ? `, RFC ${x.key.slice(3)}` : ''}. <a href="${esc(draftPageFor(x.target) ?? x.target)}">${esc(draftPageFor(x.target) ? x.target.replace(/^.*\/(draft-[^/#]+?)\.md.*$/, '$1') : x.target.replace(/^https?:\/\//, ''))}</a></dd>`,
       )
       .join('');
   const refsHtml =
