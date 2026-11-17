@@ -7,7 +7,10 @@ import { NAV, GITHUB } from '../site.config';
  * the nav so an open menu is the next Tab stop. The nav marks the current section with aria-current
  * (a link is current when the page path starts with its href).
  *
- * Below 1080px the nav folds behind the Menu button and opens inside the band as full-width rows.
+ * Below 1200px the nav folds behind the Menu button and opens inside the band as full-width rows.
+ * The one-row header (wordmark, nav, GitHub and theme toggle) needs about 1160px with Public Sans,
+ * so 1200px leaves about 40px of room. Measure again if a nav label grows, and move the matching
+ * --header-h breakpoint in tokens.css with this one.
  * Without JavaScript (no `.js` on <html>) the button stays hidden and the nav wraps under the
  * wordmark instead.
  *
@@ -178,7 +181,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href);
 
   /* Narrow screens: wordmark, theme toggle and Menu on one row; the nav opens below them. Without
      JavaScript the nav wraps as a row under the wordmark. */
-  @media (max-width: 1079px) {
+  @media (max-width: 1199px) {
     .bar {
       gap: 0;
       padding-block: 12px;

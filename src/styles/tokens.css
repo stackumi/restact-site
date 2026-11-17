@@ -99,7 +99,8 @@
   /* Height of the sticky masthead row; sticky columns and anchor jumps sit below it. */
   --header-h: 64px;
 }
-@media (max-width: 1079px) {
+/* The header's Menu-button breakpoint (Header.astro), where the band is 68px tall. */
+@media (max-width: 1199px) {
   :root {
     --header-h: 68px;
   }
