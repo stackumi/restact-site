@@ -6,11 +6,12 @@ import ReaderGroups from '../components/ReaderGroups.astro';
 import { term } from '../lib/term';
 import { DRAFT, GITHUB, RESTACTD_DOCS, SITE } from '../site.config';
 
-/* The home page: a documentation hub. The draft's title, the one-line reason for the protocol and
-   the abstract open it, with one next step per reader. Then one object answers four requests, what
-   the protocol is for, the mandatory core, and one verb built, uploaded and called. It closes on the
-   reader-grouped links and a note on comments. The page sets the tagline in its opening, so the
-   tagline bar is off here. Copy sits up here, markup below. */
+/* The home page, written for a general technical reader first. The draft's title, the one-line
+   reason for the protocol and a plain introduction open it, with one next step per reader. Then
+   what the protocol is for, one object answering four requests, the rules that confine uploaded
+   code, and one verb built, uploaded and called. It closes on the reader-grouped links and a note on
+   comments. The page sets the tagline in its opening, so the tagline bar is off here. Copy sits up
+   here, markup below. */
 
 const DRAFT_URL = '/spec/draft/';
 
@@ -26,9 +27,12 @@ const dek = {
   },
 };
 
+/* Plain first, for a reader who has never met the protocol; the last paragraph names the technology
+   for the reader who wants it. */
 const abstract = [
-  'REST:ACT is an HTTP protocol that lets the clients of an API add their own code to the server, within the permissions the server grants them. A client uploads a small program, called a verb, to a path in the server’s object tree, and anyone the server allows can call it with GET or POST.',
-  'A verb is a WebAssembly component. It runs with the caller’s permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit.',
+  'An API can do only what its developers built into it. When you need something it lacks, you ask them and wait, or you copy the data out and do the work somewhere else.',
+  'REST:ACT lets an API’s users add the missing piece themselves, within the permissions the server grants them. A user, or an agent working for them, uploads a small program called a verb. From then on, anyone the server allows can run it with an ordinary web request.',
+  'Each verb is a WebAssembly component. The server runs it in a sandbox, by default with the permissions of whoever calls it, and stops it when it runs out of time or memory.',
 ];
 
 /* One next step for each of the three readers, named as the reader groups at the close name them,
@@ -42,7 +46,7 @@ const next = [
 
 const demo = {
   heading: 'How the server reads a request',
-  lead: 'Four requests to the same note, notes/42. Select one to see how the server reads it.',
+  lead: 'A verb’s address is the address of the thing it works on, then a colon and the verb’s name, as in notes/42:wordCount. Here are four requests to one example note, notes/42. Select one to see what the server does with it.',
 };
 
 const paths = {
@@ -77,33 +81,38 @@ const paths = {
 
 const uses = {
   heading: 'What it is for',
-  lead: 'A few examples of what client-extensible APIs make possible:',
+  lead: 'Code-writing assistants have made small programs easy to write, even for people who are not programmers. Many of those programs are most useful running next to the data they work on, inside someone else’s service. For example:',
   items: [
-    'A user uploads a function that transforms rows in a database.',
-    'A bot contributes a tool to a remote service.',
-    'A social platform runs a profile owner’s code when other people interact with the profile.',
-    'An interactive environment where participants write both the content and the programs.',
+    'A user adds a function that reshapes rows in a database.',
+    'A bot adds a tool to a service it works with.',
+    'A social site runs a profile owner’s code when other people interact with the profile.',
+    'In a shared online world, the people in it write both the content and the programs.',
   ],
-  after:
-    'The draft treats every uploaded verb as hostile. Execution is deny-by-default, resource-limited, and bounded by the caller’s own authority.',
 };
 
+/* The rules that confine uploaded code, in plain words. Each links the draft section it rests on;
+   the full mandatory core is on /spec/, where the build checks it against the draft. */
 const core = {
-  heading: 'What a server must implement',
-  lead: 'A conformant server implements six things. Everything else in the draft is an optional feature, which the server lists in its discovery document.',
+  heading: 'How the server keeps uploaded code in check',
+  lead: 'The draft assumes that any uploaded verb could be hostile. A server does not try to decide whether the code is safe. It confines whatever runs, under these rules.',
   items: [
-    { name: 'Addressing and verb invocation', body: 'A colon separates the object path from the verb name, as in /v1/notes/42:wordCount.', href: `${DRAFT_URL}#addressing` },
-    { name: 'Capability confinement', body: 'A verb reaches only the host interfaces it imports. The server refuses an upload that imports one it does not grant.', href: `${DRAFT_URL}#capabilities` },
-    { name: 'Resource limits', body: 'Every call has wall-clock, compute and memory limits, answered with 504, 429 and 507.', href: `${DRAFT_URL}#limits` },
-    { name: 'Runs as the caller', body: 'A verb acts with the caller’s authority, narrowed by what the verb declared and by the target’s policy.', href: `${DRAFT_URL}#exec-identity` },
-    { name: 'Problem Details errors', body: 'Errors are RFC 9457 problem details carrying a restact_code.', href: `${DRAFT_URL}#errors` },
-    { name: 'A discovery document', body: '/.well-known/restact lists the server’s features, limits and verbs.', href: `${DRAFT_URL}#discovery` },
+    { name: 'A verb reaches only what it imports', body: 'A verb lists the server interfaces it needs, and the server refuses an upload that asks for one it does not allow. No verb gets raw network access.', href: `${DRAFT_URL}#capabilities` },
+    { name: 'A verb runs as the caller', body: 'By default, a verb can do nothing the person or program calling it could not do directly, and nothing it did not declare. A server may let a verb’s owner lend it the owner’s permissions instead, and the verb’s description then says so.', href: `${DRAFT_URL}#exec-identity` },
+    { name: 'Every call has limits', body: 'A call that runs past its time limit ends with HTTP status 504, and one that runs out of memory with 507. The draft also recommends a compute limit, answered with 429.', href: `${DRAFT_URL}#limits` },
+    { name: 'Calls share one deadline', body: 'Where a server lets verbs call other verbs on it, they all share one deadline, so a chain of calls cannot run longer than the first call was allowed.', href: `${DRAFT_URL}#composition` },
   ],
+  after: {
+    before: 'The',
+    spec: { label: 'specification overview', href: '/spec/' },
+    middle: 'lists everything a conformant server must implement, and the',
+    security: { label: 'security model', href: '/security/' },
+    after: 'explains each rule.',
+  },
 };
 
 const example = {
   heading: 'A verb, end to end',
-  lead: 'A Rust verb that counts words, built with plain cargo, uploaded with the draft’s reference deployment request, POST /v1/modules, and called with GET. The upload names notes/42:wordCount, so it creates the wordCount verb that the demo above calls. A local restactd without authentication lets a verb bind to an object that does not exist yet.',
+  lead: 'Here is a Rust verb that counts words. It is built with cargo, uploaded with POST /v1/modules (the draft’s reference way to deploy a verb) and called with GET. The upload creates notes/42:wordCount, the function in the second request above. With authentication off, as on a local restactd, the note does not have to exist first.',
   needs: {
     server: { before: 'The commands need', link: { label: 'restactd', href: '/restactd/' }, after: 'running on localhost:8080.' },
     how: { link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },
@@ -167,14 +176,6 @@ const jsonLd = {
     </ul>
   </section>
 
-  <section class="container sect demo" aria-labelledby="demo">
-    <h2 id="demo">{demo.heading}</h2>
-    <p class="lead">
-      {split(demo.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}
-    </p>
-    <AnatomyDemo />
-  </section>
-
   <section class="container sect" aria-labelledby="uses">
     <div class="measure">
       <h2 id="uses">{uses.heading}</h2>
@@ -182,8 +183,15 @@ const jsonLd = {
       <ul class="uses">
         {uses.items.map((u) => <li>{u}</li>)}
       </ul>
-      <p>{uses.after}</p>
     </div>
+  </section>
+
+  <section class="container sect demo" aria-labelledby="demo">
+    <h2 id="demo">{demo.heading}</h2>
+    <p class="lead">
+      {split(demo.lead).map((x) => (x.code ? <code>{x.t}</code> : x.t))}
+    </p>
+    <AnatomyDemo />
   </section>
 
   <section class="container sect" aria-labelledby="core">
@@ -201,6 +209,10 @@ const jsonLd = {
         ))
       }
     </ul>
+    <p class="measure core-after">
+      {core.after.before} <a href={core.after.spec.href}>{core.after.spec.label}</a> {core.after.middle}{' '}
+      <a href={core.after.security.href}>{core.after.security.label}</a> {core.after.after}
+    </p>
   </section>
 
   <section class="container sect" aria-labelledby="example">
@@ -326,10 +338,10 @@ const jsonLd = {
     color: var(--ink-3);
   }
 
-  /* Core: a compact three-column list. */
+  /* Core: four rules, read as two pairs. */
   .core {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 56px;
     margin-top: 32px;
     font-variant-numeric: tabular-nums;
@@ -347,7 +359,8 @@ const jsonLd = {
     max-width: 880px;
     margin-top: 32px;
   }
-  .more {
+  .more,
+  .core-after {
     margin-top: 24px;
   }
 
@@ -361,11 +374,6 @@ const jsonLd = {
     color: var(--ink-3);
   }
 
-  @media (max-width: 1080px) {
-    .core {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
   @media (max-width: 720px) {
     .opening {
       padding-block: 40px 28px;
