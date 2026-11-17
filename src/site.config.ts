@@ -86,7 +86,7 @@ export interface NavLink {
 
 /** The header navigation, in order. A link is current when the page path starts with its href. */
 export const NAV: NavLink[] = [
-  { label: 'How it works', href: '/how-it-works/' },
+  { label: 'Introduction', href: '/introduction/' },
   { label: 'Specification', href: '/spec/' },
   { label: 'Get started', href: '/start/' },
   { label: 'restactd', href: '/restactd/' },
@@ -108,6 +108,7 @@ export const DOCS_NAV: NavGroup[] = [
   {
     title: 'Protocol',
     items: [
+      { label: 'Introduction', href: '/introduction/' },
       { label: 'How it works', href: '/how-it-works/' },
       { label: 'Security', href: '/security/' },
       { label: 'Compared with other approaches', href: '/compare/' },
