@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/MdPage.astro
 title: How REST:ACT works
-description: A REST:ACT server is a tree of objects addressed by path. Each object has data, read and written with the standard HTTP methods, and verbs, uploaded programs addressed with a colon and invoked over HTTP.
+description: A REST:ACT server holds objects at addresses, much as a disk holds files in folders. Each object has data, which you read and write with ordinary HTTP requests. It can also have verbs, small uploaded programs you run by adding a colon and the verb’s name to the object’s address.
 summary: A REST:ACT server is a tree of objects addressed by path. Each object has data, read and written with HTTP, and verbs, uploaded programs called over HTTP.
 chips:
   - Explanatory
@@ -16,6 +16,8 @@ import Callout from '../components/Callout.astro';
 import ResolutionWalk from '../components/ResolutionWalk.astro';
 import InRestactd from '../components/InRestactd.astro';
 import { RESTACTD_DOCS } from '../site.config';
+
+This page shows how the server finds the verb a request names, how a function differs from an action, and what a verb is allowed to reach.
 
 ## Objects, data and verbs
 

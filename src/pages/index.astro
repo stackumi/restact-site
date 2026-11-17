@@ -35,12 +35,12 @@ const abstract = [
   'Each verb is a WebAssembly component. The server runs it in a sandbox, by default with the permissions of whoever calls it, and stops it when it runs out of time or memory.',
 ];
 
-/* One next step for each of the three readers, named as the reader groups at the close name them,
-   then the reference server, which all three can use. */
+/* One next step for each of the three readers, then the reference server, which all three can use.
+   Each link carries the same name here and in the reader groups at the close: one name per page. */
 const next = [
-  { label: 'Review the protocol', href: DRAFT_URL },
-  { label: 'Implement a server', href: '/spec/' },
-  { label: 'Write and call verbs', href: '/start/' },
+  { label: 'Read the draft', href: DRAFT_URL },
+  { label: 'Specification overview', href: '/spec/' },
+  { label: 'Get started', href: '/start/' },
   { label: 'Run the reference server', href: '/restactd/' },
 ];
 
@@ -55,25 +55,25 @@ const paths = {
     {
       reader: 'Reviewing the protocol',
       links: [
+        { label: 'How it works', href: '/how-it-works/', body: 'Objects, verbs and how a request finds the verb it names, step by step.' },
         { label: 'Read the draft', href: DRAFT_URL, body: 'Addressing, method semantics, capabilities, limits, authorization and security considerations.' },
-        { label: 'Specification overview', href: '/spec/', body: 'A section-by-section map of the draft, marked core or optional.' },
         { label: 'Security model', href: '/security/', body: 'The threat model and how the draft answers it.' },
       ],
     },
     {
       reader: 'Implementing a server',
       links: [
-        { label: 'How it works', href: '/how-it-works/', body: 'Addressing and verb resolution, step by step.' },
-        { label: 'restact-conformance', href: RESTACTD_DOCS.conformance, body: 'Black-box tests for any server, run against the features it advertises.' },
-        { label: 'restactd', href: '/restactd/', body: 'The reference server, in Rust on Wasmtime: what it implements, its documentation and its source.' },
+        { label: 'Specification overview', href: '/spec/', body: 'A section-by-section map of the draft, marked core or optional.' },
+        { label: 'Test a server', href: RESTACTD_DOCS.conformance, body: 'restact-conformance sends black-box tests to any server, using the features it advertises.' },
+        { label: 'Run the reference server', href: '/restactd/', body: 'restactd, in Rust on Wasmtime: what it implements, its documentation and its source.' },
       ],
     },
     {
       reader: 'Writing and calling verbs',
       links: [
         { label: 'Get started', href: '/start/', body: 'Run restactd locally and deploy a first verb in JavaScript, Python or Rust.' },
-        { label: 'restact mcp', href: GITHUB.mcp, body: 'Serves a REST:ACT host’s verbs as MCP tools.' },
-        { label: 'restact-sdk', href: GITHUB.sdk, body: 'A Rust crate for writing verbs.' },
+        { label: 'Call verbs from an AI agent', href: GITHUB.mcp, body: 'restact mcp serves a REST:ACT host’s verbs as MCP tools.' },
+        { label: 'Write verbs in Rust', href: GITHUB.sdk, body: 'restact-sdk, a Rust crate for writing verbs.' },
       ],
     },
   ],
