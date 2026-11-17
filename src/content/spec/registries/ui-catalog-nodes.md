@@ -145,8 +145,10 @@ These rules apply to every node type; per-node entries reference them rather tha
   `..`**. A non-string value MUST fail validation without coercion. By construction a valid path
   is colon-free (no scheme — it cannot be confused with a verb route) and has no leading `/`, no
   empty segment (`//`), no traversal, no whitespace, and no `%`, `?`, or `#`. The client resolves
-  a valid path against **its own data plane only**: the fetch URL is the same-origin discovery
-  base + `/v1/` + path. Validation MUST happen **before any fetch is issued**. A control whose
+  a valid path against **its own data plane only**: the fetch URL is the server's base URL
+  (core draft §Base URL) + `/v1/` + path, which is same-origin with the client. Every other `/v1/`
+  path this registry writes, for a route, an image or an upload, is relative to that base URL in
+  the same way. Validation MUST happen **before any fetch is issued**. A control whose
   path is missing or fails validation renders inert per its entry (for `image`: an inert
   placeholder carrying the `alt` text, with no fetch). External URLs and `data:` URIs are
   unrepresentable by design — this closes exfiltration and tracking-pixel vectors.
@@ -1700,10 +1702,23 @@ opaque origin under this envelope; clients SHOULD prefer `blob:`).
 `postMessage` from the embedder: the embedder MUST NOT post anything until the frame first
 posts a `ready` message; on `ready` the embedder validates **source identity**
 (`event.source === frame.contentWindow` — the origin string is `"null"` for an opaque frame, so
-source identity, not origin string, is the guard), then posts **exactly** the [ADR-0092]
-sub-token and nothing else — never the embedder's primary bearer, shell state, storage
-contents, or DOM references. The frame fetches its scoped data cross-origin (`Origin: null`)
-under that credential. The node is renderable **only** where such a credential is obtainable
+source identity, not origin string, is the guard), then posts **exactly** one object with two
+members and nothing else — never the embedder's primary bearer, shell state, storage
+contents, or DOM references:
+
+- `token`: the [ADR-0092] sub-token.
+- `baseUrl` (Since v0.21): the server's base URL (core draft §Base URL) as an absolute URL with
+  no `/` at its end, for example `https://shop.example/restact`, or `https://shop.example` for a
+  server with the empty prefix. The embedder posts the base URL it is itself configured with for
+  that server, never one taken from the view document, the payload or the frame. It is not a
+  secret and grants nothing: the frame already learns the origin from the message.
+
+The frame fetches its scoped data cross-origin (`Origin: null`) under that credential, at URLs
+it forms by joining an object path to `baseUrl` as text, as the core draft's §Base URL directs.
+It has no other conformant way to learn the base URL: stored bytes read the same wherever the
+server is mounted, so a payload never embeds it. A payload written before v0.21 ignores
+`baseUrl` and keeps working on a server with the empty prefix, where the origin is the base URL.
+The node is renderable **only** where such a credential is obtainable
 (`path-scoped-tokens` advertised and the mint succeeds); otherwise it renders inert. There is
 **no** posture where the frame runs on the embedder's primary bearer.
 
@@ -1715,12 +1730,15 @@ author's choosing. That party may hold less authority than the person viewing th
 viewer's read grant becomes the author's.
 
 A client SHOULD give the framed document a Content Security Policy that keeps its requests on the
-server's own origin: `default-src 'none'`; `script-src` and `style-src` set to `'unsafe-inline'`,
+server: on its own origin or, where the server's base URL has a prefix (core draft §Base URL), on
+that base URL written as a source with its path, since the origin then also serves other content.
+The policy is `default-src 'none'`; `script-src` and `style-src` set to `'unsafe-inline'`,
 so that the payload's own inline script and style still run (the policy limits where the frame can
 send, not what it runs); `connect-src` (and `img-src` and `media-src` where the payload needs
-them) naming that origin explicitly, because `'self'` is not a reliable name for it inside an
+them) naming that origin or base URL explicitly, because `'self'` is not a reliable name for it inside an
 opaque-origin document; and `frame-src` and `worker-src` set to `'none'` so that no nested context
-escapes the policy. A `srcdoc` or `blob:` document inherits the
+escapes the policy. The origin or base URL the policy names is the one the handoff's `baseUrl`
+carries, so the frame can fetch only under the URL it was handed. A `srcdoc` or `blob:` document inherits the
 embedding document's policy and also enforces any policy declared in its own markup; each policy
 can only narrow the other. A client can therefore confine the frame by putting
 `<!doctype html>`, a `<meta charset>` element and a `<meta http-equiv="Content-Security-Policy">`
@@ -1740,9 +1758,12 @@ own merits.
 
 Old-client degradation: a pre-v0.14 client renders the whole node as an inert placeholder
 naming the unknown type — strictly safer than rendering; no discovery token of its own, no
-gate (the credential dependency above is [ADR-0092]'s token, not this node's).
+gate (the credential dependency above is [ADR-0092]'s token, not this node's). A v0.14 to v0.20
+client posts `{token}` alone; a payload that needs `baseUrl` finds it absent there and works
+only on a server with the empty prefix, where it can take the base URL to be the message's
+origin.
 
-Since: v0.14. Status: provisional.
+Since: v0.14 (`baseUrl` in the handoff: v0.21). Status: provisional.
 
 ### `cell`
 

@@ -5,7 +5,7 @@ description: REST:ACT adds one thing to HTTP APIs, a way for a client to install
 summary: 'REST:ACT beside REST, RPC, GraphQL, serverless, Wasm platforms, Extism, PostgREST, Hasura, PocketBase and MCP. It adds one thing: runtime code from clients.'
 chips:
   - Explanatory
-  - 'Normative text: draft, Relationship to Google AIP and JSON:API'
+  - 'Normative text: draft, Relationship to REST'
 ---
 
 import Callout from '../components/Callout.astro';
@@ -33,6 +33,8 @@ Each approach below solves a problem that REST:ACT does not try to solve, and th
 ## Plain REST and OpenAPI
 
 REST:ACT keeps methods, status codes, conditional requests and caching, and adds the `:verb` suffix from AIP-136. It sits at Richardson Level 2 and extends the uniform interface on purpose, as OData does with its actions and functions.
+
+Fielding's dissertation (section 3.5) sorts mobile code into styles. REST adopted one, Code on Demand, as an optional constraint: the server sends code and the client runs it. REST:ACT is the other direction, Remote Evaluation, where the client sends code and the server runs it. The dissertation names the costs of that style as lost visibility and the need to trust the client's code. A verb is an addressable resource with a descriptor in discovery, so it stays visible, and it runs capability-confined and metered, so the server need not trust it. The draft builds on Roy Fielding's work and owes him a good deal.
 
 A client that only does CRUD sees an ordinary REST API, and discovery can point to a generated OpenAPI 3.1 document. OpenAPI describes an API whose behavior its developers fixed. REST:ACT adds a way to change that behavior at runtime.
 
@@ -115,7 +117,7 @@ REST:ACT is a compatible extension of the Google API Design Guide. Its object an
 From JSON:API, REST:ACT borrows the optional relationship representation and the `source.pointer` error convention. It does not adopt JSON:API as its native representation, nor gRPC-style status objects.
 
 <Callout title="Where the ideas come from">
-  The draft draws on OData, AIP-136, JSON:API and the WebAssembly Component Model.
+  The draft draws on OData, AIP-136, JSON:API and the WebAssembly Component Model. It also builds on Roy Fielding's [dissertation](https://ics.uci.edu/~fielding/pubs/dissertation/top.htm), the source of REST and of the mobile-code styles above.
 </Callout>
 
 ## In restactd
