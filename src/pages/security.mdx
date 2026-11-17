@@ -36,7 +36,7 @@ Four rules apply to every verb, and a server that skips one is not conformant.
 1. A verb is a WebAssembly component. Every verb runs as a WASI 0.2 component. A server may compile JavaScript or Python to a component at upload or run it through an interpreter component, under the same confinement and limits either way. [restactd](/restactd/) interprets, so nothing is compiled per upload.
 2. A verb reaches only what it imports. The imports of the component are its capability manifest, and there is no ambient authority beyond them. A server answers `403` at upload for an interface it does not grant, and none of the standard interfaces opens a socket or a file.
 3. A verb runs as the caller. A call can do what the caller could do directly and the verb declared, within the policy of the target. Its compute is charged to the caller.
-4. A verb is metered. Wall-clock, compute and memory limits apply to every call, and a verb that calls other verbs shares one budget with them.
+4. A verb is metered. Every call has a wall-clock limit and a memory limit, and the draft recommends a compute limit as well. A verb that calls other verbs shares one deadline with them, and one compute budget where the server counts compute.
 
 ### Capabilities are an import list
 
@@ -85,7 +85,7 @@ A server enforces a wall-clock limit and a compute limit separately. Counting in
 
 | Limit | Status | restactd default |
 |---|---|---|
-| Wall-clock time | `408` | 2 s |
+| Wall-clock time | `504` | 2 s |
 | Compute (fuel) | `429` | 200,000,000 |
 | Memory | `507` | 32 MiB |
 

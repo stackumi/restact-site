@@ -40,7 +40,7 @@ const reqs: Req[] = [
       { text: '/v1/notes/42', caption: 'object path: the noun', tone: 'ink', rule: 'line' },
     ],
     kind: 'data', kindTone: 'soft', gist: 'The object’s data, a JSON document',
-    desc: 'Plain HTTP on the object path reads and writes its data. No verb runs, and a client that only does CRUD sees an ordinary REST API.',
+    desc: 'Plain HTTP on the object path reads and writes its data. No verb runs, so a client that only reads and writes data sees an ordinary REST API.',
   },
   {
     method: 'GET', methodTone: 'sig', path: '/v1/notes/42:wordCount', short: 'function',
@@ -50,7 +50,7 @@ const reqs: Req[] = [
       { text: 'wordCount', caption: 'verb', tone: 'ink', rule: 'sig', lead: ':' },
     ],
     kind: 'function', kindTone: 'sig', gist: 'Safe and cacheable',
-    desc: 'A function is called with GET. The host refuses any write it attempts, and a function may not call an action, so the response can be cached.',
+    desc: 'A function is called with GET. The server refuses any write it attempts, and a function may not call an action, so the response can be cached.',
   },
   {
     method: 'POST', methodTone: 'act', path: '/v1/notes/42:archive', short: 'action',
