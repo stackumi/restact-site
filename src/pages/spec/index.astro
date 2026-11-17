@@ -12,7 +12,7 @@ const doc = renderDraft();
 const f = doc.front;
 const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
 
-// The mandatory core is the list in "Conformance and Feature Discovery". The page words it in nine
+// The mandatory core is the list in "Conformance and Feature Discovery". The page words it in ten
 // lines; fail the build if the draft's list stops saying these things.
 const conformance = plain(sectionText(doc, 'conformance')).replace(/\s+/g, ' ');
 for (const phrase of [
@@ -41,6 +41,7 @@ const core = [
   'Per-invocation resource limits',
   'The runs-as-caller authority rule',
   'Problem Details error responses',
+  'OPTIONS on object, verb and verb-property paths',
   'A discovery document',
   'The strict default under authentication, where a strict binding mode is supported',
   'Refusal of a cross-origin request, where a browser credential or an anonymous write is accepted',
