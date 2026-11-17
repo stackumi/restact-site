@@ -31,6 +31,7 @@ Each verb is a WebAssembly component. The server runs it in a sandbox, by defaul
 
 ## Explanations
 
+- [Introduction](${u('/introduction/')}): what REST:ACT is, why it exists, its design goals and the draft's status
 - [How REST:ACT works](${u('/how-it-works/')}): objects, data and verbs, addressing, and what a verb can reach
 - [Security model](${u('/security/')}): the four rules, whose authority a verb carries, and resource limits
 - [Compared with other approaches](${u('/compare/')}): REST and OpenAPI, RPC, GraphQL, serverless and Wasm platforms, MCP

@@ -1,0 +1,67 @@
+---
+layout: ../layouts/MdPage.astro
+title: Introduction
+description: REST:ACT is a draft protocol that lets the users of a web API add the functions it lacks. It is written as an Internet-Draft, not yet submitted, and it is not a standard.
+summary: What REST:ACT is, why it exists, its three design goals and where the draft stands. An Internet-Draft, not yet submitted; not a standard.
+chips:
+  - Explanatory
+  - 'Normative text: draft, Introduction'
+asideLinks:
+  - label: Read the draft’s Introduction
+    href: /spec/draft/#introduction
+---
+
+import { DRAFT, GITHUB } from '../site.config';
+
+## What it is
+
+REST:ACT is a way for a web API to accept small programs from its users and run them in a sandbox, under limits. A user, or an agent working for them, uploads a program called a verb, and from then on anyone the server allows can run it with an ordinary `GET` or `POST` request.
+
+An API built this way is still an ordinary HTTP API. You read and write its data with the usual methods. A verb is an addition, reached at the address of the thing it works on, then a colon and the verb’s name, as in `notes/42:wordCount`.
+
+Each verb is a WebAssembly component. The server runs it in a sandbox, by default with the permissions of whoever calls it, and stops it when it runs out of time or memory.
+
+## Why it exists
+
+Most web APIs let a client change data, but only the API’s developers can change what the API does. A growing number of applications need their users to add behavior that runs on the server. The draft gives four examples:
+
+- A user adds a function that reshapes rows in a database.
+- A bot adds a tool to a service it works with.
+- A social site runs a profile owner’s code when other people interact with the profile.
+- In a shared online world, the people in it write both the content and the programs.
+
+Code-writing AI assistants let people who are not programmers write such programs. The draft notes that this raises the demand for uploaded code and, at the same time, the chance that the code cannot be trusted. REST:ACT is its answer. It is a common way to address, call, limit and authorize uploaded code over HTTP, so a server can run that code without having to trust it.
+
+A client that is allowed to deploy adds a verb through the same HTTP interface it uses to call one, so it can extend a server without leaving the protocol. Deployment is optional. A server whose verbs arrive some other way still conforms.
+
+## Design goals
+
+The draft names three.
+
+1. A small core, with optional layers. The grammar every server must implement is small. Richer features, such as an authorization vocabulary or more languages for writing verbs, are optional. A simple API uses a thin slice and a complex one uses the whole stack, and both speak the same protocol.
+2. Uploaded code is untrusted. The draft assumes every uploaded verb could be hostile. A verb reaches only the server interfaces it declares and the server allows. Every call runs under limits. By default, a verb can do no more than whoever called it. The [security model](/security/) explains each rule.
+3. It extends existing practice. REST:ACT reuses HTTP’s methods, status codes and headers, and extends the custom-method convention in Google’s API design guide, [AIP-136](https://google.aip.dev/136). Any custom method that follows AIP-136 is a valid REST:ACT verb invocation.
+
+## How it relates to REST
+
+REST:ACT keeps REST’s resources, methods and status codes, and adds actions and inheritance to them, as OData and AIP-136 add actions. The draft says this departure from REST’s fixed set of methods is deliberate, not an attempt to be as RESTful as possible. [Compared with other approaches](/compare/) sets it beside REST and the other ways to extend an API.
+
+Roy Fielding’s dissertation, which defines REST, has a name for sending code to a server to run there: Remote Evaluation. It names two costs. The server receives code instead of standard requests, so it loses visibility into what each request does. It also has to trust the code. The draft answers both. A verb is an addressable resource with a published description, so it stays visible. It runs confined and metered, under the caller’s authority, so the server does not have to trust it.
+
+## Where the draft stands
+
+The protocol is written as an individual Internet-Draft, <code>{DRAFT.docname}</code>, on the independent stream, with intended category Experimental. It has not yet been submitted to the IETF, and it is not a standard. Companion drafts specify optional extensions, such as events, delegation and connectors. The [specification overview](/spec/) lists them all.
+
+The reference implementation is [restactd](/restactd/), a server written in Rust on the Wasmtime runtime. The draft’s implementation section says that this reference implementation and a security-focused prototype have demonstrated the core of the execution and safety model: denied capabilities, enforced limits, checked uploads and composed calls with a shared budget.
+
+## Reviewing the draft
+
+The draft is open for review. A channel for comments has not been chosen yet. The draft and its companion documents are in the <a href={GITHUB.specs}>specification repository</a>.
+
+## Where to go next
+
+- [How it works](/how-it-works/): objects, verbs and how a request finds the verb it names.
+- [Security model](/security/): the rules a server applies to uploaded code.
+- [Read the draft](/spec/draft/): the normative text.
+- [Get started](/start/): run restactd locally and deploy a first verb.
+- [Compared with other approaches](/compare/): REST:ACT beside REST, RPC, GraphQL, serverless and MCP.
