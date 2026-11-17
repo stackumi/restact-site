@@ -8,7 +8,10 @@ web
 
 ## Users
 
-Three audiences, weighted equally. The site routes each to its own path rather than picking one:
+The home page is written for a general technical reader first: someone who arrives from a link and has never
+met the protocol. It states the problem and the idea in plain words before the mechanism, and names the
+technology once for the reader who wants it. The docs pages serve three audiences, weighted equally, and the
+home page routes each to its own path rather than picking one:
 
 - **Protocol reviewers**: IETF participants, HTTP and API-standards people, security reviewers. They read the
   draft to judge its rigour and send critique.
@@ -76,7 +79,7 @@ in REST:ACT the API's clients deploy it, it runs as each caller, and it is charg
 
 - The draft and its companion documents (the extension drafts, registries), rendered under `/spec/`.
 - Interactive explanations: `AnatomyDemo.astro` (four requests against `notes/42`), `ResolutionWalk.astro`.
-- Real behaviour from restactd: status codes 408/429/507, default limits, the `/.well-known/restact` document,
+- Real behaviour from restactd: status codes 504/429/507, default limits, the `/.well-known/restact` document,
   verbatim shell sessions.
 - restactd, restact-conformance, verbsmith, restact-sdk and the agent plugins exist and are linked.
 - **Absent, never to be invented:** adopters, users, testimonials, benchmarks, other implementations, IETF
