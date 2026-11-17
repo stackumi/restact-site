@@ -12,11 +12,11 @@ const doc = renderDraft();
 const f = doc.front;
 const source = JSON.parse(readSpec('SOURCE.json')) as { commit: string; date: string };
 
-// The mandatory core is the list in "Conformance and Feature Discovery". The page words it in six
+// The mandatory core is the list in "Conformance and Feature Discovery". The page words it in nine
 // lines; fail the build if the draft's list stops saying these things.
 const conformance = plain(sectionText(doc, 'conformance')).replace(/\s+/g, ' ');
 for (const phrase of [
-  'A conformant server MUST implement',
+  'the mandatory core of a server is',
   'addressing grammar',
   'invocation',
   'capability confinement',
@@ -27,12 +27,12 @@ for (const phrase of [
 ]) {
   if (!conformance.includes(phrase)) throw new Error(`spec hub: the draft's conformance text no longer contains "${phrase}"`);
 }
-// The list itself: exactly five bullets between the lead-in and "Everything else is OPTIONAL",
-// and the same words in the same order, so a sixth item or a reordering also fails the build.
-const coreList = sectionText(doc, 'conformance').split('A conformant server MUST implement:')[1]?.split('Everything else is OPTIONAL')[0] ?? '';
+// The list itself: exactly nine bullets between the lead-in and "Optional features, each implemented",
+// and the same words in the same order, so a tenth item or a reordering also fails the build.
+const coreList = sectionText(doc, 'conformance').split('the mandatory core of a server is:')[1]?.split('Optional features, each implemented')[0] ?? '';
 const bullets = coreList.split('\n').filter((l) => /^\* /.test(l));
-if (bullets.length !== 5) throw new Error(`spec hub: the draft's mandatory core now has ${bullets.length} bullets (the page words five); update the page`);
-const order = ['addressing grammar', 'capability confinement', 'runs-as-caller', 'Problem Details', 'discovery'];
+if (bullets.length !== 9) throw new Error(`spec hub: the draft's mandatory core now has ${bullets.length} bullets (the page words nine); update the page`);
+const order = ['addressing grammar', 'capability confinement', 'runs-as-caller', 'Problem Details', '`OPTIONS`', 'discovery', '`strict` default', 'cross-origin', 'TLS'];
 const at = order.map((w) => bullets.findIndex((b) => b.includes(w)));
 if (at.some((n, i) => n < 0 || (i > 0 && n < at[i - 1]))) throw new Error('spec hub: the mandatory core bullets no longer match the page');
 const core = [
@@ -42,6 +42,9 @@ const core = [
   'The runs-as-caller authority rule',
   'Problem Details error responses',
   'A discovery document',
+  'The strict default under authentication, where a strict binding mode is supported',
+  'Refusal of a cross-origin request, where a browser credential or an anonymous write is accepted',
+  'TLS on the transport, except over loopback',
 ];
 
 const sections = doc.sections

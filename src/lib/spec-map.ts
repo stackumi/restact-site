@@ -26,7 +26,6 @@ export const SECTION_MAP: Record<string, { gist: string; tag: Tag }> = {
     tag: 'core + optional',
   },
   resolution: { gist: 'The search walks from the target object up to the root, and the first definition runs.', tag: 'core' },
-  'object-binding': { gist: 'A verb binds to an object; a deployment keeps the planes independent or couples them.', tag: 'optional' },
   representations: {
     gist: 'Native JSON and its system fields, object policy, verb source and executable, deployment, history.',
     tag: 'optional',
@@ -34,8 +33,6 @@ export const SECTION_MAP: Record<string, { gist: string; tag: Tag }> = {
   capabilities: { gist: 'Layered host interfaces, deny by default; object data access and caller identity.', tag: 'core + optional' },
   limits: { gist: 'Wall-clock, compute and memory limits per invocation, answered with 408, 429 and 507.', tag: 'core' },
   composition: { gist: 'One verb calls another through the host, under a declared call graph and a shared budget.', tag: 'optional' },
-  'active-properties': { gist: 'Reserved verb names let code mediate reads and writes of an object’s representation.', tag: 'optional' },
-  'data-properties': { gist: 'An object declares data properties with scope, final and per-property access rules.', tag: 'optional' },
   authz: {
     gist: 'Bearer tokens, policy matchers, ownership, the execution identity, scoped and delegated tokens.',
     tag: 'core + optional',
@@ -43,16 +40,13 @@ export const SECTION_MAP: Record<string, { gist: string; tag: Tag }> = {
   'consistency-txn': { gist: 'Consistency levels from eventual to transactional, advertised and never over-claimed.', tag: 'optional' },
   collections: { gist: 'Pagination, filter, order and field masks on collection reads.', tag: 'optional' },
   operations: { gist: 'Prefer: respond-async returns 202 and an operation resource the client polls.', tag: 'optional' },
-  events: { gist: 'Server-initiated invocation: lifecycle hooks, schedules, SSE delivery and verb subscriptions.', tag: 'optional' },
+  'admin-reset': { gist: 'An operator-authenticated reset of a server’s stored state, advertised as its own feature.', tag: 'optional' },
   errors: { gist: 'RFC 9457 Problem Details, with the restact_code and restact_verb members.', tag: 'core' },
   discovery: { gist: 'OPTIONS on object, verb and property paths, and the document at /.well-known/restact.', tag: 'core' },
-  'relationship-to-google-aip-and-jsonapi': {
-    gist: 'How the protocol extends the Google API Design Guide, and what it borrows from JSON:API.',
-    tag: 'informative',
-  },
   security: { gist: 'Hostile uploads, denial of wallet, side channels, confused deputies and delegation.', tag: 'core + optional' },
   iana: { gist: 'The media types, the well-known URI and the registries the draft requests.', tag: 'registry' },
   'appendix-wit': { gist: 'The rest-act:plugin@0.1.0 interfaces and worlds a component targets.', tag: 'core + optional' },
+  'appendix-pairwise': { gist: 'Test values for computing the pairwise subject a verb reads by default.', tag: 'informative' },
   'implementation-status-and-experience': { gist: 'What the reference implementation has demonstrated so far.', tag: 'informative' },
 };
 
