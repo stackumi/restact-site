@@ -34,13 +34,12 @@ the hub, the page descriptions) is still checked. Meta descriptions are always c
 ## The specification pages
 
 `/spec/`, `/spec/draft/`, `/spec/presentation-verbs/` and `/spec/registries/` are rendered at build
-time from copies of the sources in `stackumi/restact` (the specification repository, named restact-specs
-until 2026-10-29), committed under `src/content/spec/`
-(the Cloudflare build needs no sibling checkout). `SOURCE.json` there records the source commit.
-When the specification changes, a person runs
+time from copies of the sources in `stackumi/restact` (the specification repository), committed
+under `src/content/spec/` (the Cloudflare build needs no sibling checkout).
+`SOURCE.json` there records the source commit. When the specification changes, a person runs
 
 ```sh
-corepack pnpm sync:spec [path-to-spec-checkout]   # default ../restact-specs
+corepack pnpm sync:spec [path-to-spec-checkout]   # default ../restact
 corepack pnpm verify
 ```
 
@@ -60,7 +59,7 @@ committed here as static files under `public/docs/`. The build there bakes
 
 ```sh
 corepack pnpm sync:docs v0.1.0                     # a restactd release: its docs tarball and .sha256
-corepack pnpm sync:docs ../restact                 # or a local restactd checkout, before the release asset exists
+corepack pnpm sync:docs ../restactd                # or a local restactd checkout, before the release asset exists
 corepack pnpm verify
 ```
 

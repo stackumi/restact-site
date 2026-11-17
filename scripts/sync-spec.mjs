@@ -1,9 +1,8 @@
 // Copies the specification sources from a checkout of stackumi/restact (the specification
-// repository, named restact-specs until 2026-10-29; the local checkout keeps that name) into
-// src/content/spec/, so the Cloudflare build needs no sibling checkout. Run by a human when the
-// specification changes, then commit the result:
+// repository) into src/content/spec/, so the Cloudflare build needs no sibling checkout. Run by a
+// human when the specification changes, then commit the result:
 //
-//   corepack pnpm sync:spec [path-to-spec-checkout]      (default: ../restact-specs)
+//   corepack pnpm sync:spec [path-to-spec-checkout]      (default: ../restact)
 //
 // The vendored copies are not edited, with one exception: each draft's front matter (the protocol
 // draft and the presentation draft) keeps only the `ins:` line of its author list, so no address enters this repository (a scan of every copied .md
@@ -14,7 +13,7 @@ import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
-const src = resolve(process.argv[2] ?? join(root, '..', 'restact-specs'));
+const src = resolve(process.argv[2] ?? join(root, '..', 'restact'));
 const out = join(root, 'src', 'content', 'spec');
 
 const DRAFT = 'draft-byrd-restact-protocol-00.md';
