@@ -74,7 +74,7 @@ in REST:ACT the API's clients deploy it, it runs as each caller, and it is charg
 
 ## Evidence on Hand
 
-- The draft and its companion documents (presentation verbs, registries), rendered under `/spec/`.
+- The draft and its companion documents (the extension drafts, registries), rendered under `/spec/`.
 - Interactive explanations: `AnatomyDemo.astro` (four requests against `notes/42`), `ResolutionWalk.astro`.
 - Real behaviour from restactd: status codes 408/429/507, default limits, the `/.well-known/restact` document,
   verbatim shell sessions.

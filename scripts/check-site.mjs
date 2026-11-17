@@ -23,7 +23,7 @@
 //     their own 404 page and agree with INDEXABLE on noindex; the page rules above skip them
 import { readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { EMAIL, FORBIDDEN, scanText, treeHash, walk } from './vendored.mjs';
+import { FORBIDDEN, findEmail, scanText, treeHash, walk } from './vendored.mjs';
 
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const CONFIG = new URL('../src/site.config.ts', import.meta.url).pathname;
@@ -61,8 +61,8 @@ const SPEC_SRC = new URL('../src/content/spec/', import.meta.url).pathname;
 if (existsSync(SPEC_SRC)) {
   for (const f of walk(SPEC_SRC)) {
     if (!f.endsWith('.md')) continue;
-    const m = readFileSync(f, 'utf8').match(EMAIL);
-    if (m) err(relative(SPEC_SRC, f), `email address "${m[0]}" in a vendored specification file`);
+    const m = findEmail(readFileSync(f, 'utf8'));
+    if (m) err(relative(SPEC_SRC, f), `email address "${m}" in a vendored specification file`);
   }
 }
 
@@ -106,8 +106,8 @@ for (const file of pages) {
     if (m) err(page, `banned wording "${m[0]}"`);
   }
   // (b) emails, anywhere in the markup (scripts and styles excluded)
-  const em = noScripts.match(EMAIL);
-  if (em) err(page, `email address "${em[0]}"`);
+  const em = findEmail(noScripts);
+  if (em) err(page, `email address "${em}"`);
   // (c) forbidden names and hosts, anywhere including code
   for (const [re, label] of FORBIDDEN) if (re.test(noScripts)) err(page, `contains ${label}`);
   // (d) noindex while not indexable

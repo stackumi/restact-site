@@ -126,6 +126,12 @@ export const DOCS_NAV: NavGroup[] = [
     items: [
       { label: 'Specification', href: '/spec/' },
       { label: 'The Internet-Draft', href: '/spec/draft/' },
+      { label: 'Objects and data', href: '/spec/objects/' },
+      { label: 'Events', href: '/spec/events/' },
+      { label: 'Identity and delegation', href: '/spec/delegation/' },
+      { label: 'Connectors', href: '/spec/connectors/' },
+      { label: 'MCP facet', href: '/spec/mcp/' },
+      { label: 'HTTP verbs', href: '/spec/http-verbs/' },
       { label: 'Presentation verbs, normative', href: '/spec/presentation-verbs/' },
       { label: 'Registries', href: '/spec/registries/' },
     ],

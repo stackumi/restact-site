@@ -20,6 +20,12 @@ A verb is a WebAssembly component. It runs with the caller's permissions, can us
 - [The draft](${u('/spec/draft/')}): the normative text, "${DRAFT.title}"
 - [The draft's Markdown source](${raw}): the same text, as written
 - [Specification overview](${u('/spec/')}): the draft section by section, feature tokens, the guest contract, and tests
+- [Objects and data](${u('/spec/objects/')}): the extension draft for object listing and queries, property access, policy inheritance, accessor verbs and deployment history
+- [Events](${u('/spec/events/')}): the extension draft for lifecycle hooks, subscriptions, schedules and delivery over Server-Sent Events
+- [Identity and delegation](${u('/spec/delegation/')}): the extension draft for ownership reassignment, path-scoped sub-tokens and grants
+- [Connectors](${u('/spec/connectors/')}): the extension draft for the secrets mount, mediated outbound calls, model completion and webhook delivery
+- [Model Context Protocol facet](${u('/spec/mcp/')}): the extension draft for the four MCP tools
+- [HTTP verbs](${u('/spec/http-verbs/')}): the extension draft for request headers, response status and headers, and webhook signature verification
 - [Presentation verbs and their media type](${u('/spec/presentation-verbs/')}): application/vnd.restact.ui+json, the extension draft, normative
 - [Registries](${u('/spec/registries/')}): the registries the draft requests
 

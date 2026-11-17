@@ -30,9 +30,9 @@ export function* walk(dir) {
 // as Pagefind's, is not ours to remove).
 const TEXT = /\.(?:html|txt|xml|json|js|mjs|css|svg|md|webmanifest)$/;
 const CODE = /\.(?:js|mjs|css)$/;
-// `scheme://user:password@host` is a URL's userinfo, such as a placeholder connection string, not
-// an address.
-const USERINFO = /[a-z][a-z0-9+.-]*:\/\/[^\s/@]*:$/i;
+// `scheme://user@host` and `scheme://user:password@host` are a URL's userinfo, such as a
+// placeholder connection string, not an address.
+const USERINFO = /[a-z][a-z0-9+.-]*:\/\/(?:[^\s/@]*:)?$/i;
 
 /** The first email address in `s`, ignoring URL userinfo, or null. */
 export const findEmail = (s) => {
