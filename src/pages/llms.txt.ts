@@ -13,7 +13,7 @@ export const GET: APIRoute = ({ site }) => {
 
 > REST:ACT is an HTTP protocol that lets the clients of an API add their own code to the server, within the permissions the server grants them. A client uploads a small program, called a verb, to a path in the server's object tree, and anyone the server allows can call it with GET or POST.
 
-A verb is a WebAssembly component. It runs with the caller's permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit. The protocol is specified in ${DRAFT.docname}, written as an Internet-Draft and not yet submitted to the IETF; it is not a standard. restactd is the reference server.
+A verb is a WebAssembly component. By default it runs with the caller's permissions, can use only the host interfaces it imports, and stops when it reaches its time or memory limit. The protocol is specified in ${DRAFT.docname}, written as an Internet-Draft and not yet submitted to the IETF; it is not a standard. restactd is the reference server.
 
 ## Specification
 
