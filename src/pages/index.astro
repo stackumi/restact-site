@@ -32,7 +32,7 @@ const dek = {
 const abstract = [
   'An API can do only what its developers built into it. When you need something it lacks, you ask them and wait, or you copy the data out and do the work somewhere else.',
   'REST:ACT lets an API’s users add the missing piece themselves, within the permissions the server grants them. A user, or an agent working for them, uploads a small program called a verb. From then on, anyone the server allows can run it with an ordinary web request.',
-  'Each verb is a WebAssembly component. The server runs it in a sandbox with the permissions of whoever calls it, and stops it when it runs out of time or memory.',
+  'Each verb is a WebAssembly component. The server runs it in a sandbox, by default with the permissions of whoever calls it, and stops it when it runs out of time or memory.',
 ];
 
 /* One next step for each of the three readers, named as the reader groups at the close name them,
@@ -46,7 +46,7 @@ const next = [
 
 const demo = {
   heading: 'How the server reads a request',
-  lead: 'A verb is called at the address of the thing it works on, after a colon. Here are four requests to one example note, notes/42. Select one to see what the server does with it.',
+  lead: 'A verb’s address is the address of the thing it works on, then a colon and the verb’s name, as in notes/42:wordCount. Here are four requests to one example note, notes/42. Select one to see what the server does with it.',
 };
 
 const paths = {
@@ -86,7 +86,7 @@ const uses = {
     'A user adds a function that reshapes rows in a database.',
     'A bot adds a tool to a service it works with.',
     'A social site runs a profile owner’s code when other people interact with the profile.',
-    'A shared online world where the people in it write both the content and the programs.',
+    'In a shared online world, the people in it write both the content and the programs.',
   ],
 };
 
@@ -94,12 +94,12 @@ const uses = {
    the full mandatory core is on /spec/, where the build checks it against the draft. */
 const core = {
   heading: 'How the server keeps uploaded code in check',
-  lead: 'The draft assumes that any uploaded verb could be hostile. A server does not try to judge the code. It confines whatever runs, under rules every conformant server follows.',
+  lead: 'The draft assumes that any uploaded verb could be hostile. A server does not try to decide whether the code is safe. It confines whatever runs, under these rules.',
   items: [
-    { name: 'A verb reaches only what it imports', body: 'A verb lists the host interfaces it needs, and the server refuses an upload that asks for one it does not allow. No verb gets raw network access.', href: `${DRAFT_URL}#capabilities` },
-    { name: 'A verb runs as the caller', body: 'A verb can do nothing the person or program calling it could not do directly, and nothing it did not declare.', href: `${DRAFT_URL}#exec-identity` },
-    { name: 'Every call has limits', body: 'A call that runs past its time limit ends with 504, and one that runs out of memory with 507. The draft also recommends a compute limit, answered with 429.', href: `${DRAFT_URL}#limits` },
-    { name: 'Calls share one deadline', body: 'A verb that calls other verbs shares one deadline with them, so a chain of calls cannot stretch its time.', href: `${DRAFT_URL}#composition` },
+    { name: 'A verb reaches only what it imports', body: 'A verb lists the server interfaces it needs, and the server refuses an upload that asks for one it does not allow. No verb gets raw network access.', href: `${DRAFT_URL}#capabilities` },
+    { name: 'A verb runs as the caller', body: 'By default, a verb can do nothing the person or program calling it could not do directly, and nothing it did not declare. A server may let a verb’s owner lend it the owner’s permissions instead, and the verb’s description then says so.', href: `${DRAFT_URL}#exec-identity` },
+    { name: 'Every call has limits', body: 'A call that runs past its time limit ends with HTTP status 504, and one that runs out of memory with 507. The draft also recommends a compute limit, answered with 429.', href: `${DRAFT_URL}#limits` },
+    { name: 'Calls share one deadline', body: 'Where a server lets verbs call other verbs on it, they all share one deadline, so a chain of calls cannot run longer than the first call was allowed.', href: `${DRAFT_URL}#composition` },
   ],
   after: {
     before: 'The',
@@ -112,7 +112,7 @@ const core = {
 
 const example = {
   heading: 'A verb, end to end',
-  lead: 'A Rust verb that counts words. It is built with cargo, uploaded with POST /v1/modules (the draft’s reference way to deploy a verb) and called with GET. The upload creates notes/42:wordCount, the verb the requests above call. On a local restactd with no sign-in, the note does not have to exist first.',
+  lead: 'Here is a Rust verb that counts words. It is built with cargo, uploaded with POST /v1/modules (the draft’s reference way to deploy a verb) and called with GET. The upload creates notes/42:wordCount, the function in the second request above. With authentication off, as on a local restactd, the note does not have to exist first.',
   needs: {
     server: { before: 'The commands need', link: { label: 'restactd', href: '/restactd/' }, after: 'running on localhost:8080.' },
     how: { link: { label: 'Get started', href: '/start/' }, after: 'shows how.' },

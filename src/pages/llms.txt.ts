@@ -3,7 +3,7 @@ import { DRAFT_FILE, SPECS_REPO } from '../lib/specmd';
 import { DRAFT, GITHUB, RESTACTD_DOCS } from '../site.config';
 
 // /llms.txt (llmstxt.org): a reading list for language models and the tools that feed them. The
-// summary repeats the home page's abstract; the notes are short forms of each page's description.
+// summary is a short form of the home page's opening; the notes are short forms of each page's description.
 // The draft's Markdown source is linked raw, since a model reads it more reliably than HTML.
 const raw = `${SPECS_REPO.replace('https://github.com/', 'https://raw.githubusercontent.com/')}/main/${DRAFT_FILE}`;
 
@@ -11,9 +11,9 @@ export const GET: APIRoute = ({ site }) => {
   const u = (p: string) => new URL(p, site).href;
   const body = `# REST:ACT
 
-> REST:ACT is an HTTP protocol that lets the clients of an API add their own code to the server, within the permissions the server grants them. A client uploads a small program, called a verb, to a path in the server's object tree, and anyone the server allows can call it with GET or POST.
+> REST:ACT lets an API's users add the functions the API lacks, within the permissions the server grants them. A user, or an agent working for them, uploads a small program called a verb, and anyone the server allows can then run it with an ordinary GET or POST request.
 
-A verb is a WebAssembly component. It runs with the caller's permissions, can use only the host interfaces it imports, and stops when it reaches its time, compute or memory limit. The protocol is specified in ${DRAFT.docname}, written as an Internet-Draft and not yet submitted to the IETF; it is not a standard. restactd is the reference server.
+Each verb is a WebAssembly component. The server runs it in a sandbox, by default with the permissions of whoever calls it, lets it use only the interfaces it imports and the server allows, and stops it when it runs out of time or memory. The protocol is specified in ${DRAFT.docname}, written as an Internet-Draft and not yet submitted to the IETF; it is not a standard. restactd is the reference server.
 
 ## Specification
 

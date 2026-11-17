@@ -40,7 +40,7 @@ const reqs: Req[] = [
       { text: '/v1/notes/42', caption: 'object path: the noun', tone: 'ink', rule: 'line' },
     ],
     kind: 'data', kindTone: 'soft', gist: 'The object’s data, a JSON document',
-    desc: 'Plain HTTP on the object path reads and writes its data. No verb runs, so a client that only reads and writes data sees an ordinary REST API.',
+    desc: 'Plain HTTP on the object path reads and writes its data. No verb is named, so a client that only reads and writes data sees an ordinary REST API.',
   },
   {
     method: 'GET', methodTone: 'sig', path: '/v1/notes/42:wordCount', short: 'function',

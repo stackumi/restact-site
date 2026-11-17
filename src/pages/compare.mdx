@@ -66,7 +66,7 @@ REST:ACT is a wire protocol for the clients of an API to upload components at ru
 
 Extism is a plug-in system built on WebAssembly. The host application defines an interface, and users or customers add logic by writing plug-ins against it. Extism supplies host SDKs for embedding that runtime in an application.
 
-Both share the idea of letting a product's users extend it with their own code. The difference is the layer. Extism is a library that a product's developers embed, and they design the extension points. REST:ACT is a wire protocol, so any client of a compliant server can upload a verb over HTTP, and the server limits its time and memory, runs it as the caller by default and lists it in its discovery document.
+Both share the idea of letting a product's users extend it with their own code. The difference is the layer. Extism is a library that a product's developers embed, and they design the extension points. REST:ACT is a wire protocol, so any client a compliant server allows can upload a verb over HTTP, and the server limits its time and memory, runs it as the caller by default and lists it in its discovery document.
 
 ## Cloudflare Workers for Platforms
 
@@ -78,7 +78,7 @@ It shares the multi-tenant goal and the idea that uploaded code is untrusted. In
 
 PostgREST serves a Postgres database over HTTP. A function in the exposed schema is callable under `/rpc`. A function that does not modify the database also runs under `GET`, and a request with a valid JWT switches the database session to the role named in the token, so the database decides what the caller may do. Supabase's REST API is PostgREST, and `rpc()` calls its database functions. Supabase recommends `security invoker`, the default, so a function runs with the caller's privileges.
 
-This is the closest relative here. Read-only calls use `GET`, others use `POST`, and the code runs as the caller. PostgREST decides by function volatility: `GET` is always read-only, and `POST` is read-write only for volatile functions. REST:ACT separates a function from an action by declared kind, and a function is a cacheable `GET`. The functions there are SQL or other database code written by whoever administers the database, then exposed. A verb is uploaded at runtime by an API client, is not tied to a database, runs as a WebAssembly component under time, compute and memory limits, and works on the object it is bound to.
+This is the closest relative here. Read-only calls use `GET`, others use `POST`, and the code runs as the caller. PostgREST decides by function volatility: `GET` is always read-only, and `POST` is read-write only for volatile functions. REST:ACT separates a function from an action by declared kind, and a function is a cacheable `GET`. The functions there are SQL or other database code written by whoever administers the database, then exposed. A verb is uploaded at runtime by an API client, is not tied to a database, runs as a WebAssembly component under time and memory limits, and works on the object it is bound to.
 
 ## Hasura actions
 
